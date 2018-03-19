@@ -1,10 +1,10 @@
 from functools import partial
 from charfbuzz cimport *
 from libc.stdlib cimport free, malloc
-from typing import Callable, List, Tuple
+from typing import Callable, Dict, List, Tuple
 
 
-cdef class glyph_info:
+cdef class GlyphInfo:
     cdef hb_glyph_info_t _hb_glyph_info
     # could maybe store Buffer to prevent GC
 
@@ -20,7 +20,7 @@ cdef class glyph_info:
         return self._hb_glyph_info.cluster
 
 
-cdef class glyph_position:
+cdef class GlyphPosition:
     cdef hb_glyph_position_t _hb_glyph_position
     # could maybe store Buffer to prevent GC
 
@@ -82,29 +82,29 @@ cdef class Buffer:
             self._hb_buffer, hb_direction_from_string(cstr, -1))
 
     @property
-    def glyph_infos(self) -> List[glyph_info]:
+    def glyph_infos(self) -> List[GlyphInfo]:
         cdef unsigned int count
         cdef hb_glyph_info_t* glyph_infos = hb_buffer_get_glyph_infos(
             self._hb_buffer, &count)
         cdef list infos = []
-        cdef glyph_info info
+        cdef GlyphInfo info
         cdef unsigned int i
         for i in range(count):
-            info = glyph_info()
+            info = GlyphInfo()
             info.set(glyph_infos[i])
             infos.append(info)
         return infos
 
     @property
-    def glyph_positions(self) -> List[glyph_position]:
+    def glyph_positions(self) -> List[GlyphPosition]:
         cdef unsigned int count
         cdef hb_glyph_position_t* glyph_positions = \
             hb_buffer_get_glyph_positions(self._hb_buffer, &count)
         cdef list positions = []
-        cdef glyph_position position
+        cdef GlyphPosition position
         cdef unsigned int i
         for i in range(count):
-            position = glyph_position()
+            position = GlyphPosition()
             position.set(glyph_positions[i])
             positions.append(position)
         return positions
@@ -126,6 +126,7 @@ cdef class Buffer:
     def script(self) -> str:
         cdef char cstr[5]
         hb_tag_to_string(hb_buffer_get_script(self._hb_buffer), cstr)
+        cstr[4] = b'\0'
         cdef bytes packed = cstr
         return packed.decode()
 
@@ -134,7 +135,7 @@ cdef class Buffer:
         cdef bytes packed = value.encode()
         cdef char* cstr = packed
         # all the *_from_string calls should probably be checked and throw an
-        # exception if NULL
+        # exception if invalid
         hb_buffer_set_script(
             self._hb_buffer, hb_script_from_string(cstr, -1))
 
@@ -182,6 +183,7 @@ cdef hb_blob_t* _reference_table_func(
     #
     cdef char cstr[5]
     hb_tag_to_string(tag, cstr)
+    cstr[4] = b'\0'
     #
     cdef bytes table = py_face._reference_table_func(
         py_face, <bytes>cstr, <object>user_data)
@@ -364,9 +366,7 @@ cdef class FontFuncs:
         self._nominal_glyph_func = func
 
 
-# features can be enabled/disabled, so this should rather be a dict of
-# str: bool
-def shape(font: Font, buffer: Buffer, features: List[str] = None) -> None:
+def shape(font: Font, buffer: Buffer, features: Dict[str, bool] = None) -> None:
     cdef unsigned int size
     cdef hb_feature_t* hb_features
     cdef bytes packed
@@ -378,10 +378,11 @@ def shape(font: Font, buffer: Buffer, features: List[str] = None) -> None:
     else:
         size = len(features)
         hb_features = <hb_feature_t*>malloc(size * sizeof(hb_feature_t))
-        for i in range(size):
-            packed = features[i].encode()
+        for i, (name, value) in enumerate(features.items()):
+            packed = name.encode()
             cstr = packed
             hb_feature_from_string(packed, len(packed), &feat)
+            feat.value = value
             hb_features[i] = feat
     hb_shape(font._hb_font, buffer._hb_buffer, hb_features, size)
     if hb_features is not NULL:

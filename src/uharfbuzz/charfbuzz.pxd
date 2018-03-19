@@ -4,10 +4,11 @@ cdef extern from "hb.h":
 
     # hb-common.h
     ctypedef void (*hb_destroy_func_t) (void* user_data)
+    ctypedef int hb_bool_t
     ctypedef unsigned long hb_codepoint_t
     ctypedef long hb_position_t
     ctypedef unsigned long hb_mask_t
-    ctypedef int hb_bool_t
+    ctypedef unsigned long hb_tag_t
 
     ctypedef enum hb_direction_t:
         HB_DIRECTION_LTR
@@ -19,8 +20,10 @@ cdef extern from "hb.h":
     ctypedef struct hb_language_t:
         pass
     ctypedef struct hb_feature_t:
-        pass
-    ctypedef unsigned long hb_tag_t
+        hb_tag_t tag
+        unsigned long value
+        unsigned int start
+        unsigned int end
 
     hb_direction_t hb_direction_from_string(const char* str, int len)
     const char* hb_direction_to_string(hb_direction_t direction)
