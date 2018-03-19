@@ -28,7 +28,7 @@ ExternalProject_Add_StepTargets(harfbuzz install)
 # the cmake variables set by scikit-build in the top-level CMakeLists.txt
 ExternalProject_Add(
     uharfbuzz
-    URL ${CMAKE_SOURCE_DIR}/src/uharfbuzz
+    SOURCE_DIR ${CMAKE_SOURCE_DIR}/src/uharfbuzz
     CMAKE_CACHE_ARGS
       -DCMAKE_INSTALL_PREFIX:PATH=${CMAKE_INSTALL_PREFIX}
       -DCMAKE_BUILD_TYPE:STRING=${CMAKE_BUILD_TYPE}
@@ -40,6 +40,10 @@ ExternalProject_Add(
       -DSKBUILD:BOOL=${SKBUILD}
       -DCMAKE_MODULE_PATH:PATH=${CMAKE_MODULE_PATH}
     DEPENDS harfbuzz-install
+    BUILD_ALWAYS 1
+    DOWNLOAD_COMMAND ""
+    UPDATE_COMMAND ""
+    PATCH_COMMAND ""
     INSTALL_COMMAND ""
 )
 ExternalProject_Get_Property(uharfbuzz BINARY_DIR)
