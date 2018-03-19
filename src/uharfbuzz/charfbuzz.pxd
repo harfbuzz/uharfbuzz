@@ -33,9 +33,10 @@ cdef extern from "hb.h":
     void hb_feature_to_string(
         hb_feature_t* feature,
         char* buf, unsigned int size)
-    hb_language_t hb_language_from_string(const char *str, int len)
+    hb_language_t hb_language_from_string(const char* str, int len)
     const char* hb_language_to_string(hb_language_t language)
     hb_script_t hb_script_from_string(const char* str, int len)
+    hb_tag_t hb_tag_from_string(const char* str, int len)
     void hb_tag_to_string(hb_tag_t tag, char* buf)
 
     ctypedef struct hb_user_data_key_t:
@@ -165,6 +166,15 @@ cdef extern from "hb.h":
     void hb_font_set_scale(hb_font_t* font, int x_scale, int y_scale)
     void hb_font_destroy(hb_font_t* font)
 
+    # hb-shape.h
+    void hb_shape(
+        hb_font_t* font,
+        hb_buffer_t* buffer,
+        const hb_feature_t* features, unsigned int num_features)
+
+
+cdef extern from "hb-ot.h":
+
     # hb-ot-layout.h
     unsigned int hb_ot_layout_language_get_feature_tags(
         hb_face_t* face,
@@ -187,9 +197,3 @@ cdef extern from "hb.h":
         unsigned int start_offset,
         unsigned int* script_count,  # in/out
         hb_tag_t* script_tags)  # out
-
-    # hb-shape.h
-    void hb_shape(
-        hb_font_t* font,
-        hb_buffer_t* buffer,
-        const hb_feature_t* features, unsigned int num_features)

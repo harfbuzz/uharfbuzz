@@ -1,4 +1,3 @@
-from functools import partial
 from charfbuzz cimport *
 from libc.stdlib cimport free, malloc
 from typing import Callable, Dict, List, Tuple
@@ -71,8 +70,10 @@ cdef class Buffer:
 
     @property
     def direction(self) -> str:
-        return hb_direction_to_string(
+        cdef char* cstr = hb_direction_to_string(
             hb_buffer_get_direction(self._hb_buffer))
+        cdef bytes packed = cstr
+        return packed.decode()
 
     @direction.setter
     def direction(self, value: str):
@@ -112,8 +113,10 @@ cdef class Buffer:
 
     @property
     def language(self) -> str:
-        return hb_language_to_string(
+        cdef char* cstr = hb_language_to_string(
             hb_buffer_get_language(self._hb_buffer))
+        cdef bytes packed = cstr
+        return packed.decode()
 
     @language.setter
     def language(self, value: str):
@@ -184,9 +187,10 @@ cdef hb_blob_t* _reference_table_func(
     cdef char cstr[5]
     hb_tag_to_string(tag, cstr)
     cstr[4] = b'\0'
+    cdef bytes packed = cstr
     #
     cdef bytes table = py_face._reference_table_func(
-        py_face, <bytes>cstr, <object>user_data)
+        py_face, packed.decode(), <object>user_data)
     if table is None:
         return NULL
     return hb_blob_create(
@@ -203,7 +207,6 @@ cdef class Face:
     def __dealloc__(self):
         if self._hb_face is not NULL:
             hb_face_destroy(self._hb_face)
-        self._func = None
 
     """ use bytes/bytearray, not Blob
     @classmethod
@@ -217,7 +220,7 @@ cdef class Face:
     def create_for_tables(cls,
                           func: Callable[[
                               Face,
-                              bytes,  # tag
+                              str,  # tag
                               object  # user_data
                           ], bytes],
                           user_data: object):
@@ -387,3 +390,63 @@ def shape(font: Font, buffer: Buffer, features: Dict[str, bool] = None) -> None:
     hb_shape(font._hb_font, buffer._hb_buffer, hb_features, size)
     if hb_features is not NULL:
         free(hb_features)
+
+
+def ot_layout_language_get_feature_tags(
+        face: Face, tag: str, script_index: int = 0,
+        language_index: int = 0xFFFF) -> List[str]:
+    cdef bytes packed = tag.encode()
+    cdef hb_tag_t hb_tag = hb_tag_from_string(<char*>packed, -1)
+    cdef unsigned int feature_count = 24
+    # we could get count first and malloc the array like pango is doing
+    cdef hb_tag_t feature_tags[24]
+    hb_ot_layout_language_get_feature_tags(
+        face._hb_face, hb_tag, script_index, language_index, 0, &feature_count,
+        feature_tags)
+    cdef list tags = []
+    cdef char cstr[5]
+    cdef unsigned int i
+    for i in range(feature_count):
+        hb_tag_to_string(feature_tags[i], cstr)
+        cstr[4] = b'\0'
+        packed = cstr
+        tags.append(packed.decode())
+    return tags
+
+
+def ot_layout_script_get_language_tags(
+        face: Face, tag: str, script_index: int = 0) -> List[str]:
+    cdef bytes packed = tag.encode()
+    cdef hb_tag_t hb_tag = hb_tag_from_string(<char*>packed, -1)
+    cdef unsigned int language_count = 24
+    # we could get count first and malloc the array like pango is doing
+    cdef hb_tag_t language_tags[24]
+    hb_ot_layout_script_get_language_tags(
+        face._hb_face, hb_tag, script_index, 0, &language_count, language_tags)
+    cdef list tags = []
+    cdef char cstr[5]
+    cdef unsigned int i
+    for i in range(language_count):
+        hb_tag_to_string(language_tags[i], cstr)
+        cstr[4] = b'\0'
+        packed = cstr
+        tags.append(packed.decode())
+    return tags
+
+def ot_layout_table_get_script_tags(face: Face, tag: str) -> List[str]:
+    cdef bytes packed = tag.encode()
+    cdef hb_tag_t hb_tag = hb_tag_from_string(<char*>packed, -1)
+    cdef unsigned int script_count = 24
+    # we could get count first and malloc the array like pango is doing
+    cdef hb_tag_t script_tags[24]
+    hb_ot_layout_table_get_script_tags(
+        face._hb_face, hb_tag, 0, &script_count, script_tags)
+    cdef list tags = []
+    cdef char cstr[5]
+    cdef unsigned int i
+    for i in range(script_count):
+        hb_tag_to_string(script_tags[i], cstr)
+        cstr[4] = b'\0'
+        packed = cstr
+        tags.append(packed.decode())
+    return tags
