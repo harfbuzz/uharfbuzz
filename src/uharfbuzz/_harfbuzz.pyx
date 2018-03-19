@@ -1,8 +1,56 @@
 from functools import partial
-# currently we malloc but dont free..
 from charfbuzz cimport *
 from libc.stdlib cimport free, malloc
 from typing import Callable, List, Tuple
+
+
+cdef class glyph_info:
+    cdef hb_glyph_info_t _hb_glyph_info
+    # could maybe store Buffer to prevent GC
+
+    cdef set(self, hb_glyph_info_t info):
+        self._hb_glyph_info = info
+
+    @property
+    def codepoint(self):
+        return self._hb_glyph_info.codepoint
+
+    @property
+    def cluster(self):
+        return self._hb_glyph_info.cluster
+
+
+cdef class glyph_position:
+    cdef hb_glyph_position_t _hb_glyph_position
+    # could maybe store Buffer to prevent GC
+
+    cdef set(self, hb_glyph_position_t position):
+        self._hb_glyph_position = position
+
+    @property
+    def position(self):
+        return (
+            self._hb_glyph_position.x_offset,
+            self._hb_glyph_position.y_offset,
+            self._hb_glyph_position.x_advance,
+            self._hb_glyph_position.y_advance
+        )
+
+    @property
+    def x_advance(self):
+        return self._hb_glyph_position.x_advance
+
+    @property
+    def y_advance(self):
+        return self._hb_glyph_position.y_advance
+
+    @property
+    def x_offset(self):
+        return self._hb_glyph_position.x_offset
+
+    @property
+    def y_offset(self):
+        return self._hb_glyph_position.y_offset
 
 
 cdef class Buffer:
@@ -28,10 +76,39 @@ cdef class Buffer:
 
     @direction.setter
     def direction(self, value: str):
-        packed = value.encode()
+        cdef bytes packed = value.encode()
         cdef char* cstr = packed
         hb_buffer_set_direction(
             self._hb_buffer, hb_direction_from_string(cstr, -1))
+
+    @property
+    def glyph_infos(self) -> List[glyph_info]:
+        cdef unsigned int count
+        cdef hb_glyph_info_t* glyph_infos = hb_buffer_get_glyph_infos(
+            self._hb_buffer, &count)
+        cdef list infos = []
+        cdef glyph_info info
+        cdef unsigned int i
+        for i in range(count):
+            info = glyph_info()
+            info.set(glyph_infos[i])
+            infos.append(info)
+        return infos
+
+    @property
+    def glyph_positions(self) -> List[glyph_position]:
+        cdef unsigned int count
+        cdef hb_glyph_position_t* glyph_positions = \
+            hb_buffer_get_glyph_positions(self._hb_buffer, &count)
+        cdef list positions = []
+        cdef glyph_position position
+        cdef unsigned int i
+        for i in range(count):
+            position = glyph_position()
+            position.set(glyph_positions[i])
+            positions.append(position)
+        return positions
+
 
     @property
     def language(self) -> str:
@@ -40,7 +117,7 @@ cdef class Buffer:
 
     @language.setter
     def language(self, value: str):
-        packed = value.encode()
+        cdef bytes packed = value.encode()
         cdef char* cstr = packed
         hb_buffer_set_language(
             self._hb_buffer, hb_language_from_string(cstr, -1))
@@ -54,7 +131,7 @@ cdef class Buffer:
 
     @script.setter
     def script(self, value: str):
-        packed = value.encode()
+        cdef bytes packed = value.encode()
         cdef char* cstr = packed
         # all the *_from_string calls should probably be checked and throw an
         # exception if NULL
@@ -63,22 +140,28 @@ cdef class Buffer:
 
     def add_codepoints(self, codepoints: List[int],
                        item_offset: int = None, item_length: int = None) -> None:
-        cdef int size = len(codepoints)
+        cdef unsigned int size = len(codepoints)
+        cdef hb_codepoint_t* hb_codepoints
         if item_offset is None:
             item_offset = 0
         if item_length is None:
             item_length = size
-        cdef hb_codepoint_t* hb_codepoints = <hb_codepoint_t*>malloc(
+        if not size:
+            hb_codepoints = NULL
+        else:
+            hb_codepoints = <hb_codepoint_t*>malloc(
                 size * sizeof(hb_codepoint_t))
-        for i in range(size):
-            hb_codepoints[i] = codepoints[i]
+            for i in range(size):
+                hb_codepoints[i] = codepoints[i]
         hb_buffer_add_codepoints(
             self._hb_buffer, hb_codepoints, size, item_offset, item_length)
+        if hb_codepoints is not NULL:
+            free(hb_codepoints)
 
     def add_str(self, text: str,
                 item_offset: int = None, item_length: int = None) -> None:
         cdef bytes packed = text.encode('UTF-8')
-        size = len(packed)
+        cdef unsigned int size = len(packed)
         if item_offset is None:
             item_offset = 0
         if item_length is None:
@@ -99,10 +182,11 @@ cdef hb_blob_t* _reference_table_func(
     #
     cdef char cstr[5]
     hb_tag_to_string(tag, cstr)
-    cdef bytes packed = cstr
     #
     cdef bytes table = py_face._reference_table_func(
-        py_face, packed.decode(), <object>user_data)
+        py_face, <bytes>cstr, <object>user_data)
+    if table is None:
+        return NULL
     return hb_blob_create(
         table, len(table), HB_MEMORY_MODE_READONLY, NULL, NULL)
 
@@ -131,7 +215,7 @@ cdef class Face:
     def create_for_tables(cls,
                           func: Callable[[
                               Face,
-                              str,  # tag
+                              bytes,  # tag
                               object  # user_data
                           ], bytes],
                           user_data: object):
@@ -173,6 +257,10 @@ cdef class Font:
         return inst
 
     @property
+    def face(self):
+        return self._face
+
+    @property
     def funcs(self) -> FontFuncs:
         return self._ffuncs
 
@@ -193,32 +281,12 @@ cdef class Font:
         x, y = value
         hb_font_set_scale(self._hb_font, x, y)
 
-    def shape(self, buffer: Buffer, features: List[str] = None) -> None:
-        cdef int size
-        cdef hb_feature_t* hb_features
-        if features is None:
-            size = 0
-            hb_features = NULL
-        else:
-            size = len(features)
-            hb_features = <hb_feature_t*>malloc(
-                size * sizeof(hb_feature_t))
-        cdef bytes packed
-        cdef char* cstr
-        cdef hb_feature_t feat
-        for i in range(size):
-            packed = features[i].encode()
-            cstr = packed
-            hb_feature_from_string(packed, len(packed), &feat)
-            hb_features[i] = feat
-        hb_shape(self._hb_font, buffer._hb_buffer, hb_features, size)
-
 
 cdef hb_position_t _glyph_h_advance_func(hb_font_t* font, void* font_data,
                                          hb_codepoint_t glyph,
                                          void* user_data):
     cdef Font py_font = <Font>font_data
-    return py_font.funcs._glyph_h_advance_func(
+    return (<FontFuncs>py_font.funcs)._glyph_h_advance_func(
         py_font, glyph, <object>user_data)
 
 
@@ -227,7 +295,7 @@ cdef hb_bool_t _glyph_name_func(hb_font_t *font, void *font_data,
                                 char *name, unsigned int size,
                                 void *user_data):
     cdef Font py_font = <Font>font_data
-    cdef bytes ret = py_font.funcs._glyph_name_func(
+    cdef bytes ret = (<FontFuncs>py_font.funcs)._glyph_name_func(
         py_font, glyph, <object>user_data).encode()
     name[0] = ret
     return 1
@@ -238,7 +306,7 @@ cdef hb_bool_t _nominal_glyph_func(hb_font_t* font, void* font_data,
                                    hb_codepoint_t* glyph,
                                    void* user_data):
     cdef Font py_font = <Font>font_data
-    glyph[0] = py_font.funcs._nominal_glyph_func(
+    glyph[0] = (<FontFuncs>py_font.funcs)._nominal_glyph_func(
         py_font, unicode, <object>user_data)
     return 1
 
@@ -295,3 +363,26 @@ cdef class FontFuncs:
             self._hb_ffuncs, _nominal_glyph_func, <void*>user_data, NULL)
         self._nominal_glyph_func = func
 
+
+# features can be enabled/disabled, so this should rather be a dict of
+# str: bool
+def shape(font: Font, buffer: Buffer, features: List[str] = None) -> None:
+    cdef unsigned int size
+    cdef hb_feature_t* hb_features
+    cdef bytes packed
+    cdef char* cstr
+    cdef hb_feature_t feat
+    if features is None:
+        size = 0
+        hb_features = NULL
+    else:
+        size = len(features)
+        hb_features = <hb_feature_t*>malloc(size * sizeof(hb_feature_t))
+        for i in range(size):
+            packed = features[i].encode()
+            cstr = packed
+            hb_feature_from_string(packed, len(packed), &feat)
+            hb_features[i] = feat
+    hb_shape(font._hb_font, buffer._hb_buffer, hb_features, size)
+    if hb_features is not NULL:
+        free(hb_features)

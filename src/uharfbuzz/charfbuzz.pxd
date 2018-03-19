@@ -64,6 +64,17 @@ cdef extern from "hb.h":
     ctypedef struct hb_buffer_t:
         pass
 
+    ctypedef struct hb_glyph_info_t:
+        hb_codepoint_t codepoint
+        hb_mask_t mask
+        unsigned long cluster
+    ctypedef struct hb_glyph_position_t:
+        hb_position_t x_advance
+        hb_position_t y_advance
+        hb_position_t x_offset
+        hb_position_t y_offset
+        hb_var_int_t var
+
     hb_buffer_t* hb_buffer_create()
     void hb_buffer_add_codepoints(
         hb_buffer_t* buffer,
@@ -76,23 +87,15 @@ cdef extern from "hb.h":
     void hb_buffer_guess_segment_properties(hb_buffer_t* buffer)
     hb_direction_t hb_buffer_get_direction(hb_buffer_t* buffer)
     void hb_buffer_set_direction(hb_buffer_t* buffer, hb_direction_t direction)
+    hb_glyph_info_t* hb_buffer_get_glyph_infos(
+        hb_buffer_t* buffer, unsigned int* length)
+    hb_glyph_position_t* hb_buffer_get_glyph_positions(
+        hb_buffer_t* buffer, unsigned int* length)
     hb_script_t hb_buffer_get_script(hb_buffer_t* buffer)
     void hb_buffer_set_script(hb_buffer_t* buffer, hb_script_t script)
     hb_language_t hb_buffer_get_language(hb_buffer_t* buffer)
     void hb_buffer_set_language(hb_buffer_t* buffer, hb_language_t language)
     void hb_buffer_destroy(hb_buffer_t* buffer)
-
-    ctypedef struct hb_glyph_position_t:
-        hb_position_t x_advance
-        hb_position_t y_advance
-        hb_position_t x_offset
-        hb_position_t y_offset
-        hb_var_int_t var
-
-    ctypedef struct hb_glyph_info_t:
-        hb_codepoint_t codepoint
-        hb_mask_t mask
-        unsigned long cluster
 
     # hb-face.h
     ctypedef struct hb_face_t:
