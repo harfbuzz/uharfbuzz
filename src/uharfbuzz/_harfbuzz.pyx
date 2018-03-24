@@ -55,6 +55,7 @@ cdef class GlyphPosition:
 
 cdef class Buffer:
     cdef hb_buffer_t* _hb_buffer
+    cdef object _message_func
 
     def __cinit__(self):
         self._hb_buffer = NULL
@@ -110,7 +111,6 @@ cdef class Buffer:
             position.set(glyph_positions[i])
             positions.append(position)
         return positions
-
 
     @property
     def language(self) -> str:
@@ -178,6 +178,23 @@ cdef class Buffer:
     def guess_segment_properties(self) -> None:
         hb_buffer_guess_segment_properties(self._hb_buffer)
 
+    def set_message_func(self, func: Callable[[str], bool]) -> None:
+        # XXX I'm passing the python callback as user_data and recovering it
+        # from the C-API func below. Is there a better way?
+        # Also, the callback is only taking a message argument, no buffer,
+        # nor font or its own user_data. Not sure whether/how to pass them on
+        hb_buffer_set_message_func(
+            self._hb_buffer, _buffer_message_func, <void*>func, NULL)
+        self._message_func = func
+
+
+cdef hb_bool_t _buffer_message_func(hb_buffer_t *buffer, hb_font_t *font,
+                                    const char *message, void *user_data):
+    cdef object py_func = <object>user_data
+    cdef str py_message = (<bytes>message).decode("utf-8")
+    return bool(py_func(py_message))
+
+
 cdef hb_user_data_key_t k
 
 
@@ -209,13 +226,13 @@ cdef class Face:
         if self._hb_face is not NULL:
             hb_face_destroy(self._hb_face)
 
-    """ use bytes/bytearray, not Blob
     @classmethod
-    def create(self, blob: Blob, index: int):
+    def create(cls, fontdata: bytes, index: int):
         cdef Face inst = cls()
+        cdef hb_blob_t* blob = hb_blob_create(
+            fontdata, len(fontdata), HB_MEMORY_MODE_READONLY, NULL, NULL)
         inst._hb_face = hb_face_create(blob, index)
         return inst
-    """
 
     @classmethod
     def create_for_tables(cls,
@@ -451,3 +468,7 @@ def ot_layout_table_get_script_tags(face: Face, tag: str) -> List[str]:
         packed = cstr
         tags.append(packed.decode())
     return tags
+
+
+cpdef void ot_font_set_funcs(Font font):
+    hb_ot_font_set_funcs(font._hb_font)
