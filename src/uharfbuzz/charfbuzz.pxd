@@ -100,6 +100,12 @@ cdef extern from "hb.h":
     hb_language_t hb_buffer_get_language(hb_buffer_t* buffer)
     void hb_buffer_set_language(hb_buffer_t* buffer, hb_language_t language)
     void hb_buffer_destroy(hb_buffer_t* buffer)
+    ctypedef hb_bool_t(*hb_buffer_message_func_t) (
+        hb_buffer_t *buffer, hb_font_t *font, const char *message,
+        void *user_data)
+    void hb_buffer_set_message_func(
+        hb_buffer_t *buffer, hb_buffer_message_func_t func,
+        void *user_data, hb_destroy_func_t destroy)
 
     # hb-face.h
     ctypedef struct hb_face_t:
@@ -197,3 +203,6 @@ cdef extern from "hb-ot.h":
         unsigned int start_offset,
         unsigned int* script_count,  # in/out
         hb_tag_t* script_tags)  # out
+
+    # hb-ot-font.h
+    void hb_ot_font_set_funcs(hb_font_t *font)
