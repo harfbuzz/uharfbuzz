@@ -1,5 +1,6 @@
 from charfbuzz cimport *
 from libc.stdlib cimport free, malloc
+from libc.string cimport const_char
 from typing import Callable, Dict, List, Tuple
 
 
@@ -70,7 +71,7 @@ cdef class Buffer:
 
     @property
     def direction(self) -> str:
-        cdef char* cstr = hb_direction_to_string(
+        cdef const_char* cstr = hb_direction_to_string(
             hb_buffer_get_direction(self._hb_buffer))
         cdef bytes packed = cstr
         return packed.decode()
@@ -113,7 +114,7 @@ cdef class Buffer:
 
     @property
     def language(self) -> str:
-        cdef char* cstr = hb_language_to_string(
+        cdef const_char* cstr = hb_language_to_string(
             hb_buffer_get_language(self._hb_buffer))
         cdef bytes packed = cstr
         return packed.decode()
