@@ -1,9 +1,10 @@
 language: python
 
 env:
-  # skip 2.7, 3.4 and 3.5: for now, only build for 3.6
-  - CIBW_SKIP: "cp27-* cp34-* cp35-*"
-  - CIBW_BEFORE_BUILD: "{pip} install -r requirements-dev.txt"
+  global:
+    # skip 2.7, 3.4 and 3.5: for now, only build for 3.6
+    - CIBW_SKIP: "cp27-* cp34-* cp35-*"
+    - CIBW_BEFORE_BUILD: "{pip} install -r requirements-dev.txt"
 
 matrix:
   include:
