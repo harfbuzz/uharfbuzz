@@ -1,19 +1,17 @@
 #!/usr/bin/python3
 
-from __future__ import print_function
 import uharfbuzz as hb
 import sys
 
 
-with open(sys.argv[1], 'rb') as fp:
-    fontdata = fp.read()
+with open(sys.argv[1], 'rb') as fontfile:
+    fontdata = fontfile.read()
 
 text = sys.argv[2]
 
-face = hb.Face.create(fontdata, 0)
+face = hb.Face.create(fontdata)
 font = hb.Font.create(face)
 upem = face.upem
-del face
 
 font.scale = (upem, upem)
 hb.ot_font_set_funcs(font)
@@ -31,7 +29,6 @@ buf.guess_segment_properties()
 
 features = {"kern": True, "liga": True}
 hb.shape(font, buf, features)
-del font
 
 infos = buf.glyph_infos
 positions = buf.glyph_positions
@@ -42,4 +39,4 @@ for info, pos in zip(infos, positions):
     x_advance = pos.x_advance
     x_offset = pos.x_offset
     y_offset = pos.y_offset
-    print("gid%d=%d@%d,%d+%d" % (gid, cluster, x_advance, x_offset, y_offset))
+    print(f"gid{gid}={cluster}@{x_advance},{x_offset}+{y_offset}")
