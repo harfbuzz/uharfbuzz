@@ -111,7 +111,6 @@ cdef class Buffer:
             positions.append(position)
         return positions
 
-
     @property
     def language(self) -> str:
         cdef const_char* cstr = hb_language_to_string(
@@ -178,6 +177,7 @@ cdef class Buffer:
     def guess_segment_properties(self) -> None:
         hb_buffer_guess_segment_properties(self._hb_buffer)
 
+
 cdef hb_user_data_key_t k
 
 
@@ -209,13 +209,13 @@ cdef class Face:
         if self._hb_face is not NULL:
             hb_face_destroy(self._hb_face)
 
-    """ use bytes/bytearray, not Blob
     @classmethod
-    def create(self, blob: Blob, index: int):
+    def create(cls, bytes blob, int index=0):
         cdef Face inst = cls()
-        inst._hb_face = hb_face_create(blob, index)
+        cdef hb_blob_t* hb_blob = hb_blob_create(
+            blob, len(blob), HB_MEMORY_MODE_READONLY, NULL, NULL)
+        inst._hb_face = hb_face_create(hb_blob, index)
         return inst
-    """
 
     @classmethod
     def create_for_tables(cls,
@@ -451,3 +451,7 @@ def ot_layout_table_get_script_tags(face: Face, tag: str) -> List[str]:
         packed = cstr
         tags.append(packed.decode())
     return tags
+
+
+def ot_font_set_funcs(Font font):
+    hb_ot_font_set_funcs(font._hb_font)

@@ -197,3 +197,6 @@ cdef extern from "hb-ot.h":
         unsigned int start_offset,
         unsigned int* script_count,  # in/out
         hb_tag_t* script_tags)  # out
+
+    # hb-ot-font.h
+    void hb_ot_font_set_funcs(hb_font_t* font)
