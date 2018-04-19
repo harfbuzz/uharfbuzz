@@ -227,11 +227,11 @@ cdef class Face:
             hb_face_destroy(self._hb_face)
 
     @classmethod
-    def create(cls, fontdata: bytes, index: int):
+    def create(cls, bytes blob, int index=0):
         cdef Face inst = cls()
-        cdef hb_blob_t* blob = hb_blob_create(
-            fontdata, len(fontdata), HB_MEMORY_MODE_READONLY, NULL, NULL)
-        inst._hb_face = hb_face_create(blob, index)
+        cdef hb_blob_t* cblob = hb_blob_create(
+            blob, len(blob), HB_MEMORY_MODE_READONLY, NULL, NULL)
+        inst._hb_face = hb_face_create(cblob, index)
         return inst
 
     @classmethod
