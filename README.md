@@ -24,12 +24,6 @@ hb.ot_font_set_funcs(font)
 
 buf = hb.Buffer.create()
 
-def debug_message(msg):
-    print(msg)
-    return True
-
-buf.set_message_func(debug_message)
-
 buf.add_str(text)
 buf.guess_segment_properties()
 
