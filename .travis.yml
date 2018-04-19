@@ -16,6 +16,9 @@ matrix:
       language: generic
       env: PIP=pip2
 
+install:
+  - $PIP install -r requirements-dev.txt
+
 script:
   - $PIP install cibuildwheel==0.7.1
   - cibuildwheel --output-dir wheelhouse
