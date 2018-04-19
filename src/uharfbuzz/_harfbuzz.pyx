@@ -188,6 +188,7 @@ cdef hb_blob_t* _reference_table_func(
     cdef char cstr[5]
     hb_tag_to_string(tag, cstr)
     cstr[4] = b'\0'
+    cdef bytes packed = cstr
     #
     cdef bytes table = py_face._reference_table_func(
         py_face, packed.decode(), <object>user_data)
@@ -452,5 +453,5 @@ def ot_layout_table_get_script_tags(face: Face, tag: str) -> List[str]:
     return tags
 
 
-def void ot_font_set_funcs(Font font):
+def ot_font_set_funcs(Font font):
     hb_ot_font_set_funcs(font._hb_font)
