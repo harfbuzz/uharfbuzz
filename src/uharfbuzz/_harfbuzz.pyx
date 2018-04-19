@@ -188,8 +188,8 @@ cdef class Buffer:
         self._message_func = func
 
 
-cdef hb_bool_t _buffer_message_func(hb_buffer_t *buffer, hb_font_t *font,
-                                    const char *message, void *user_data):
+cdef hb_bool_t _buffer_message_func(hb_buffer_t* buffer, hb_font_t* font,
+                                    const char* message, void* user_data):
     cdef object py_func = <object>user_data
     cdef str py_message = (<bytes>message).decode("utf-8")
     return bool(py_func(py_message))
