@@ -17,7 +17,10 @@ matrix:
       env: PIP=pip2
 
 install:
-  - $PIP install -r requirements-dev.txt
+  # XXX not sure why this is needed, given that CIBW_BEFORE_BUILD is defined
+  # already. Probably because setup.py imports skbuild, and cibuildwheel
+  # imports it somehow?
+  - $PIP install -e git+https://github.com/scikit-build/scikit-build.git#egg=scikit-build
 
 script:
   - $PIP install cibuildwheel==0.7.1
