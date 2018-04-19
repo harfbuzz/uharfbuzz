@@ -470,5 +470,5 @@ def ot_layout_table_get_script_tags(face: Face, tag: str) -> List[str]:
     return tags
 
 
-cpdef void ot_font_set_funcs(Font font):
+def void ot_font_set_funcs(Font font):
     hb_ot_font_set_funcs(font._hb_font)
