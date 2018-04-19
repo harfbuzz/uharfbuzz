@@ -1,8 +1,8 @@
 #!/usr/bin/env python3
 # -*- coding: utf-8 -*-
-from skbuild import setup
-import os
 from io import open
+import os
+from skbuild import setup
 
 
 here = os.path.abspath(os.path.dirname(__file__))

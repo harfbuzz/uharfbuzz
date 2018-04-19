@@ -212,9 +212,9 @@ cdef class Face:
     @classmethod
     def create(cls, bytes blob, int index=0):
         cdef Face inst = cls()
-        cdef hb_blob_t* cblob = hb_blob_create(
+        cdef hb_blob_t* hb_blob = hb_blob_create(
             blob, len(blob), HB_MEMORY_MODE_READONLY, NULL, NULL)
-        inst._hb_face = hb_face_create(cblob, index)
+        inst._hb_face = hb_face_create(hb_blob, index)
         return inst
 
     @classmethod
