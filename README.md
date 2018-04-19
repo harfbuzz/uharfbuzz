@@ -1,9 +1,9 @@
-# uharfbuzz
+## uharfbuzz
 
 Streamlined Cython bindings for the [HarfBuzz][hb] shaping engine.
 
 
-# Example
+### Example
 
 ```python
 import uharfbuzz as hb
