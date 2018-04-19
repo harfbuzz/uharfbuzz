@@ -55,7 +55,6 @@ cdef class GlyphPosition:
 
 cdef class Buffer:
     cdef hb_buffer_t* _hb_buffer
-    cdef object _message_func
 
     def __cinit__(self):
         self._hb_buffer = NULL
@@ -178,22 +177,6 @@ cdef class Buffer:
     def guess_segment_properties(self) -> None:
         hb_buffer_guess_segment_properties(self._hb_buffer)
 
-    def set_message_func(self, func: Callable[[str], bool]) -> None:
-        # XXX I'm passing the python callback as user_data and recovering it
-        # from the C-API func below. Is there a better way?
-        # Also, the callback is only taking a message argument, no buffer,
-        # nor font or its own user_data. Not sure whether/how to pass them on
-        hb_buffer_set_message_func(
-            self._hb_buffer, _buffer_message_func, <void*>func, NULL)
-        self._message_func = func
-
-
-cdef hb_bool_t _buffer_message_func(hb_buffer_t* buffer, hb_font_t* font,
-                                    const char* message, void* user_data):
-    cdef object py_func = <object>user_data
-    cdef str py_message = (<bytes>message).decode("utf-8")
-    return bool(py_func(py_message))
-
 
 cdef hb_user_data_key_t k
 
@@ -205,7 +188,6 @@ cdef hb_blob_t* _reference_table_func(
     cdef char cstr[5]
     hb_tag_to_string(tag, cstr)
     cstr[4] = b'\0'
-    cdef bytes packed = cstr
     #
     cdef bytes table = py_face._reference_table_func(
         py_face, packed.decode(), <object>user_data)
