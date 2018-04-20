@@ -29,9 +29,13 @@ setup_params = dict(
 
 if __name__ == "__main__":
     import sys
-    # cibuildwheel calls setup.py --name to get the package name, but
-    # by then scikit-build has not been installed yet...
-    if len(sys.argv) == 2 and sys.argv[1] == "--name":
+    # cibuildwheel calls setup.py --name to get the package name; no need
+    # to require scikit-build at that stage: it will be installed later with
+    # the rest of the build requirements. Also, creating an sdist can be done
+    # with plain setuptools since there is no cmake involved there, and we
+    # generate the manifest using setuptools_scm anyway.
+    args = sys.argv[1:]
+    if len(args) == 1 and {"--name", "sdist"}.intersection(args):
         from setuptools import setup
     else:
         from skbuild import setup
