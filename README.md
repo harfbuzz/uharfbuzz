@@ -1,3 +1,6 @@
+[![Travis Build status](https://travis-ci.org/trufont/uharfbuzz.svg)](https://travis-ci.org/trufont/uharfbuzz)
+[![Appveyor Build status](https://ci.appveyor.com/api/projects/status/ujynqhnvd7qbh1vh/branch/master?svg=true)](https://ci.appveyor.com/project/trufont/uharfbuzz/branch/master)
+
 ## uharfbuzz
 
 Streamlined Cython bindings for the [HarfBuzz][hb] shaping engine.
