@@ -6,10 +6,9 @@ environment:
 
 install:
   - python -m pip install --upgrade pip
-  - pip install -r requirements-dev.txt
+  - pip install -e git+https://github.com/anthrotype/cibuildwheel.git@fix-pip-upgrade-windows#egg=cibuildwheel
 
 build_script:
-  - pip install -e git+https://github.com/anthrotype/cibuildwheel.git@fix-pip-upgrade-windows#egg=cibuildwheel
   - cibuildwheel --output-dir wheelhouse
 
 artifacts:

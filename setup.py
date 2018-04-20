@@ -2,7 +2,6 @@
 # -*- coding: utf-8 -*-
 from io import open
 import os
-from skbuild import setup
 
 
 here = os.path.abspath(os.path.dirname(__file__))
@@ -11,7 +10,7 @@ here = os.path.abspath(os.path.dirname(__file__))
 with open(os.path.join(here, 'README.md'), encoding='utf-8') as f:
     long_description = f.read()
 
-setup(
+setup_params = dict(
     name="uharfbuzz",
     use_scm_version=True,
     description="Streamlined Cython bindings for the harfbuzz shaping engine",
@@ -26,3 +25,8 @@ setup(
     zip_safe=False,
     setup_requires=["setuptools_scm"],
 )
+
+
+if __name__ == "__main__":
+    from skbuild import setup
+    setup(**setup_params)
