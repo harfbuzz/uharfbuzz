@@ -4,6 +4,8 @@ env:
   global:
     # skip 2.7, 3.4 and 3.5: for now, only build for 3.6 64-bit
     - CIBW_SKIP="cp27-* cp33-* cp34-* cp35-* cp*manylinux1_i686"
+    - TWINE_USERNAME="anthrotype"
+    - secure: UpYAJa1XUkWxS3e/dMOwkRqUrX26qRvFwdmwNtBcVnGFCGq6K/x/LzSQFWE2az4tLX3So/hUeOfanILmw25CgWDVfGeVXw9WxRL+/7n5nKlpRp4ImA5vrouh0b3Gm5ey5bL+friTC/p5kXT0TGf4Mun+abb5vp2MFPMs6prHqQKn/10JDiS5XNApsVYBnLU6e5uU0VJgId0IlVtZ+lqxA+heI5fknaRE5mVwjidYURvzVZZi8XcoG4kzHLmOKGLI1vUwQ0M7FaE9BuhCMD21jipeiuS7vxlfXNlLGlM61bItGsz84amKHudWYlA8CKavKdHq3J685DbGhmafvcvAQ8W5o7Ra5IAUVFIYjj07eDa5PBz22yYvSBlwP0WD1GUWd0avxHvact6AcdfntqZcEZsNuevCoizY/YYVjytGjdxqlx/tZbok0t/JUlShgr/65ZiAwo+/GCS4bDdoVjt9snR/0nqaZDzyyLmfScNapudeLaxeqkaGEruHlynSwfhwZjbKi3zshgmRrxtU3MTKR5MQrPpzOLhoE3WW87g5LtKzWCpTKjNV+fdBsDxEYTeQr8ukzLWnJ6pCsLLeWS5Qe4PmBVyDNUHFuxzhj16ZZiJogcUhv7LSfgUBnqMhZtnI90yjH+u3QJT64cTmzHLdge6lk3/ThjSK6iZzRMwktLI=
 
 matrix:
   include:
@@ -26,3 +28,11 @@ install:
 
 script:
   - cibuildwheel --output-dir wheelhouse
+  - |
+    if [[ $TRAVIS_TAG ]]; then
+      if [[ $TRAVIS_OS_NAME == osx ]]; then
+        python setup.py sdist
+      fi
+      $PIP install twine
+      twine upload wheelhouse/*.whl dist/*.zip
+    fi
