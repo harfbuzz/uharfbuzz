@@ -31,9 +31,8 @@ if __name__ == "__main__":
     import sys
     # cibuildwheel calls setup.py --name to get the package name, but
     # by then scikit-build has not been installed yet...
-    try:
-        from skbuild import setup
-    except ImportError:
-        print("WARNING: scikit-build is required to build uharfbuzz!")
+    if len(sys.argv) == 2 and sys.argv[1] == "--name":
         from setuptools import setup
+    else:
+        from skbuild import setup
     setup(**setup_params)
