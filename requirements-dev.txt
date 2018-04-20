@@ -1,4 +1,6 @@
 cython>=0.28.1
 cmake
-ninja
+# macOS py36 wheels are missing
+# https://github.com/scikit-build/ninja-python-distributions/issues/12
+# ninja
 -e git+https://github.com/scikit-build/scikit-build.git#egg=scikit-build
