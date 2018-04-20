@@ -13,7 +13,7 @@ with open(os.path.join(here, 'README.md'), encoding='utf-8') as f:
 
 setup(
     name="uharfbuzz",
-    version="0.1.0",
+    use_scm_version=True,
     description="Streamlined Cython bindings for the harfbuzz shaping engine",
     long_description=long_description,
     long_description_content_type='text/markdown',
@@ -24,4 +24,5 @@ setup(
     package_dir={"": "src"},
     packages=["uharfbuzz"],
     zip_safe=False,
+    setup_requires=["setuptools_scm"],
 )
