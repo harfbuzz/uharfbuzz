@@ -14,17 +14,19 @@ matrix:
         - docker
       env:
         - PYTHON=python
+        - PIP_INSTALL_OPTIONS=--upgrade
         - CIBW_BEFORE_BUILD="{pip} install -r requirements-dev.txt ninja"
     - os: osx
       language: generic
       env:
         - PYTHON=python2
-        - PIP_INSTALL_OPTIONS=--user
+        - PIP_INSTALL_OPTIONS="--upgrade --user"
         # install ninja from homebrew as macos py36 wheel is missing:
         # https://github.com/scikit-build/ninja-python-distributions/issues/12
         - CIBW_BEFORE_BUILD="brew install ninja && {pip} install -r requirements-dev.txt"
 
 install:
+  - $PYTHON -m pip install $PIP_INSTALL_OPTIONS pip
   - $PYTHON -m pip install $PIP_INSTALL_OPTIONS cibuildwheel==0.7.1
 
 script:
@@ -33,6 +35,7 @@ script:
     if [[ $TRAVIS_TAG ]]; then
       $PYTHON -m pip install $PIP_INSTALL_OPTIONS twine
       if [[ $TRAVIS_OS_NAME == osx ]]; then
+        $PYTHON -m pip install $PIP_INSTALL_OPTIONS setuptools
         $PYTHON setup.py sdist
         $PYTHON -m twine upload dist/*.zip
       fi
