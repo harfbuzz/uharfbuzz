@@ -17,6 +17,8 @@ ExternalProject_Add(
       -DCMAKE_BUILD_TYPE:STRING=${CMAKE_BUILD_TYPE}
       -DCMAKE_CONFIGURATION_TYPES:STRING=${CMAKE_CONFIGURATION_TYPES}
       -DCMAKE_POSITION_INDEPENDENT_CODE:BOOL=ON
+    # use a shorter prefix to fit in the Windows paths' 260-char limit
+    PREFIX hb
 )
 
 # this allows to use a step from an external project as a dependency of
