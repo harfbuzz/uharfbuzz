@@ -3,6 +3,9 @@ environment:
     # skip 2.7, 3.4 and 3.5: for now, only build for 3.6
     CIBW_SKIP: "cp27-* cp33-* cp34-* cp35-*"
     CIBW_BEFORE_BUILD: "{pip} install -r requirements-dev.txt ninja"
+    TWINE_USERNAME: "anthrotype"
+    TWINE_PASSWORD:
+      secure: GAcVA2ouFVI7CxpQ6vdsCQ==
 
 install:
   - python -m pip install --upgrade pip
@@ -10,6 +13,14 @@ install:
 
 build_script:
   - cibuildwheel --output-dir wheelhouse
+  - ps: >-
+      if($env:APPVEYOR_REPO_TAG -eq 'true') {
+        Write-Output ("Deploying " + $env:APPVEYOR_REPO_TAG_NAME + " to PyPI...")
+        pip install --upgrade twine
+        twine upload wheelhouse\*.whl
+      } else {
+        Write-Output "Not deploying as this is not a tagged commit"
+      }
 
 artifacts:
   - path: "wheelhouse\\*.whl"
