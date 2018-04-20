@@ -9,7 +9,7 @@ install:
   - pip install -r requirements-dev.txt
 
 build_script:
-  - pip install cibuildwheel==0.7.1
+  - pip install -e git+https://github.com/anthrotype/cibuildwheel.git@fix-pip-upgrade-windows#egg=cibuildwheel
   - cibuildwheel --output-dir wheelhouse
 
 artifacts:
