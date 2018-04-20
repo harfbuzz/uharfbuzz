@@ -4,7 +4,6 @@ env:
   global:
     # skip 2.7, 3.4 and 3.5: for now, only build for 3.6 64-bit
     - CIBW_SKIP="cp27-* cp33-* cp34-* cp35-* cp*manylinux1_i686"
-    - CIBW_BEFORE_BUILD="{pip} install -r requirements-dev.txt"
 
 matrix:
   include:
@@ -15,11 +14,12 @@ matrix:
         - PIP=pip
         # install ninja from homebrew as macos py36 wheel is missing:
         # https://github.com/scikit-build/ninja-python-distributions/issues/12
-        - CIBW_BEFORE_BUILD_MACOS="brew install ninja"
+        - CIBW_BEFORE_BUILD_MACOS="brew install ninja && {pip} install -r requirements-dev.txt"
     - os: osx
       language: generic
       env:
         - PIP=pip2
+        - CIBW_BEFORE_BUILD_LINUX="{pip} install -r requirements.txt ninja"
 
 install:
   # XXX not sure why this is needed, given that CIBW_BEFORE_BUILD is defined
