@@ -1,0 +1,10 @@
+[build-system]
+requires = [
+    "setuptools >= 36.4",
+    "wheel >= 0.31",
+    "setuptools_scm >= 2.1",
+    "cython >= 0.28.1",
+    "scikit-build >= 0.7.1",
+    "cmake",
+    "ninja",
+]
