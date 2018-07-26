@@ -16,6 +16,16 @@ include_directories(${CMAKE_CURRENT_SOURCE_DIR}
 
 add_cython_target(_harfbuzz)
 add_library(_harfbuzz MODULE ${_harfbuzz})
+
+if (APPLE)
+  find_library(APPLICATION_SERVICES_FRAMEWORK ApplicationServices)
+  if (NOT APPLICATION_SERVICES_FRAMEWORK)
+    message(FATAL_ERROR "HB_HAVE_CORETEXT was set, but we failed to find ApplicationServices, which is required")
+  else ()
+    target_link_libraries(_harfbuzz ${APPLICATION_SERVICES_FRAMEWORK})
+  endif ()
+endif ()
+
 target_link_libraries(_harfbuzz ${HARFBUZZ_LIBRARY})
 python_extension_module(_harfbuzz)
 
