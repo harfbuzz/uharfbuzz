@@ -1,7 +1,9 @@
 [build-system]
+# Temporarily pin wheel version to 0.31.1 as 0.32 breaks scikit-build
+# https://github.com/scikit-build/scikit-build/issues/360
 requires = [
     "setuptools >= 36.4",
-    "wheel >= 0.31",
+    "wheel == 0.31.1",
     "setuptools_scm >= 2.1",
     "cython >= 0.28.1",
     "scikit-build >= 0.7.1",
