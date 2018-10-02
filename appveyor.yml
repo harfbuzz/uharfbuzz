@@ -4,7 +4,7 @@ environment:
     CIBW_SKIP: "cp27-* cp33-* cp34-* cp35-*"
     TWINE_USERNAME: "anthrotype"
     TWINE_PASSWORD:
-      secure: GAcVA2ouFVI7CxpQ6vdsCQ==
+      secure: H3o/uI5KfKGTFumKKW68hg==
 
 install:
   - python -m pip install --upgrade pip
