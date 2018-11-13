@@ -287,6 +287,26 @@ cdef class Font:
         x, y = value
         hb_font_set_scale(self._hb_font, x, y)
 
+    def set_variations(self, variations: Dict[str, float]) -> None:
+        cdef unsigned int size
+        cdef hb_variation_t* hb_variations
+        cdef bytes packed
+        cdef hb_variation_t variation
+        size = len(variations)
+        hb_variations = <hb_variation_t*>malloc(size * sizeof(hb_variation_t))
+        if not hb_variations:
+            raise MemoryError()
+
+        try:
+            for i, (name, value) in enumerate(variations.items()):
+                packed = name.encode()
+                variation.tag = hb_tag_from_string(packed, -1)
+                variation.value = value
+                hb_variations[i] = variation
+            hb_font_set_variations(self._hb_font, hb_variations, size)
+        finally:
+            free(hb_variations)
+
 
 cdef hb_position_t _glyph_h_advance_func(hb_font_t* font, void* font_data,
                                          hb_codepoint_t glyph,
