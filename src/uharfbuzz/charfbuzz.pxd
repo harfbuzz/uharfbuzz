@@ -141,6 +141,9 @@ cdef extern from "hb.h":
         hb_codepoint_t glyph,
         char *name, unsigned int size,
         void *user_data)
+    ctypedef struct hb_variation_t:
+        hb_tag_t tag
+        float value
 
     hb_font_funcs_t* hb_font_funcs_create()
     void hb_font_funcs_set_glyph_h_advance_func(
@@ -164,6 +167,10 @@ cdef extern from "hb.h":
         void* font_data, hb_destroy_func_t destroy)
     void hb_font_get_scale(hb_font_t* font, int* x_scale, int* y_scale)
     void hb_font_set_scale(hb_font_t* font, int x_scale, int y_scale)
+    void hb_font_set_variations(
+        hb_font_t* font,
+        const hb_variation_t* variations,
+        unsigned int variations_length)
     void hb_font_destroy(hb_font_t* font)
 
     # hb-shape.h
