@@ -1,3 +1,4 @@
+from libc.stdint cimport uint16_t, uint32_t
 
 
 cdef extern from "hb.h":
@@ -87,6 +88,14 @@ cdef extern from "hb.h":
     void hb_buffer_add_utf8(
         hb_buffer_t* buffer,
         const char* text, int text_length,
+        unsigned int item_offset, int item_length)
+    void hb_buffer_add_utf16(
+        hb_buffer_t* buffer,
+        const uint16_t* text, int text_length,
+        unsigned int item_offset, int item_length)
+    void hb_buffer_add_utf32(
+        hb_buffer_t* buffer,
+        const uint32_t* text, int text_length,
         unsigned int item_offset, int item_length)
     void hb_buffer_guess_segment_properties(hb_buffer_t* buffer)
     hb_direction_t hb_buffer_get_direction(hb_buffer_t* buffer)
