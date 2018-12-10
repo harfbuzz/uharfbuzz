@@ -1,3 +1,4 @@
+#cython: language_level=3
 from charfbuzz cimport *
 from libc.stdlib cimport free, malloc
 from libc.string cimport const_char
