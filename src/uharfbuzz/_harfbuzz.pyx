@@ -2,6 +2,11 @@ from charfbuzz cimport *
 from libc.stdlib cimport free, malloc
 from libc.string cimport const_char
 from typing import Callable, Dict, List, Tuple
+import array
+from cpython cimport array
+
+
+cdef bint PY_NARROW_UNICODE = sizeof(Py_UNICODE) != 4
 
 
 cdef class GlyphInfo:
@@ -162,17 +167,46 @@ cdef class Buffer:
         if hb_codepoints is not NULL:
             free(hb_codepoints)
 
+    def add_utf8(self, text: bytes,
+                 item_offset: int = None, item_length: int = None) -> None:
+        cdef unsigned int size = len(text)
+        if item_offset is None:
+            item_offset = 0
+        if item_length is None:
+            item_length = size
+        cdef char* cstr = text
+        hb_buffer_add_utf8(
+            self._hb_buffer, cstr, size, item_offset, item_length)
+
     def add_str(self, text: str,
                 item_offset: int = None, item_length: int = None) -> None:
-        cdef bytes packed = text.encode('UTF-8')
+        cdef array.array packed
+        # handle both "wide" and "narrow" python builds; strip the BOM
+        if PY_NARROW_UNICODE:
+            packed = array.array("H", text.encode("UTF-16")[2:])
+        else:
+            packed = array.array("I", text.encode("UTF-32")[4:])
         cdef unsigned int size = len(packed)
         if item_offset is None:
             item_offset = 0
         if item_length is None:
             item_length = size
-        cdef char* cstr = packed
-        hb_buffer_add_utf8(
-            self._hb_buffer, cstr, size, item_offset, item_length)
+        if PY_NARROW_UNICODE:
+            hb_buffer_add_utf16(
+                self._hb_buffer,
+                packed.data.as_ushorts,
+                size,
+                item_offset,
+                item_length,
+            )
+        else:
+            hb_buffer_add_utf32(
+                self._hb_buffer,
+                packed.data.as_uints,
+                size,
+                item_offset,
+                item_length,
+            )
 
     def guess_segment_properties(self) -> None:
         hb_buffer_guess_segment_properties(self._hb_buffer)
