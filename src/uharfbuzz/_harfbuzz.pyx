@@ -64,6 +64,8 @@ cdef class Buffer:
 
     def __cinit__(self):
         self._hb_buffer = hb_buffer_create()
+        if not hb_buffer_allocation_successful(self._hb_buffer):
+            raise MemoryError()
 
     def __dealloc__(self):
         if self._hb_buffer is not NULL:

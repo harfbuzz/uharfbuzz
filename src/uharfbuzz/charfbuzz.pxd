@@ -81,6 +81,7 @@ cdef extern from "hb.h":
         hb_var_int_t var
 
     hb_buffer_t* hb_buffer_create()
+    hb_bool_t hb_buffer_allocation_successful(hb_buffer_t* buffer)
     void hb_buffer_add_codepoints(
         hb_buffer_t* buffer,
         const hb_codepoint_t* text, int text_length,
