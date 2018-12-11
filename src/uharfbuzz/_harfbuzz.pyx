@@ -1,13 +1,17 @@
 #cython: language_level=3
 from charfbuzz cimport *
-from cpython.unicode cimport PyUnicode_AS_UNICODE, PyUnicode_GET_SIZE
-from libc.stdint cimport uint16_t, uint32_t
 from libc.stdlib cimport free, malloc
 from libc.string cimport const_char
 from typing import Callable, Dict, List, Tuple
 
 
-cdef bint PY_NARROW_UNICODE = sizeof(Py_UNICODE) != 4
+cdef extern from "Python.h":
+    # PEP 393
+    bint PyUnicode_IS_READY(object u)
+    Py_ssize_t PyUnicode_GET_LENGTH(object u)
+    int PyUnicode_KIND(object u)
+    void* PyUnicode_DATA(object u)
+    Py_UCS4 PyUnicode_READ(int kind, void* data, Py_ssize_t index)
 
 
 cdef class GlyphInfo:
@@ -157,7 +161,7 @@ cdef class Buffer:
         if item_offset is None:
             item_offset = 0
         if item_length is None:
-            item_length = size
+            item_length = size - item_offset
         if not size:
             hb_codepoints = NULL
         else:
@@ -176,35 +180,34 @@ cdef class Buffer:
         if item_offset is None:
             item_offset = 0
         if item_length is None:
-            item_length = size
+            item_length = size - item_offset
         cdef char* cstr = text
         hb_buffer_add_utf8(
             self._hb_buffer, cstr, size, item_offset, item_length)
 
     def add_str(self, text: str,
                 item_offset: int = None, item_length: int = None) -> None:
-        cdef Py_UNICODE* array = PyUnicode_AS_UNICODE(text)
-        cdef Py_ssize_t size = PyUnicode_GET_SIZE(text)
+        # ensure unicode string is in the "canonical" representation
+        assert PyUnicode_IS_READY(text)
+
+        cdef void* data = PyUnicode_DATA(text)
+        cdef Py_ssize_t length = PyUnicode_GET_LENGTH(text)
+        cdef int kind = PyUnicode_KIND(text)
+
         if item_offset is None:
             item_offset = 0
         if item_length is None:
-            item_length = size
-        if PY_NARROW_UNICODE:
-            hb_buffer_add_utf16(
-                self._hb_buffer,
-                <uint16_t*>array,
-                size,
-                item_offset,
-                item_length,
-            )
-        else:
-            hb_buffer_add_utf32(
-                self._hb_buffer,
-                <uint32_t*>array,
-                size,
-                item_offset,
-                item_length,
-            )
+            item_length = length - item_offset
+
+        hb_codepoints = <hb_codepoint_t*>malloc(length * sizeof(hb_codepoint_t))
+        if not hb_codepoints:
+            raise MemoryError()
+        cdef Py_ssize_t i
+        for i in range(length):
+            hb_codepoints[i] = PyUnicode_READ(kind, data, i)
+        hb_buffer_add_codepoints(
+            self._hb_buffer, hb_codepoints, length, item_offset, item_length)
+        free(hb_codepoints)
 
     def guess_segment_properties(self) -> None:
         hb_buffer_guess_segment_properties(self._hb_buffer)
