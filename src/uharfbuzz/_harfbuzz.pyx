@@ -63,16 +63,16 @@ cdef class Buffer:
     cdef hb_buffer_t* _hb_buffer
 
     def __cinit__(self):
-        self._hb_buffer = NULL
+        self._hb_buffer = hb_buffer_create()
 
     def __dealloc__(self):
         if self._hb_buffer is not NULL:
             hb_buffer_destroy(self._hb_buffer)
 
+    # DEPRECATED: use the normal constructor
     @classmethod
     def create(cls):
         cdef Buffer inst = cls()
-        inst._hb_buffer = hb_buffer_create()
         return inst
 
     @property
@@ -232,19 +232,19 @@ cdef class Face:
     cdef hb_face_t* _hb_face
     cdef object _reference_table_func
 
-    def __cinit__(self):
-        self._hb_face = NULL
+    def __cinit__(self, bytes blob, int index=0):
+        cdef hb_blob_t* hb_blob = hb_blob_create(
+            blob, len(blob), HB_MEMORY_MODE_READONLY, NULL, NULL)
+        self._hb_face = hb_face_create(hb_blob, index)
 
     def __dealloc__(self):
         if self._hb_face is not NULL:
             hb_face_destroy(self._hb_face)
 
+    # DEPRECATED: use the normal constructor
     @classmethod
     def create(cls, bytes blob, int index=0):
-        cdef Face inst = cls()
-        cdef hb_blob_t* hb_blob = hb_blob_create(
-            blob, len(blob), HB_MEMORY_MODE_READONLY, NULL, NULL)
-        inst._hb_face = hb_face_create(hb_blob, index)
+        cdef Face inst = cls(blob, index)
         return inst
 
     @classmethod
@@ -277,19 +277,19 @@ cdef class Font:
     cdef Face _face
     cdef FontFuncs _ffuncs
 
-    def __cinit__(self):
-        self._hb_font = NULL
+    def __cinit__(self, Face face):
+        self._hb_font = hb_font_create(face._hb_face)
+        self._face = face
 
     def __dealloc__(self):
         if self._hb_font is not NULL:
             hb_font_destroy(self._hb_font)
         self._face = self._ffuncs = None
 
+    # DEPRECATED: use the normal constructor
     @classmethod
     def create(cls, face: Face):
-        cdef Font inst = cls()
-        inst._hb_font = hb_font_create(face._hb_face)
-        inst._face = face
+        cdef Font inst = cls(face)
         return inst
 
     @property
@@ -374,16 +374,16 @@ cdef class FontFuncs:
     cdef object _nominal_glyph_func
 
     def __cinit__(self):
-        self._hb_ffuncs = NULL
+        self._hb_ffuncs = hb_font_funcs_create()
 
     def __dealloc__(self):
         if self._hb_ffuncs is not NULL:
             hb_font_funcs_destroy(self._hb_ffuncs)
 
+    # DEPRECATED: use the normal constructor
     @classmethod
     def create(cls):
         cdef FontFuncs inst = cls()
-        inst._hb_ffuncs = hb_font_funcs_create()
         return inst
 
     def set_glyph_h_advance_func(self,
