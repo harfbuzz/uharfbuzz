@@ -21,6 +21,12 @@ matrix:
         - PYTHON=python2
         - PIP_INSTALL_OPTIONS="--upgrade --user"
 
+branches:
+  only:
+    # skip PR branches, only build from master and tagged commits
+    - master
+    - /^v\d+\.\d+.*$/
+
 install:
   - $PYTHON -m pip install $PIP_INSTALL_OPTIONS pip
   - $PYTHON -m pip install $PIP_INSTALL_OPTIONS cibuildwheel==0.10.0

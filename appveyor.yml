@@ -6,6 +6,12 @@ environment:
     TWINE_PASSWORD:
       secure: H3o/uI5KfKGTFumKKW68hg==
 
+branches:
+  only:
+    # skip PR branches, only build from master and tagged commits
+    - master
+    - /^v\d+\.\d+.*$/
+
 install:
   - python -m pip install --upgrade pip
   - pip install cibuildwheel==0.10.0
