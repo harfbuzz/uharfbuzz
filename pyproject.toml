@@ -10,3 +10,4 @@ requires = [
     "cmake",
     "ninja",
 ]
+build-backend = "setuptools.build_meta"
