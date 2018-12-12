@@ -17,6 +17,7 @@ _skbuild/
 # Unit test / coverage files
 .tox/*
 .cache/
+.pytest_cache/
 .coverage
 .coverage.*
 htmlcov/
@@ -26,3 +27,7 @@ htmlcov/
 
 # OSX Finder
 .DS_Store
+
+# Cython
+src/uharfbuzz/*.c
+src/uharfbuzz/*.html

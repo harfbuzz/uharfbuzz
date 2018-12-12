@@ -2,6 +2,14 @@ cmake_minimum_required(VERSION 3.6.0)
 
 project(uharfbuzz)
 
+set(CYTHON_LINETRACE OFF
+    CACHE BOOL "Enable linetrace compiler directive.")
+mark_as_advanced(CYTHON_LINETRACE)
+
+if (CYTHON_LINETRACE)
+  set(CYTHON_FLAGS "${CYTHON_FLAGS} -Xlinetrace=True")
+endif ()
+
 find_package(PythonInterp REQUIRED)
 find_package(PythonLibs)
 find_package(PythonExtensions REQUIRED)
@@ -15,6 +23,13 @@ include_directories(${CMAKE_CURRENT_SOURCE_DIR}
                     ${CMAKE_INSTALL_PREFIX}/include/harfbuzz)
 
 add_cython_target(_harfbuzz)
+
+if (CYTHON_LINETRACE)
+  set_source_files_properties(
+    _harfbuzz PROPERTIES COMPILE_DEFINITIONS CYTHON_TRACE_NOGIL=1
+  )
+endif ()
+
 add_library(_harfbuzz MODULE ${_harfbuzz})
 
 if (APPLE)
