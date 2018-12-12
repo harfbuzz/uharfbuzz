@@ -30,3 +30,4 @@ htmlcov/
 
 # Cython
 src/uharfbuzz/*.c
+src/uharfbuzz/*.html

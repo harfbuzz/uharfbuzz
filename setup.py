@@ -11,9 +11,10 @@ with open(os.path.join(here, 'README.md'), encoding='utf-8') as f:
     long_description = f.read()
 
 cmake_args = []
-linetrace = os.environ.get("CYTHON_LINETRACE")
-if linetrace is not None and bool(int(linetrace)):
-    cmake_args.append("-DCYTHON_LINETRACE:BOOL=TRUE")
+for option in ("CYTHON_LINETRACE", "CYTHON_ANNOTATE"):
+    value = os.environ.get(option)
+    if value is not None and bool(int(value)):
+        cmake_args.append("-D{}:BOOL=TRUE".format(option))
 
 setup_params = dict(
     name="uharfbuzz",
