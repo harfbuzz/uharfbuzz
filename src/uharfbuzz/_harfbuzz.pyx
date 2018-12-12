@@ -11,7 +11,14 @@ cdef extern from "Python.h":
     Py_ssize_t PyUnicode_GET_LENGTH(object u)
     int PyUnicode_KIND(object u)
     void* PyUnicode_DATA(object u)
-    Py_UCS4 PyUnicode_READ(int kind, void* data, Py_ssize_t index)
+    ctypedef uint8_t Py_UCS1
+    ctypedef uint16_t Py_UCS2
+    Py_UCS1 PyUnicode_1BYTE_DATA(object u)
+    Py_UCS2 PyUnicode_2BYTE_DATA(object u)
+    Py_UCS4 PyUnicode_4BYTE_DATA(object u)
+    int PyUnicode_1BYTE_KIND
+    int PyUnicode_2BYTE_KIND
+    int PyUnicode_4BYTE_KIND
 
 
 cdef class GlyphInfo:
@@ -190,7 +197,6 @@ cdef class Buffer:
         # ensure unicode string is in the "canonical" representation
         assert PyUnicode_IS_READY(text)
 
-        cdef void* data = PyUnicode_DATA(text)
         cdef Py_ssize_t length = PyUnicode_GET_LENGTH(text)
         cdef int kind = PyUnicode_KIND(text)
 
@@ -199,15 +205,32 @@ cdef class Buffer:
         if item_length is None:
             item_length = length - item_offset
 
-        hb_codepoints = <hb_codepoint_t*>malloc(length * sizeof(hb_codepoint_t))
-        if not hb_codepoints:
-            raise MemoryError()
-        cdef Py_ssize_t i
-        for i in range(length):
-            hb_codepoints[i] = PyUnicode_READ(kind, data, i)
-        hb_buffer_add_codepoints(
-            self._hb_buffer, hb_codepoints, length, item_offset, item_length)
-        free(hb_codepoints)
+        if kind == PyUnicode_1BYTE_KIND:
+            hb_buffer_add_latin1(
+                self._hb_buffer,
+                <uint8_t*>PyUnicode_1BYTE_DATA(text),
+                length,
+                item_offset,
+                item_length,
+            )
+        elif kind == PyUnicode_2BYTE_KIND:
+            hb_buffer_add_utf16(
+                self._hb_buffer,
+                <uint16_t*>PyUnicode_2BYTE_DATA(text),
+                length,
+                item_offset,
+                item_length,
+            )
+        elif kind == PyUnicode_4BYTE_KIND:
+            hb_buffer_add_utf32(
+                self._hb_buffer,
+                <uint32_t*>PyUnicode_4BYTE_DATA(text),
+                length,
+                item_offset,
+                item_length,
+            )
+        else:
+            raise AssertionError(kind)
 
     def guess_segment_properties(self) -> None:
         hb_buffer_guess_segment_properties(self._hb_buffer)
