@@ -5,7 +5,7 @@ env:
     # skip 2.7, 3.4 and 3.5: for now, only build for >= 3.6 64-bit
     - CIBW_SKIP="cp27-* cp33-* cp34-* cp35-* cp*manylinux1_i686"
     - CIBW_TEST_REQUIRES="pytest"
-    - CIBW_TEST_COMMAND="pytest"
+    - CIBW_TEST_COMMAND="cd {project} && pytest"
     - TWINE_USERNAME="anthrotype"
     - secure: SwZeTC36Yw8y6ksafqiVl0al/9zbq465vZKi1B/QecZEkfGOKau/Zn6robMa7MHrQIlnx8ri/L/tLzBEZXPIFlg0o5myW3LJ7q2ygeWztCHCEFfI/DhXK1zdtwXKXJhV/xyuizXPUvWSP1YgIgTmUS5iatfJJgKs+Jl1SFm7Q+R84PCjowhBdjx/azfaVrpTX0z4S+knsTHH2E6PP8hUx3CvfxJj0uae1qyIU8NgjpbuJhJGLO5hcZtP3Ci3kkFoojpBTe6AjY/H40ZF058YdQlzPYPWf4JScZDAbr6HcqyyaG2RQ9emHeyOKQjZAf0IG2G2YICE3OhtEDUIw7sdos97Fb5JS9sVPAmaCP6ouJbxZZOHr7ZejtXT2hOtJbTFa7FSpVqOpLvhlAryFIUe+by2ufbJYGhYrndbrCbt5JG8jXovhh+dHWLP5E0u6QyJ/2daTx2jEFJVn5gq1EjxP1QxK5jRSBBDVxHvA5+qRnhQHGOb6h1jixFZ+IKsLtHT9nNezzEWusjmeXL3dnu76Za+8YnJEudn0UHp16WUDiiFclroGiboctxyWf4NhnYC8v39RXW9pNkmy00ibSiN5wR8tPvOTFMEp1YJ2vbUu7hqQjnW/xNmntBp9cWUr3ZItFCmF2od+l2ci6bSDZFxRo4KdL1NJml6jwigiLyIA+k=
 
