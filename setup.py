@@ -10,6 +10,11 @@ here = os.path.abspath(os.path.dirname(__file__))
 with open(os.path.join(here, 'README.md'), encoding='utf-8') as f:
     long_description = f.read()
 
+cmake_args = []
+linetrace = os.environ.get("CYTHON_LINETRACE")
+if linetrace is not None and bool(int(linetrace)):
+    cmake_args.append("-DCYTHON_LINETRACE:BOOL=TRUE")
+
 setup_params = dict(
     name="uharfbuzz",
     use_scm_version=True,
@@ -24,6 +29,7 @@ setup_params = dict(
     packages=["uharfbuzz"],
     zip_safe=False,
     setup_requires=["setuptools_scm"],
+    cmake_args=cmake_args,
 )
 
 
