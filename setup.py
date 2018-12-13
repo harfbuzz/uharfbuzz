@@ -31,6 +31,7 @@ setup_params = dict(
     zip_safe=False,
     setup_requires=["setuptools_scm"],
     cmake_args=cmake_args,
+    python_requires=">=3.5",
 )
 
 

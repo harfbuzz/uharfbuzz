@@ -1,4 +1,4 @@
-from libc.stdint cimport uint16_t, uint32_t
+from libc.stdint cimport uint8_t, uint16_t, uint32_t
 
 
 cdef extern from "hb.h":
@@ -85,6 +85,10 @@ cdef extern from "hb.h":
     void hb_buffer_add_codepoints(
         hb_buffer_t* buffer,
         const hb_codepoint_t* text, int text_length,
+        unsigned int item_offset, int item_length)
+    void hb_buffer_add_latin1(
+        hb_buffer_t* buffer,
+        const uint8_t* text, int text_length,
         unsigned int item_offset, int item_length)
     void hb_buffer_add_utf8(
         hb_buffer_t* buffer,
