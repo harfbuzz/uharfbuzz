@@ -162,13 +162,9 @@ cdef class Buffer:
             self._hb_buffer, hb_script_from_string(cstr, -1))
 
     def add_codepoints(self, codepoints: List[int],
-                       item_offset: int = None, item_length: int = None) -> None:
+                       item_offset: int = 0, item_length: int = -1) -> None:
         cdef unsigned int size = len(codepoints)
         cdef hb_codepoint_t* hb_codepoints
-        if item_offset is None:
-            item_offset = 0
-        if item_length is None:
-            item_length = size - item_offset
         if not size:
             hb_codepoints = NULL
         else:
@@ -182,28 +178,17 @@ cdef class Buffer:
             free(hb_codepoints)
 
     def add_utf8(self, text: bytes,
-                 item_offset: int = None, item_length: int = None) -> None:
-        cdef unsigned int size = len(text)
-        if item_offset is None:
-            item_offset = 0
-        if item_length is None:
-            item_length = size - item_offset
-        cdef char* cstr = text
+                 item_offset: int = 0, item_length: int = -1) -> None:
         hb_buffer_add_utf8(
-            self._hb_buffer, cstr, size, item_offset, item_length)
+            self._hb_buffer, text, len(text), item_offset, item_length)
 
     def add_str(self, text: str,
-                item_offset: int = None, item_length: int = None) -> None:
+                item_offset: int = 0, item_length: int = -1) -> None:
         # ensure unicode string is in the "canonical" representation
         assert PyUnicode_IS_READY(text)
 
         cdef Py_ssize_t length = PyUnicode_GET_LENGTH(text)
         cdef int kind = PyUnicode_KIND(text)
-
-        if item_offset is None:
-            item_offset = 0
-        if item_length is None:
-            item_length = length - item_offset
 
         if kind == PyUnicode_1BYTE_KIND:
             hb_buffer_add_latin1(
