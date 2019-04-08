@@ -2,6 +2,7 @@
 # -*- coding: utf-8 -*-
 from io import open
 import os
+import sys
 
 
 here = os.path.abspath(os.path.dirname(__file__))
@@ -15,6 +16,10 @@ for option in ("CYTHON_LINETRACE", "CYTHON_ANNOTATE"):
     value = os.environ.get(option)
     if value is not None and bool(int(value)):
         cmake_args.append("-D{}:BOOL=TRUE".format(option))
+
+# On Mac, require OSX >= 10.9 so we can use te new libc++ targeting C++11
+if sys.platform == "darwin":
+    cmake_args.append("-DCMAKE_OSX_DEPLOYMENT_TARGET:STRING=10.9")
 
 setup_params = dict(
     name="uharfbuzz",
