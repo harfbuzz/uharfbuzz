@@ -16,7 +16,7 @@ branches:
 
 install:
   - python -m pip install --upgrade pip
-  - pip install cibuildwheel==0.10.0
+  - pip install cibuildwheel==0.10.2
 
 build_script:
   - cibuildwheel --output-dir wheelhouse

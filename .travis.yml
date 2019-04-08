@@ -31,7 +31,7 @@ branches:
 
 install:
   - $PYTHON -m pip install $PIP_INSTALL_OPTIONS pip
-  - $PYTHON -m pip install $PIP_INSTALL_OPTIONS cibuildwheel==0.10.0
+  - $PYTHON -m pip install $PIP_INSTALL_OPTIONS cibuildwheel==0.10.2
 
 script:
   - $PYTHON -m cibuildwheel --output-dir wheelhouse
