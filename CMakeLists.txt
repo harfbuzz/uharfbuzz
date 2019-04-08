@@ -12,6 +12,8 @@ ExternalProject_Add(
     harfbuzz
     URL "https://github.com/harfbuzz/harfbuzz/releases/download/${HARFBUZZ_VERSION}/harfbuzz-${HARFBUZZ_VERSION}.tar.bz2"
     URL_HASH SHA256=${HARFBUZZ_SHA256}
+    # https://github.com/harfbuzz/harfbuzz/issues/1659
+    PATCH_COMMAND patch -p1 < ${CMAKE_CURRENT_SOURCE_DIR}/src/patches/hb-coretext-unused-variable.patch
     CMAKE_CACHE_ARGS
       -DCMAKE_INSTALL_PREFIX:PATH=${CMAKE_INSTALL_PREFIX}
       -DCMAKE_BUILD_TYPE:STRING=${CMAKE_BUILD_TYPE}
