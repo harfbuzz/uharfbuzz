@@ -246,9 +246,13 @@ cdef class Face:
     cdef object _reference_table_func
 
     def __cinit__(self, bytes blob, int index=0):
-        cdef hb_blob_t* hb_blob = hb_blob_create(
-            blob, len(blob), HB_MEMORY_MODE_READONLY, NULL, NULL)
-        self._hb_face = hb_face_create(hb_blob, index)
+        cdef hb_blob_t* hb_blob
+        if blob is not None:
+            hb_blob = hb_blob_create(
+                blob, len(blob), HB_MEMORY_MODE_READONLY, NULL, NULL)
+            self._hb_face = hb_face_create(hb_blob, index)
+        else:
+            self._hb_face = NULL
 
     def __dealloc__(self):
         if self._hb_face is not NULL:
@@ -268,7 +272,7 @@ cdef class Face:
                               object  # user_data
                           ], bytes],
                           user_data: object):
-        cdef Face inst = cls()
+        cdef Face inst = cls(None)
         inst._hb_face = hb_face_create_for_tables(
             _reference_table_func, <void*>user_data, NULL)
         hb_face_set_user_data(inst._hb_face, &k, <void*>inst, NULL, 0)
