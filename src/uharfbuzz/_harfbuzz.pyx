@@ -381,7 +381,8 @@ cdef hb_bool_t _nominal_glyph_func(hb_font_t* font, void* font_data,
     cdef Font py_font = <Font>font_data
     glyph[0] = (<FontFuncs>py_font.funcs)._nominal_glyph_func(
         py_font, unicode, <object>user_data)
-    return 1
+    # If the glyph is .notdef, return false, else return true
+    return int(glyph[0] != 0)
 
 
 cdef class FontFuncs:
