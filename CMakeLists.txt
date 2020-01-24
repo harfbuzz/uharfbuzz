@@ -17,6 +17,8 @@ ExternalProject_Add(
       -DCMAKE_BUILD_TYPE:STRING=${CMAKE_BUILD_TYPE}
       -DCMAKE_CONFIGURATION_TYPES:STRING=${CMAKE_CONFIGURATION_TYPES}
       -DCMAKE_POSITION_INDEPENDENT_CODE:BOOL=ON
+      -DHB_BUILD_TESTS:BOOL=OFF
+      -DHB_BUILD_SUBSET:BOOL=OFF
     # use a shorter prefix to fit in the Windows paths' 260-char limit
     PREFIX hb
 )
