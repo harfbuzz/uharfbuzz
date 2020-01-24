@@ -4,21 +4,21 @@ project(uharfbuzz_skbuild)
 
 include(ExternalProject)
 
-set(HARFBUZZ_VERSION "2.4.0")
-set(HARFBUZZ_SHA256 "b470eff9dd5b596edf078596b46a1f83c179449f051a469430afc15869db336f")
+set(HARFBUZZ_VERSION "2.6.4")
+set(HARFBUZZ_SHA256 "9413b8d96132d699687ef914ebb8c50440efc87b3f775d25856d7ec347c03c12")
 
 # download, configure, build and install harbfuzz static library
 ExternalProject_Add(
     harfbuzz
-    URL "https://github.com/harfbuzz/harfbuzz/releases/download/${HARFBUZZ_VERSION}/harfbuzz-${HARFBUZZ_VERSION}.tar.bz2"
+    URL "https://github.com/harfbuzz/harfbuzz/releases/download/${HARFBUZZ_VERSION}/harfbuzz-${HARFBUZZ_VERSION}.tar.xz"
     URL_HASH SHA256=${HARFBUZZ_SHA256}
-    # https://github.com/harfbuzz/harfbuzz/issues/1659
-    PATCH_COMMAND patch -p1 < ${CMAKE_CURRENT_SOURCE_DIR}/src/patches/hb-coretext-unused-variable.patch
     CMAKE_CACHE_ARGS
       -DCMAKE_INSTALL_PREFIX:PATH=${CMAKE_INSTALL_PREFIX}
       -DCMAKE_BUILD_TYPE:STRING=${CMAKE_BUILD_TYPE}
       -DCMAKE_CONFIGURATION_TYPES:STRING=${CMAKE_CONFIGURATION_TYPES}
       -DCMAKE_POSITION_INDEPENDENT_CODE:BOOL=ON
+      -DHB_BUILD_TESTS:BOOL=OFF
+      -DHB_BUILD_SUBSET:BOOL=OFF
     # use a shorter prefix to fit in the Windows paths' 260-char limit
     PREFIX hb
 )
