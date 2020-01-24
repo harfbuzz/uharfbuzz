@@ -11,7 +11,7 @@ environment:
     CIBW_TEST_COMMAND: "cd {project} && pytest"
     TWINE_USERNAME: "anthrotype"
     TWINE_PASSWORD:
-      secure: H3o/uI5KfKGTFumKKW68hg==
+      secure: 9L/DdqoIILlN7qCh0lotvA==
 
 branches:
   only:
