@@ -452,12 +452,12 @@ cdef class FontFuncs:
         self._glyph_v_advance_func = func
 
     def set_glyph_v_origin_func(self,
-                                 func: Callable[[
-                                     Font,
-                                     int,  # gid
-                                     object,  # user_data
-                                 ], (int, int, int)],  # success, v_origin_x, v_origin_y
-                                 user_data: object) -> None:
+                                func: Callable[[
+                                    Font,
+                                    int,  # gid
+                                    object,  # user_data
+                                ], (int, int, int)],  # success, v_origin_x, v_origin_y
+                                user_data: object) -> None:
         hb_font_funcs_set_glyph_v_origin_func(
             self._hb_ffuncs, _glyph_v_origin_func, <void*>user_data, NULL)
         self._glyph_v_origin_func = func
