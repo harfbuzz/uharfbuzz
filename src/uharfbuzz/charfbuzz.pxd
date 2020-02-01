@@ -150,6 +150,13 @@ cdef extern from "hb.h":
         hb_codepoint_t glyph,
         void* user_data)
     ctypedef hb_font_get_glyph_advance_func_t hb_font_get_glyph_h_advance_func_t;
+    ctypedef hb_font_get_glyph_advance_func_t hb_font_get_glyph_v_advance_func_t;
+    ctypedef hb_bool_t (*hb_font_get_glyph_origin_func_t) (
+        hb_font_t* font, void* font_data,
+        hb_codepoint_t glyph,
+        hb_position_t* x, hb_position_t* y,
+        void* user_data)
+    ctypedef hb_font_get_glyph_origin_func_t hb_font_get_glyph_v_origin_func_t;
     ctypedef hb_bool_t (*hb_font_get_glyph_name_func_t) (
         hb_font_t *font, void *font_data,
         hb_codepoint_t glyph,
@@ -163,6 +170,14 @@ cdef extern from "hb.h":
     void hb_font_funcs_set_glyph_h_advance_func(
         hb_font_funcs_t* ffuncs,
         hb_font_get_glyph_h_advance_func_t func,
+        void* user_data, hb_destroy_func_t destroy)
+    void hb_font_funcs_set_glyph_v_advance_func(
+        hb_font_funcs_t* ffuncs,
+        hb_font_get_glyph_v_advance_func_t func,
+        void* user_data, hb_destroy_func_t destroy)
+    void hb_font_funcs_set_glyph_v_origin_func(
+        hb_font_funcs_t* ffuncs,
+        hb_font_get_glyph_v_origin_func_t func,
         void* user_data, hb_destroy_func_t destroy)
     void hb_font_funcs_set_glyph_name_func (
         hb_font_funcs_t* ffuncs,

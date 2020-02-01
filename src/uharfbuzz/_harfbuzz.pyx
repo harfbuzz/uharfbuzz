@@ -363,6 +363,29 @@ cdef hb_position_t _glyph_h_advance_func(hb_font_t* font, void* font_data,
         py_font, glyph, <object>user_data)
 
 
+cdef hb_position_t _glyph_v_advance_func(hb_font_t* font, void* font_data,
+                                         hb_codepoint_t glyph,
+                                         void* user_data):
+    cdef Font py_font = <Font>font_data
+    return (<FontFuncs>py_font.funcs)._glyph_v_advance_func(
+        py_font, glyph, <object>user_data)
+
+
+cdef hb_bool_t _glyph_v_origin_func(hb_font_t* font, void* font_data,
+                                    hb_codepoint_t glyph,
+                                    hb_position_t* x, hb_position_t* y,
+                                    void* user_data):
+    cdef Font py_font = <Font>font_data
+    cdef hb_bool_t success
+    cdef hb_position_t px
+    cdef hb_position_t py
+    success, px, py = (<FontFuncs>py_font.funcs)._glyph_v_origin_func(
+        py_font, glyph, <object>user_data)
+    x[0] = px
+    y[0] = py
+    return success
+
+
 cdef hb_bool_t _glyph_name_func(hb_font_t *font, void *font_data,
                                 hb_codepoint_t glyph,
                                 char *name, unsigned int size,
@@ -388,6 +411,8 @@ cdef hb_bool_t _nominal_glyph_func(hb_font_t* font, void* font_data,
 cdef class FontFuncs:
     cdef hb_font_funcs_t* _hb_ffuncs
     cdef object _glyph_h_advance_func
+    cdef object _glyph_v_advance_func
+    cdef object _glyph_v_origin_func
     cdef object _glyph_name_func
     cdef object _nominal_glyph_func
 
@@ -414,6 +439,28 @@ cdef class FontFuncs:
         hb_font_funcs_set_glyph_h_advance_func(
             self._hb_ffuncs, _glyph_h_advance_func, <void*>user_data, NULL)
         self._glyph_h_advance_func = func
+
+    def set_glyph_v_advance_func(self,
+                                 func: Callable[[
+                                     Font,
+                                     int,  # gid
+                                     object,  # user_data
+                                 ], int],  # v_advance
+                                 user_data: object) -> None:
+        hb_font_funcs_set_glyph_v_advance_func(
+            self._hb_ffuncs, _glyph_v_advance_func, <void*>user_data, NULL)
+        self._glyph_v_advance_func = func
+
+    def set_glyph_v_origin_func(self,
+                                 func: Callable[[
+                                     Font,
+                                     int,  # gid
+                                     object,  # user_data
+                                 ], (int, int, int)],  # success, v_origin_x, v_origin_y
+                                 user_data: object) -> None:
+        hb_font_funcs_set_glyph_v_origin_func(
+            self._hb_ffuncs, _glyph_v_origin_func, <void*>user_data, NULL)
+        self._glyph_v_origin_func = func
 
     def set_glyph_name_func(self,
                             func: Callable[[
