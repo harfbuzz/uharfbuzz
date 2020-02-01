@@ -105,3 +105,64 @@ class TestShape:
         hb.shape(blankfont, buf)
         infos = [(g.codepoint, g.cluster) for g in buf.glyph_infos]
         assert infos == expected
+
+
+class TestCallbacks:
+    def test_nominal_glyph_func(self, blankfont):
+        string = "abcde"
+        expected = [97, 98, 99, 100, 101]
+        buf = hb.Buffer()
+        buf.add_str(string)
+        buf.guess_segment_properties()
+
+        def nominal_glyph_func(font, code_point, data):
+            return code_point
+
+        funcs = hb.FontFuncs.create()
+        funcs.set_nominal_glyph_func(nominal_glyph_func, None)
+        blankfont.funcs = funcs
+
+        hb.shape(blankfont, buf)
+        infos = [g.codepoint for g in buf.glyph_infos]
+        assert infos == expected
+
+    def test_glyph_h_advance_func(self, blankfont):
+        string = "abcde"
+        expected = [456, 456, 456, 456, 456]
+        buf = hb.Buffer()
+        buf.add_str(string)
+        buf.guess_segment_properties()
+
+        def h_advance_func(font, gid, data):
+            return 456
+
+        funcs = hb.FontFuncs.create()
+        funcs.set_glyph_h_advance_func(h_advance_func, None)
+        blankfont.funcs = funcs
+
+        hb.shape(blankfont, buf)
+        infos = [pos.x_advance for pos in buf.glyph_positions]
+        assert infos == expected
+
+    def test_glyph_v_metrics_funcs(self, blankfont):
+        string = "abcde"
+        expected = [(456, -345, -567)] * 5
+        buf = hb.Buffer()
+        buf.add_str(string)
+        buf.guess_segment_properties()
+        buf.direction = "TTB"
+
+        def v_advance_func(font, gid, data):
+            return 456
+
+        def v_origin_func(font, gid, data):
+            return (True, 345, 567)
+
+        funcs = hb.FontFuncs.create()
+        funcs.set_glyph_v_advance_func(v_advance_func, None)
+        funcs.set_glyph_v_origin_func(v_origin_func, None)
+        blankfont.funcs = funcs
+
+        hb.shape(blankfont, buf)
+        infos = [(pos.y_advance, pos.x_offset, pos.y_offset) for pos in buf.glyph_positions]
+        assert infos == expected
