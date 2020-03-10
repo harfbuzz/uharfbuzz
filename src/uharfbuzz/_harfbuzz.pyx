@@ -225,8 +225,8 @@ cdef class Buffer:
     def guess_segment_properties(self) -> None:
         hb_buffer_guess_segment_properties(self._hb_buffer)
 
-    def set_message_func(self, realcallback) -> None:
-        hb_buffer_set_message_func(self._hb_buffer, msgcallback, <void*>realcallback, NULL)
+    def set_message_func(self, callback) -> None:
+        hb_buffer_set_message_func(self._hb_buffer, msgcallback, <void*>callback, NULL)
 
 
 cdef hb_user_data_key_t k
