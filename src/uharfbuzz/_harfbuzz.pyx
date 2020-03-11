@@ -22,7 +22,7 @@ cdef extern from "Python.h":
 
 
 cdef int msgcallback(hb_buffer_t *buffer, hb_font_t *font, const char* message, void* userdata):
-    (<object>userdata)(message)
+    (<object>userdata)(message.decode('utf-8'))
     return 1
 
 
