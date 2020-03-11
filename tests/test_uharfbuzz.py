@@ -166,3 +166,36 @@ class TestCallbacks:
         hb.shape(blankfont, buf)
         infos = [(pos.y_advance, pos.x_offset, pos.y_offset) for pos in buf.glyph_positions]
         assert infos == expected
+
+    def test_message_func(self, blankfont):
+        # Glyph IDs 1, 2, 3, 4, 5 map to glyphs a, b, c, d, e.
+        # The calt feature replaces c by a in the context e, d, c', b, a.
+        # The kern feature kerns b, a by +100.
+        string = "edcba"
+        buf = hb.Buffer()
+        buf.add_str(string)
+        buf.guess_segment_properties()
+
+        messages = []
+        infos_trace = []
+        positions_trace = []
+
+        def message(msg):
+            messages.append(msg)
+            infos_trace.append(buf.glyph_infos)
+            positions_trace.append(buf.glyph_positions)
+
+        buf.set_message_func(message)
+        hb.shape(blankfont, buf)
+        gids = [g.codepoint for g in buf.glyph_infos]
+        assert gids == [5, 4, 1, 2, 1]
+        pos = [g.x_advance for g in buf.glyph_positions]
+        assert pos == [0, 0, 0, 100, 0]
+        # messages: start GSUB lookup, end GSUB lookup, start GPOS lookup, end GPOS lookup
+        assert messages == ['start lookup 0', 'end lookup 0', 'start lookup 0', 'end lookup 0']
+        gids_trace = [[g.codepoint for g in infos] for infos in infos_trace]
+        assert gids_trace == [[5, 4, 3, 2, 1], [5, 4, 1, 2, 1],
+                              [5, 4, 1, 2, 1], [5, 4, 1, 2, 1]]
+        advances_trace = [[g.x_advance for g in pos] for pos in positions_trace]
+        assert advances_trace == [[0, 0, 0, 0, 0], [0, 0, 0, 0, 0],
+                                  [0, 0, 0, 0, 0], [0, 0, 0, 100, 0]]
