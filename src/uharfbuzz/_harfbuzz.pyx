@@ -21,6 +21,11 @@ cdef extern from "Python.h":
     int PyUnicode_4BYTE_KIND
 
 
+cdef int msgcallback(hb_buffer_t *buffer, hb_font_t *font, const char* message, void* userdata):
+    (<object>userdata)(message.decode('utf-8'))
+    return 1
+
+
 cdef class GlyphInfo:
     cdef hb_glyph_info_t _hb_glyph_info
     # could maybe store Buffer to prevent GC
@@ -219,6 +224,9 @@ cdef class Buffer:
 
     def guess_segment_properties(self) -> None:
         hb_buffer_guess_segment_properties(self._hb_buffer)
+
+    def set_message_func(self, callback) -> None:
+        hb_buffer_set_message_func(self._hb_buffer, msgcallback, <void*>callback, NULL)
 
 
 cdef hb_user_data_key_t k
