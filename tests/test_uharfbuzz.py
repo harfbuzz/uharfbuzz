@@ -168,6 +168,9 @@ class TestCallbacks:
         assert infos == expected
 
     def test_message_func(self, blankfont):
+        # Glyph IDs 1, 2, 3, 4, 5 map to glyphs a, b, c, d, e.
+        # The calt feature replaces c by a in the context e, d, c', b, a.
+        # The kern feature kerns b, a by +100.
         string = "edcba"
         buf = hb.Buffer()
         buf.add_str(string)
