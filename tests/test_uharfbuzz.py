@@ -234,6 +234,5 @@ class TestGetBaseline:
         ]
     )
     def test_ot_layout_get_baseline(self, blankfont, baseline_tag, script_tag, direction, expected_value):
-        baseline_tags = ["icfb", "icft", "romn", "ideo"]
         value = hb.ot_layout_get_baseline(blankfont, baseline_tag, direction, script_tag, "")
         assert value == expected_value
