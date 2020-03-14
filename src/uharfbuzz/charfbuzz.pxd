@@ -244,5 +244,22 @@ cdef extern from "hb-ot.h":
         unsigned int* script_count,  # in/out
         hb_tag_t* script_tags)  # out
 
+    ctypedef enum hb_ot_layout_baseline_tag_t:
+        HB_OT_LAYOUT_BASELINE_TAG_ROMAN
+        HB_OT_LAYOUT_BASELINE_TAG_HANGING
+        HB_OT_LAYOUT_BASELINE_TAG_IDEO_FACE_BOTTOM_OR_LEFT
+        HB_OT_LAYOUT_BASELINE_TAG_IDEO_FACE_TOP_OR_RIGHT
+        HB_OT_LAYOUT_BASELINE_TAG_IDEO_EMBOX_BOTTOM_OR_LEFT
+        HB_OT_LAYOUT_BASELINE_TAG_IDEO_EMBOX_TOP_OR_RIGHT
+        HB_OT_LAYOUT_BASELINE_TAG_MATH
+
+    hb_bool_t hb_ot_layout_get_baseline(
+        hb_font_t* font,
+        hb_ot_layout_baseline_tag_t baseline_tag,
+        hb_direction_t direction,
+        hb_tag_t script_tag,
+        hb_tag_t language_tag,
+        hb_position_t* coord)  # out
+
     # hb-ot-font.h
     void hb_ot_font_set_funcs(hb_font_t* font)

@@ -575,6 +575,51 @@ def ot_layout_table_get_script_tags(face: Face, tag: str) -> List[str]:
         tags.append(packed.decode())
     return tags
 
+def ot_layout_get_baseline(font: Font,
+                           baseline_tag: str,
+                           direction: str,
+                           script_tag: str,
+                           language_tag: str) -> int:
+    cdef hb_ot_layout_baseline_tag_t hb_baseline_tag
+    cdef hb_direction_t hb_direction
+    cdef hb_tag_t hb_script_tag
+    cdef hb_tag_t hb_language_tag
+    cdef hb_position_t hb_position
+    cdef hb_bool_t success
+    cdef bytes packed
+
+    if baseline_tag == "romn":
+        hb_baseline_tag = HB_OT_LAYOUT_BASELINE_TAG_ROMAN
+    elif baseline_tag == "hang":
+        hb_baseline_tag = HB_OT_LAYOUT_BASELINE_TAG_HANGING
+    elif baseline_tag == "icfb":
+        hb_baseline_tag = HB_OT_LAYOUT_BASELINE_TAG_IDEO_FACE_BOTTOM_OR_LEFT
+    elif baseline_tag == "icft":
+        hb_baseline_tag = HB_OT_LAYOUT_BASELINE_TAG_IDEO_FACE_TOP_OR_RIGHT
+    elif baseline_tag == "ideo":
+        hb_baseline_tag = HB_OT_LAYOUT_BASELINE_TAG_IDEO_EMBOX_BOTTOM_OR_LEFT
+    elif baseline_tag == "idtp":
+        hb_baseline_tag = HB_OT_LAYOUT_BASELINE_TAG_IDEO_EMBOX_TOP_OR_RIGHT
+    elif baseline_tag == "math":
+        hb_baseline_tag = HB_OT_LAYOUT_BASELINE_TAG_MATH
+    else:
+        raise ValueError(f"invalid baseline tag '{baseline_tag}'")
+    packed = direction.encode()
+    hb_direction = hb_direction_from_string(<char*>packed, -1)
+    packed = script_tag.encode()
+    hb_script_tag = hb_tag_from_string(<char*>packed, -1)
+    packed = language_tag.encode()
+    hb_language_tag = hb_tag_from_string(<char*>packed, -1)
+    success = hb_ot_layout_get_baseline(font._hb_font,
+                                        hb_baseline_tag,
+                                        hb_direction,
+                                        hb_script_tag,
+                                        hb_language_tag,
+                                        &hb_position)
+    if success:
+        return hb_position
+    else:
+        return None
 
 def ot_font_set_funcs(Font font):
     hb_ot_font_set_funcs(font._hb_font)

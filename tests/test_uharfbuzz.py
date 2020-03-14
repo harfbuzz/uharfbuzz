@@ -199,3 +199,41 @@ class TestCallbacks:
         advances_trace = [[g.x_advance for g in pos] for pos in positions_trace]
         assert advances_trace == [[0, 0, 0, 0, 0], [0, 0, 0, 0, 0],
                                   [0, 0, 0, 0, 0], [0, 0, 0, 100, 0]]
+
+class TestGetBaseline:
+    # The test font contains a BASE table with some test values
+    def test_ot_layout_get_baseline_invalid_tag(self, blankfont):
+        with pytest.raises(ValueError):
+            # invalid baseline tag
+            baseline = hb.ot_layout_get_baseline(blankfont, "xxxx", "LTR", "", "")
+
+    @pytest.mark.parametrize(
+        "baseline_tag, script_tag, direction, expected_value",
+        [
+            ("icfb", "grek", "LTR", None),  # BASE table doesn't contain grek script
+
+            ("icfb", "latn", "LTR", -70),
+            ("icft", "latn", "LTR", 830),
+            ("romn", "latn", "LTR", 0),
+            ("ideo", "latn", "LTR", -120),
+
+            ("icfb", "kana", "LTR", -71),
+            ("icft", "kana", "LTR", 831),
+            ("romn", "kana", "LTR", 1),
+            ("ideo", "kana", "LTR", -121),
+
+            ("icfb", "latn", "TTB", 50),
+            ("icft", "latn", "TTB", 950),
+            ("romn", "latn", "TTB", 120),
+            ("ideo", "latn", "TTB", 0),
+
+            ("icfb", "kana", "TTB", 51),
+            ("icft", "kana", "TTB", 951),
+            ("romn", "kana", "TTB", 121),
+            ("ideo", "kana", "TTB", 1),
+        ]
+    )
+    def test_ot_layout_get_baseline(self, blankfont, baseline_tag, script_tag, direction, expected_value):
+        baseline_tags = ["icfb", "icft", "romn", "ideo"]
+        value = hb.ot_layout_get_baseline(blankfont, baseline_tag, direction, script_tag, "")
+        assert value == expected_value
