@@ -516,25 +516,30 @@ def shape(font: Font, buffer: Buffer, features: Dict[str, bool] = None) -> None:
         free(hb_features)
 
 
+DEF STATIC_TAGS_ARRAY_SIZE = 128
+
+
 def ot_layout_language_get_feature_tags(
         face: Face, tag: str, script_index: int = 0,
         language_index: int = 0xFFFF) -> List[str]:
     cdef bytes packed = tag.encode()
     cdef hb_tag_t hb_tag = hb_tag_from_string(<char*>packed, -1)
-    cdef unsigned int feature_count = 24
-    # we could get count first and malloc the array like pango is doing
-    cdef hb_tag_t feature_tags[24]
-    hb_ot_layout_language_get_feature_tags(
-        face._hb_face, hb_tag, script_index, language_index, 0, &feature_count,
-        feature_tags)
+    cdef unsigned int feature_count = STATIC_TAGS_ARRAY_SIZE
+    cdef hb_tag_t feature_tags[STATIC_TAGS_ARRAY_SIZE]
     cdef list tags = []
     cdef char cstr[5]
     cdef unsigned int i
-    for i in range(feature_count):
-        hb_tag_to_string(feature_tags[i], cstr)
-        cstr[4] = b'\0'
-        packed = cstr
-        tags.append(packed.decode())
+    cdef unsigned int start_offset = 0
+    while feature_count == STATIC_TAGS_ARRAY_SIZE:
+        hb_ot_layout_language_get_feature_tags(
+            face._hb_face, hb_tag, script_index, language_index, start_offset, &feature_count,
+            feature_tags)
+        for i in range(feature_count):
+            hb_tag_to_string(feature_tags[i], cstr)
+            cstr[4] = b'\0'
+            packed = cstr
+            tags.append(packed.decode())
+        start_offset += feature_count
     return tags
 
 
@@ -542,37 +547,41 @@ def ot_layout_script_get_language_tags(
         face: Face, tag: str, script_index: int = 0) -> List[str]:
     cdef bytes packed = tag.encode()
     cdef hb_tag_t hb_tag = hb_tag_from_string(<char*>packed, -1)
-    cdef unsigned int language_count = 24
-    # we could get count first and malloc the array like pango is doing
-    cdef hb_tag_t language_tags[24]
-    hb_ot_layout_script_get_language_tags(
-        face._hb_face, hb_tag, script_index, 0, &language_count, language_tags)
+    cdef unsigned int language_count = STATIC_TAGS_ARRAY_SIZE
+    cdef hb_tag_t language_tags[STATIC_TAGS_ARRAY_SIZE]
     cdef list tags = []
     cdef char cstr[5]
     cdef unsigned int i
-    for i in range(language_count):
-        hb_tag_to_string(language_tags[i], cstr)
-        cstr[4] = b'\0'
-        packed = cstr
-        tags.append(packed.decode())
+    cdef unsigned int start_offset = 0
+    while language_count == STATIC_TAGS_ARRAY_SIZE:
+        hb_ot_layout_script_get_language_tags(
+            face._hb_face, hb_tag, script_index, start_offset, &language_count, language_tags)
+        for i in range(language_count):
+            hb_tag_to_string(language_tags[i], cstr)
+            cstr[4] = b'\0'
+            packed = cstr
+            tags.append(packed.decode())
+        start_offset += language_count
     return tags
 
 def ot_layout_table_get_script_tags(face: Face, tag: str) -> List[str]:
     cdef bytes packed = tag.encode()
     cdef hb_tag_t hb_tag = hb_tag_from_string(<char*>packed, -1)
-    cdef unsigned int script_count = 24
-    # we could get count first and malloc the array like pango is doing
-    cdef hb_tag_t script_tags[24]
-    hb_ot_layout_table_get_script_tags(
-        face._hb_face, hb_tag, 0, &script_count, script_tags)
+    cdef unsigned int script_count = STATIC_TAGS_ARRAY_SIZE
+    cdef hb_tag_t script_tags[STATIC_TAGS_ARRAY_SIZE]
     cdef list tags = []
     cdef char cstr[5]
     cdef unsigned int i
-    for i in range(script_count):
-        hb_tag_to_string(script_tags[i], cstr)
-        cstr[4] = b'\0'
-        packed = cstr
-        tags.append(packed.decode())
+    cdef unsigned int start_offset = 0
+    while script_count == STATIC_TAGS_ARRAY_SIZE:
+        hb_ot_layout_table_get_script_tags(
+            face._hb_face, hb_tag, start_offset, &script_count, script_tags)
+        for i in range(script_count):
+            hb_tag_to_string(script_tags[i], cstr)
+            cstr[4] = b'\0'
+            packed = cstr
+            tags.append(packed.decode())
+        start_offset += script_count
     return tags
 
 def ot_layout_get_baseline(font: Font,
