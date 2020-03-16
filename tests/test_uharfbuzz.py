@@ -236,3 +236,18 @@ class TestGetBaseline:
     def test_ot_layout_get_baseline(self, blankfont, baseline_tag, script_tag, direction, expected_value):
         value = hb.ot_layout_get_baseline(blankfont, baseline_tag, direction, script_tag, "")
         assert value == expected_value
+
+class TestGetTags:
+    def test_ot_layout_language_get_feature_tags(self, blankfont):
+        tags = hb.ot_layout_language_get_feature_tags(blankfont.face, "GPOS")
+        assert tags == ['kern']
+        tags = hb.ot_layout_language_get_feature_tags(blankfont.face, "GSUB")
+        assert tags == ['calt']
+
+    def test_ot_layout_table_get_script_tags(self, blankfont):
+        tags = hb.ot_layout_table_get_script_tags(blankfont.face, "GPOS")
+        assert tags == ['DFLT']
+
+    def test_ot_layout_script_get_language_tags(self, blankfont):
+        tags = hb.ot_layout_script_get_language_tags(blankfont.face, "GPOS", 0)
+        assert tags == []
