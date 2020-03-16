@@ -548,7 +548,6 @@ def ot_layout_script_get_language_tags(
     cdef bytes packed = tag.encode()
     cdef hb_tag_t hb_tag = hb_tag_from_string(<char*>packed, -1)
     cdef unsigned int language_count = STATIC_TAGS_ARRAY_SIZE
-    # we could get count first and malloc the array like pango is doing
     cdef hb_tag_t language_tags[STATIC_TAGS_ARRAY_SIZE]
     cdef list tags = []
     cdef char cstr[5]
@@ -569,7 +568,6 @@ def ot_layout_table_get_script_tags(face: Face, tag: str) -> List[str]:
     cdef bytes packed = tag.encode()
     cdef hb_tag_t hb_tag = hb_tag_from_string(<char*>packed, -1)
     cdef unsigned int script_count = STATIC_TAGS_ARRAY_SIZE
-    # we could get count first and malloc the array like pango is doing
     cdef hb_tag_t script_tags[STATIC_TAGS_ARRAY_SIZE]
     cdef list tags = []
     cdef char cstr[5]
