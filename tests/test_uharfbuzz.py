@@ -92,6 +92,7 @@ class TestBuffer:
         buf.set_ot_language("BGR")
         assert buf.language == "bg"
 
+
 class TestShape:
     @pytest.mark.parametrize(
         "string, expected",
