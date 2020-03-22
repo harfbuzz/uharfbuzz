@@ -166,6 +166,18 @@ cdef class Buffer:
         hb_buffer_set_script(
             self._hb_buffer, hb_script_from_string(cstr, -1))
 
+    def set_language_from_ot_tag(self, value: str):
+        cdef bytes packed = value.encode()
+        cdef char* cstr = packed
+        hb_buffer_set_language(
+            self._hb_buffer, hb_ot_tag_to_language(hb_tag_from_string(cstr, -1)))
+
+    def set_script_from_ot_tag(self, value: str):
+        cdef bytes packed = value.encode()
+        cdef char* cstr = packed
+        hb_buffer_set_script(
+            self._hb_buffer, hb_ot_tag_to_script(hb_tag_from_string(cstr, -1)))
+
     def add_codepoints(self, codepoints: List[int],
                        item_offset: int = 0, item_length: int = -1) -> None:
         cdef unsigned int size = len(codepoints)

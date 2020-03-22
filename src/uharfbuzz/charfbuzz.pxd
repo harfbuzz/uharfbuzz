@@ -39,6 +39,8 @@ cdef extern from "hb.h":
     hb_script_t hb_script_from_string(const char* str, int len)
     hb_tag_t hb_tag_from_string(const char* str, int len)
     void hb_tag_to_string(hb_tag_t tag, char* buf)
+    hb_language_t hb_ot_tag_to_language(hb_tag_t tag)
+    hb_script_t hb_ot_tag_to_script(hb_tag_t tag)
 
     ctypedef struct hb_user_data_key_t:
         pass

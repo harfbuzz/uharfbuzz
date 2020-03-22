@@ -86,6 +86,12 @@ class TestBuffer:
         buf.language = "he-il"
         assert buf.language == "he-il"
 
+        buf.set_script_from_ot_tag("mym2")
+        assert buf.script == "Mymr"
+
+        buf.set_language_from_ot_tag("BGR")
+        assert buf.language == "bg"
+
 
 class TestShape:
     @pytest.mark.parametrize(
