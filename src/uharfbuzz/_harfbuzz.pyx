@@ -166,13 +166,13 @@ cdef class Buffer:
         hb_buffer_set_script(
             self._hb_buffer, hb_script_from_string(cstr, -1))
 
-    def set_ot_language(self, value: str):
+    def set_language_from_ot_tag(self, value: str):
         cdef bytes packed = value.encode()
         cdef char* cstr = packed
         hb_buffer_set_language(
             self._hb_buffer, hb_ot_tag_to_language(hb_tag_from_string(cstr, -1)))
 
-    def set_ot_script(self, value: str):
+    def set_script_from_ot_tag(self, value: str):
         cdef bytes packed = value.encode()
         cdef char* cstr = packed
         hb_buffer_set_script(
