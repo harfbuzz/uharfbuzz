@@ -264,10 +264,12 @@ cdef hb_blob_t* _reference_table_func(
 cdef class Face:
     cdef hb_face_t* _hb_face
     cdef object _reference_table_func
+    cdef object _blob
 
     def __cinit__(self, bytes blob, int index=0):
         cdef hb_blob_t* hb_blob
         if blob is not None:
+            self._blob = blob
             hb_blob = hb_blob_create(
                 blob, len(blob), HB_MEMORY_MODE_READONLY, NULL, NULL)
             self._hb_face = hb_face_create(hb_blob, index)
