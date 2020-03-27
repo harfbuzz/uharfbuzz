@@ -127,9 +127,16 @@ class TestShape:
         buf.add_str(string)
         buf.guess_segment_properties()
         hb.shape(blankfont, buf)
-        infos = [blankfont.get_glyph_name(g.codepoint) for g in buf.glyph_infos]
-        assert infos == expected
+        # font.get_glyph_name() returns None if the font does not contain glyph names
+        # or if the glyph ID does not exist.
+        glyph_names = [blankfont.get_glyph_name(g.codepoint) for g in buf.glyph_infos]
+        assert glyph_names == expected
         assert blankfont.get_glyph_name(1000) is None
+        # font.glyph_to_string() return "gidN" if the font does not contain glyph names
+        # or if the glyph ID does not exist.
+        glyph_names = [blankfont.glyph_to_string(g.codepoint) for g in buf.glyph_infos]
+        assert glyph_names == expected
+        assert blankfont.glyph_to_string(1000) == 'gid1000'
 
 
 class TestCallbacks:

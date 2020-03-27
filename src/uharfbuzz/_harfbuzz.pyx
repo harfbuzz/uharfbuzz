@@ -384,6 +384,13 @@ cdef class Font:
         else:
             return None
 
+    def glyph_to_string(self, gid: int):
+        cdef char name[64]
+        cdef bytes packed
+        hb_font_glyph_to_string(self._hb_font, gid, name, 64)
+        packed = name
+        return packed.decode()
+
 
 cdef hb_position_t _glyph_h_advance_func(hb_font_t* font, void* font_data,
                                          hb_codepoint_t glyph,

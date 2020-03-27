@@ -212,7 +212,12 @@ cdef extern from "hb.h":
         hb_font_t* font,
         const hb_variation_t* variations,
         unsigned int variations_length)
-    hb_bool_t hb_font_get_glyph_name (
+    hb_bool_t hb_font_get_glyph_name(
+        hb_font_t* font,
+        hb_codepoint_t glyph,
+        char* name,
+        unsigned int size)
+    void hb_font_glyph_to_string(
         hb_font_t* font,
         hb_codepoint_t glyph,
         char* name,
