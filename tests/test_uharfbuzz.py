@@ -4,7 +4,7 @@ import pytest
 
 
 TESTDATA = Path(__file__).parent / "data"
-ADOBE_BLANK_TTF = (TESTDATA / "AdobeBlank.subset.ttf").read_bytes()
+ADOBE_BLANK_TTF_PATH = TESTDATA / "AdobeBlank.subset.ttf"
 
 
 @pytest.fixture
@@ -22,7 +22,7 @@ def blankfont():
         {gid=8, name="u1F4A9", code=0x1F4A9},  # PILE OF POO
     ]
     """
-    face = hb.Face(ADOBE_BLANK_TTF)
+    face = hb.Face(ADOBE_BLANK_TTF_PATH.read_bytes())
     font = hb.Font(face)
     upem = face.upem
     font.scale = (upem, upem)
