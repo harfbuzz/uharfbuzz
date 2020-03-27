@@ -112,6 +112,32 @@ class TestShape:
         infos = [(g.codepoint, g.cluster) for g in buf.glyph_infos]
         assert infos == expected
 
+    @pytest.mark.parametrize(
+        "string, expected",
+        [
+            ("abcde", ["a", "b", "c", "d", "e"]),
+            ("abçde", ["a", "b", "ccedilla", "d", "e"]),
+            ("aбcde", ["a", "uni0431", "c", "d", "e"]),
+            ("abc💩e", ["a", "b", "c", "u1F4A9", "e"]),
+        ],
+        ids=["ascii", "latin1", "ucs2", "ucs4"],
+    )
+    def test_glyh_name_no_features(self, blankfont, string, expected):
+        buf = hb.Buffer()
+        buf.add_str(string)
+        buf.guess_segment_properties()
+        hb.shape(blankfont, buf)
+        # font.get_glyph_name() returns None if the font does not contain glyph names
+        # or if the glyph ID does not exist.
+        glyph_names = [blankfont.get_glyph_name(g.codepoint) for g in buf.glyph_infos]
+        assert glyph_names == expected
+        assert blankfont.get_glyph_name(1000) is None
+        # font.glyph_to_string() return "gidN" if the font does not contain glyph names
+        # or if the glyph ID does not exist.
+        glyph_names = [blankfont.glyph_to_string(g.codepoint) for g in buf.glyph_infos]
+        assert glyph_names == expected
+        assert blankfont.glyph_to_string(1000) == 'gid1000'
+
 
 class TestCallbacks:
     def test_nominal_glyph_func(self, blankfont):
