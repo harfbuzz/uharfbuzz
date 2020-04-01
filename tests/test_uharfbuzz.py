@@ -237,13 +237,7 @@ class TestCallbacks:
         buf = hb.Buffer()
         buf.add_str(string)
         buf.guess_segment_properties()
-
-        messages = []
-        infos_trace = []
-        positions_trace = []
-
         message_collector = MessageCollector()
-
         buf.set_message_func(message_collector.message)
         hb.shape(blankfont, buf)
 
