@@ -77,11 +77,13 @@ cdef class GlyphPosition:
 
 cdef class Buffer:
     cdef hb_buffer_t* _hb_buffer
+    cdef object _message_callback
 
     def __cinit__(self):
         self._hb_buffer = hb_buffer_create()
         if not hb_buffer_allocation_successful(self._hb_buffer):
             raise MemoryError()
+        self._message_callback = None
 
     def __dealloc__(self):
         if self._hb_buffer is not NULL:
@@ -238,6 +240,7 @@ cdef class Buffer:
         hb_buffer_guess_segment_properties(self._hb_buffer)
 
     def set_message_func(self, callback) -> None:
+        self._message_callback = callback
         hb_buffer_set_message_func(self._hb_buffer, msgcallback, <void*>callback, NULL)
 
 

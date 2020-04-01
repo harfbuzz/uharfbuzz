@@ -232,6 +232,27 @@ class TestCallbacks:
         assert advances_trace == [[0, 0, 0, 0, 0], [0, 0, 0, 0, 0],
                                   [0, 0, 0, 0, 0], [0, 0, 0, 100, 0]]
 
+    def test_message_func_crash(self, blankfont):
+        string = "edcba"
+        buf = hb.Buffer()
+        buf.add_str(string)
+        buf.guess_segment_properties()
+
+        messages = []
+        infos_trace = []
+        positions_trace = []
+
+        message_collector = MessageCollector()
+
+        buf.set_message_func(message_collector.message)
+        hb.shape(blankfont, buf)
+
+
+class MessageCollector:
+    def message(self, message):
+        pass
+
+
 class TestGetBaseline:
     # The test font contains a BASE table with some test values
     def test_ot_layout_get_baseline_invalid_tag(self, blankfont):
