@@ -301,5 +301,5 @@ class TestGetTags:
 
 
 def test_harfbuzz_version():
-    v = hb.harfbuzz_version()
+    v = hb.version_string()
     assert isinstance(v, str)

@@ -26,7 +26,7 @@ cdef int msgcallback(hb_buffer_t *buffer, hb_font_t *font, const char* message, 
     return 1
 
 
-def harfbuzz_version() -> str:
+def version_string() -> str:
     cdef const char* cstr = hb_version_string()
     cdef bytes packed = cstr
     return packed.decode()
