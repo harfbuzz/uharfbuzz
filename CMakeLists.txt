@@ -4,8 +4,8 @@ project(uharfbuzz_skbuild)
 
 include(ExternalProject)
 
-set(HARFBUZZ_VERSION "2.6.4")
-set(HARFBUZZ_SHA256 "9413b8d96132d699687ef914ebb8c50440efc87b3f775d25856d7ec347c03c12")
+set(HARFBUZZ_VERSION "2.6.5")
+set(HARFBUZZ_SHA256 "126ea030bcb66fca518d43162443d337e60933c3729c23f8a25da3a1c7371dfd")
 
 # download, configure, build and install harbfuzz static library
 ExternalProject_Add(
