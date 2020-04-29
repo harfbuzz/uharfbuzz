@@ -298,3 +298,8 @@ class TestGetTags:
     def test_ot_layout_script_get_language_tags(self, blankfont):
         tags = hb.ot_layout_script_get_language_tags(blankfont.face, "GPOS", 0)
         assert tags == []
+
+
+def test_harfbuzz_version():
+    v = hb.harfbuzz_version()
+    assert isinstance(v, str)
