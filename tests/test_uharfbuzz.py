@@ -303,3 +303,9 @@ class TestGetTags:
 def test_harfbuzz_version():
     v = hb.version_string()
     assert isinstance(v, str)
+
+
+def test_uharfbuzz_version():
+    v = hb.__version__
+    assert isinstance(v, str)
+    assert "unknown" not in v
