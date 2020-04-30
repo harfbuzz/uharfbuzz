@@ -23,7 +23,7 @@ if sys.platform == "darwin":
 
 setup_params = dict(
     name="uharfbuzz",
-    use_scm_version=True,
+    use_scm_version={"write_to": "src/uharfbuzz/_version.py"},
     description="Streamlined Cython bindings for the harfbuzz shaping engine",
     long_description=long_description,
     long_description_content_type='text/markdown',
