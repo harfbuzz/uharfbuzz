@@ -173,6 +173,14 @@ cdef class Buffer:
         hb_buffer_set_script(
             self._hb_buffer, hb_script_from_string(cstr, -1))
 
+    @property
+    def cluster_level(self) -> int:
+        return hb_buffer_get_cluster_level(self._hb_buffer)
+
+    @cluster_level.setter
+    def cluster_level(self, value: int):
+        hb_buffer_set_cluster_level(self._hb_buffer, value)
+
     def set_language_from_ot_tag(self, value: str):
         cdef bytes packed = value.encode()
         cdef char* cstr = packed

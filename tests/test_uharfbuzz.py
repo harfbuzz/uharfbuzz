@@ -92,6 +92,18 @@ class TestBuffer:
         buf.set_language_from_ot_tag("BGR")
         assert buf.language == "bg"
 
+    def test_cluster_level(self):
+        buf = hb.Buffer()
+
+        assert buf.cluster_level == 0
+
+        buf.cluster_level = 1
+        assert buf.cluster_level == 1
+
+        # XXX: should fail
+        buf.cluster_level = 5
+        assert buf.cluster_level == 5
+
 
 class TestShape:
     @pytest.mark.parametrize(
