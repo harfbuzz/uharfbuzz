@@ -1,4 +1,5 @@
 #cython: language_level=3
+from enum import IntEnum
 from charfbuzz cimport *
 from libc.stdlib cimport free, malloc
 from libc.string cimport const_char
@@ -78,6 +79,13 @@ cdef class GlyphPosition:
     @property
     def y_offset(self):
         return self._hb_glyph_position.y_offset
+
+
+class BufferClusterLevel(IntEnum):
+    MONOTONE_GRAPHEMES = HB_BUFFER_CLUSTER_LEVEL_MONOTONE_GRAPHEMES
+    MONOTONE_CHARACTERS = HB_BUFFER_CLUSTER_LEVEL_MONOTONE_CHARACTERS
+    CHARACTERS = HB_BUFFER_CLUSTER_LEVEL_CHARACTERS
+    DEFAULT = HB_BUFFER_CLUSTER_LEVEL_DEFAULT
 
 
 cdef class Buffer:
@@ -174,12 +182,14 @@ cdef class Buffer:
             self._hb_buffer, hb_script_from_string(cstr, -1))
 
     @property
-    def cluster_level(self) -> int:
-        return hb_buffer_get_cluster_level(self._hb_buffer)
+    def cluster_level(self) -> BufferClusterLevel:
+        level = hb_buffer_get_cluster_level(self._hb_buffer)
+        return BufferClusterLevel(level)
 
     @cluster_level.setter
-    def cluster_level(self, value: int):
-        hb_buffer_set_cluster_level(self._hb_buffer, value)
+    def cluster_level(self, value: BufferClusterLevel):
+        level = BufferClusterLevel(value)
+        hb_buffer_set_cluster_level(self._hb_buffer, level)
 
     def set_language_from_ot_tag(self, value: str):
         cdef bytes packed = value.encode()
