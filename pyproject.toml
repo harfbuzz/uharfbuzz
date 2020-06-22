@@ -4,8 +4,5 @@ requires = [
     "wheel",
     "setuptools_scm >= 2.1",
     "cython >= 0.28.1",
-    "scikit-build >= 0.9.0",
-    "cmake",
-    "ninja",
 ]
 build-backend = "setuptools.build_meta"
