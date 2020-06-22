@@ -223,14 +223,25 @@ class TestCallbacks:
         assert gids == [5, 4, 1, 2, 1]
         pos = [g.x_advance for g in buf.glyph_positions]
         assert pos == [0, 0, 0, 100, 0]
-        # messages: start GSUB lookup, end GSUB lookup, start GPOS lookup, end GPOS lookup
-        assert messages == ['start lookup 0', 'end lookup 0', 'start lookup 0', 'end lookup 0']
+        expected_messages = [
+            'start table GSUB',
+            'start lookup 0',
+            'end lookup 0',
+            'end table GSUB',
+            'start table GPOS',
+            'start lookup 0',
+            'end lookup 0',
+            'end table GPOS',
+        ]
+        assert messages == expected_messages
         gids_trace = [[g.codepoint for g in infos] for infos in infos_trace]
-        assert gids_trace == [[5, 4, 3, 2, 1], [5, 4, 1, 2, 1],
+        assert gids_trace == [[5, 4, 3, 2, 1], [5, 4, 3, 2, 1], [5, 4, 1, 2, 1],
+                              [5, 4, 1, 2, 1], [5, 4, 1, 2, 1], [5, 4, 1, 2, 1],
                               [5, 4, 1, 2, 1], [5, 4, 1, 2, 1]]
         advances_trace = [[g.x_advance for g in pos] for pos in positions_trace]
-        assert advances_trace == [[0, 0, 0, 0, 0], [0, 0, 0, 0, 0],
-                                  [0, 0, 0, 0, 0], [0, 0, 0, 100, 0]]
+        assert advances_trace == [[0, 0, 0, 0, 0], [0, 0, 0, 0, 0], [0, 0, 0, 0, 0],
+                                  [0, 0, 0, 0, 0], [0, 0, 0, 0, 0], [0, 0, 0, 0, 0],
+                                  [0, 0, 0, 100, 0], [0, 0, 0, 100, 0]]
 
     def test_message_func_crash(self, blankfont):
         string = "edcba"
