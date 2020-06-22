@@ -92,6 +92,36 @@ class TestBuffer:
         buf.set_language_from_ot_tag("BGR")
         assert buf.language == "bg"
 
+    def test_cluster_level(self):
+        buf = hb.Buffer()
+
+        assert buf.cluster_level == hb.BufferClusterLevel.DEFAULT
+
+        buf.cluster_level = hb.BufferClusterLevel.MONOTONE_CHARACTERS
+        assert buf.cluster_level == hb.BufferClusterLevel.MONOTONE_CHARACTERS
+
+        buf.cluster_level = hb.BufferClusterLevel.MONOTONE_GRAPHEMES
+        assert buf.cluster_level == hb.BufferClusterLevel.MONOTONE_GRAPHEMES
+
+        buf.cluster_level = hb.BufferClusterLevel.CHARACTERS
+        assert buf.cluster_level == hb.BufferClusterLevel.CHARACTERS
+
+        buf.cluster_level = hb.BufferClusterLevel.DEFAULT
+        assert buf.cluster_level == hb.BufferClusterLevel.DEFAULT
+
+    def test_cluster_level_int(self):
+        buf = hb.Buffer()
+
+        assert buf.cluster_level == 0
+
+        buf.cluster_level = 1
+        assert buf.cluster_level == 1
+
+        with pytest.raises(ValueError):
+            # 5 is not a valid BufferClusterLevel
+            buf.cluster_level = 5
+        assert buf.cluster_level == 1
+
 
 class TestShape:
     @pytest.mark.parametrize(

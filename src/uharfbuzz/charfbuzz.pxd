@@ -83,6 +83,12 @@ cdef extern from "hb.h":
         hb_position_t y_offset
         hb_var_int_t var
 
+    ctypedef enum hb_buffer_cluster_level_t:
+        HB_BUFFER_CLUSTER_LEVEL_MONOTONE_GRAPHEMES
+        HB_BUFFER_CLUSTER_LEVEL_MONOTONE_CHARACTERS
+        HB_BUFFER_CLUSTER_LEVEL_CHARACTERS
+        HB_BUFFER_CLUSTER_LEVEL_DEFAULT
+
     hb_buffer_t* hb_buffer_create()
     hb_bool_t hb_buffer_allocation_successful(hb_buffer_t* buffer)
     void hb_buffer_add_codepoints(
@@ -116,6 +122,9 @@ cdef extern from "hb.h":
     void hb_buffer_set_script(hb_buffer_t* buffer, hb_script_t script)
     hb_language_t hb_buffer_get_language(hb_buffer_t* buffer)
     void hb_buffer_set_language(hb_buffer_t* buffer, hb_language_t language)
+    void hb_buffer_set_cluster_level(hb_buffer_t *buffer,
+        hb_buffer_cluster_level_t cluster_level)
+    hb_buffer_cluster_level_t hb_buffer_get_cluster_level(hb_buffer_t *buffer)
     void hb_buffer_destroy(hb_buffer_t* buffer)
     ctypedef hb_bool_t (*hb_buffer_message_func_t) (
         hb_buffer_t *buffer,
