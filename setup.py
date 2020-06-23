@@ -3,6 +3,7 @@
 from io import open
 import os
 import sys
+import platform
 from setuptools import Extension, setup
 from Cython.Build import cythonize
 
@@ -18,27 +19,13 @@ if int(os.environ.get('CYTHON_LINETRACE', '0')):
     linetrace = True
     extra_args.append(('CYTHON_TRACE_NOGIL', '1'))
 
-if int(os.environ.get('USE_SYSTEM_HARFBUZZ', '0')):
-    extension = Extension(
-        'uharfbuzz._harfbuzz',
-        libraries = ['harfbuzz'],
-        include_dirs = ['/usr/include/harfbuzz'],
-        sources=['src/uharfbuzz/_harfbuzz.pyx']
-    )
-else:
-    extra_compile_args = []
-
-    import platform
-    if platform.system() != 'Windows':
-        extra_compile_args.append('-std=c++14')
-
-    extension = Extension(
-        'uharfbuzz._harfbuzz',
-        define_macros=[('HB_NO_MT', '1')],
-        include_dirs=['harfbuzz/src'],
-        sources=['src/uharfbuzz/_harfbuzz.pyx', 'harfbuzz/src/harfbuzz.cc'],
-        extra_compile_args=extra_compile_args,
-    )
+extension = Extension(
+    'uharfbuzz._harfbuzz',
+    define_macros=[('HB_NO_MT', '1')],
+    include_dirs=['harfbuzz/src'],
+    sources=['src/uharfbuzz/_harfbuzz.pyx', 'harfbuzz/src/harfbuzz.cc'],
+    extra_compile_args=[] if platform.system() == 'Windows' else ['-std=c++11'],
+)
 
 setup_params = dict(
     name="uharfbuzz",
