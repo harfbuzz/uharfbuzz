@@ -22,7 +22,7 @@ if int(os.environ.get('USE_SYSTEM_HARFBUZZ', '0')):
     extension = Extension(
         'uharfbuzz._harfbuzz',
         libraries = ['harfbuzz'],
-        library_dirs = ['/usr/include/harfbuzz'],
+        include_dirs = ['/usr/include/harfbuzz'],
         sources=['src/uharfbuzz/_harfbuzz.pyx']
     )
 else:
