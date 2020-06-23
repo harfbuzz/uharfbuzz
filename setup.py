@@ -20,7 +20,7 @@ if int(os.environ.get('CYTHON_LINETRACE', '0')):
     extra_args.append(('CYTHON_TRACE_NOGIL', '1'))
 
 extra_compile_args = []
-if platform.system() == 'Windows':
+if platform.system() != 'Windows':
     extra_compile_args.append('-std=c++11')
 
 extension = Extension(
