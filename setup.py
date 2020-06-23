@@ -28,25 +28,24 @@ extension = Extension(
     extra_compile_args=[] if platform.system() == 'Windows' else ['-std=c++11'],
 )
 
-if __name__ == "__main__":
-    setup(
-        name="uharfbuzz",
-        use_scm_version={"write_to": "src/uharfbuzz/_version.py"},
-        description="Streamlined Cython bindings for the harfbuzz shaping engine",
-        long_description=long_description,
-        long_description_content_type='text/markdown',
-        author="Adrien Tétar",
-        author_email="adri-from-59@hotmail.fr",
-        url="https://github.com/trufont/uharfbuzz",
-        license="Apache License 2.0",
-        package_dir={"": "src"},
-        packages=["uharfbuzz"],
-        zip_safe=False,
-        setup_requires=["setuptools_scm"],
-        python_requires=">=3.5",
-        ext_modules = cythonize(
-            extension,
-            annotate=bool(int(os.environ.get('CYTHON_ANNOTATE', '0'))),
-            compiler_directives={"linetrace": linetrace}
-        )
+setup(
+    name="uharfbuzz",
+    use_scm_version={"write_to": "src/uharfbuzz/_version.py"},
+    description="Streamlined Cython bindings for the harfbuzz shaping engine",
+    long_description=long_description,
+    long_description_content_type='text/markdown',
+    author="Adrien Tétar",
+    author_email="adri-from-59@hotmail.fr",
+    url="https://github.com/trufont/uharfbuzz",
+    license="Apache License 2.0",
+    package_dir={"": "src"},
+    packages=["uharfbuzz"],
+    zip_safe=False,
+    setup_requires=["setuptools_scm"],
+    python_requires=">=3.5",
+    ext_modules = cythonize(
+        extension,
+        annotate=bool(int(os.environ.get('CYTHON_ANNOTATE', '0'))),
+        compiler_directives={"linetrace": linetrace}
     )
+)
