@@ -19,13 +19,17 @@ if int(os.environ.get('CYTHON_LINETRACE', '0')):
     linetrace = True
     extra_args.append(('CYTHON_TRACE_NOGIL', '1'))
 
+extra_compile_args = []
+if platform.system() == 'Windows':
+    extra_compile_args.append('-std=c++11')
+
 extension = Extension(
     'uharfbuzz._harfbuzz',
     define_macros=[('HB_NO_MT', '1')] + extra_args,
     include_dirs=['harfbuzz/src'],
     sources=['src/uharfbuzz/_harfbuzz.pyx', 'harfbuzz/src/harfbuzz.cc'],
     language='c++',
-    extra_compile_args=[] if platform.system() == 'Windows' else ['-std=c++11'],
+    extra_compile_args=extra_compile_args,
 )
 
 setup(
