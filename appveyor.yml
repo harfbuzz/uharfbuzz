@@ -20,6 +20,8 @@ branches:
     - /^v\d+\.\d+.*$/
 
 install:
+  - cd %APPVEYOR_BUILD_FOLDER%
+  - git submodule update --init --recursive
   - SET PATH=%PYTHON%;%PYTHON%\Scripts;%PATH%
   - python -m pip install --upgrade pip
   - pip install cibuildwheel==1.1.0
