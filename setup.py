@@ -21,7 +21,7 @@ if int(os.environ.get('CYTHON_LINETRACE', '0')):
 
 extension = Extension(
     'uharfbuzz._harfbuzz',
-    define_macros=[('HB_NO_MT', '1')],
+    define_macros=[('HB_NO_MT', '1')] + extra_args,
     include_dirs=['harfbuzz/src'],
     sources=['src/uharfbuzz/_harfbuzz.pyx', 'harfbuzz/src/harfbuzz.cc'],
     language='c++',
