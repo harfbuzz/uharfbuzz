@@ -26,11 +26,18 @@ if int(os.environ.get('USE_SYSTEM_HARFBUZZ', '0')):
         sources=['src/uharfbuzz/_harfbuzz.pyx']
     )
 else:
+    extra_compile_args = []
+
+    import platform
+    if platform.system() != 'Windows':
+        extra_compile_args.append('-std=c++14')
+
     extension = Extension(
         'uharfbuzz._harfbuzz',
         define_macros=[('HB_NO_MT', '1')],
         include_dirs=['harfbuzz/src'],
-        sources=['src/uharfbuzz/_harfbuzz.pyx', 'harfbuzz/src/harfbuzz.cc']
+        sources=['src/uharfbuzz/_harfbuzz.pyx', 'harfbuzz/src/harfbuzz.cc'],
+        extra_compile_args=extra_compile_args,
     )
 
 setup_params = dict(
