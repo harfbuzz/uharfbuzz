@@ -1,3 +1,4 @@
 [submodule "harfbuzz"]
 	path = harfbuzz
 	url = https://github.com/harfbuzz/harfbuzz
+	branch = 2.6.8
