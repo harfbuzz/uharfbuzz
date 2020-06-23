@@ -13,9 +13,9 @@ with open(os.path.join(here, 'README.md'), encoding='utf-8') as f:
     long_description = f.read()
 
 extra_args = []
+linetrace = False
 if int(os.environ.get('CYTHON_LINETRACE', '0')):
-    from Cython.Compiler.Options import directive_defaults
-    directive_defaults['linetrace'] = True
+    linetrace = True
     extra_args.append(('CYTHON_TRACE_NOGIL', '1'))
 
 if int(os.environ.get('USE_SYSTEM_HARFBUZZ', '0')):
@@ -48,7 +48,11 @@ setup_params = dict(
     zip_safe=False,
     setup_requires=["setuptools_scm"],
     python_requires=">=3.5",
-    ext_modules = cythonize(extension, annotate=bool(int(os.environ.get('CYTHON_ANNOTATE', '0'))))
+    ext_modules = cythonize(
+        extension,
+        annotate=bool(int(os.environ.get('CYTHON_ANNOTATE', '0'))),
+        compiler_directives={"linetrace": linetrace}
+    )
 )
 
 
