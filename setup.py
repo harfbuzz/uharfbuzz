@@ -24,6 +24,7 @@ extension = Extension(
     define_macros=[('HB_NO_MT', '1')],
     include_dirs=['harfbuzz/src'],
     sources=['src/uharfbuzz/_harfbuzz.pyx', 'harfbuzz/src/harfbuzz.cc'],
+    language='c++',
     extra_compile_args=[] if platform.system() == 'Windows' else ['-std=c++11'],
 )
 
