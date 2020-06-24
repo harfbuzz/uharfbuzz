@@ -3,7 +3,9 @@
 from io import open
 import os
 import sys
-
+import platform
+from setuptools import Extension, setup
+from Cython.Build import cythonize
 
 here = os.path.abspath(os.path.dirname(__file__))
 
@@ -11,17 +13,26 @@ here = os.path.abspath(os.path.dirname(__file__))
 with open(os.path.join(here, 'README.md'), encoding='utf-8') as f:
     long_description = f.read()
 
-cmake_args = []
-for option in ("CYTHON_LINETRACE", "CYTHON_ANNOTATE"):
-    value = os.environ.get(option)
-    if value is not None and bool(int(value)):
-        cmake_args.append("-D{}:BOOL=TRUE".format(option))
+define_macros = [('HB_NO_MT', '1')]
+linetrace = False
+if int(os.environ.get('CYTHON_LINETRACE', '0')):
+    linetrace = True
+    define_macros.append(('CYTHON_TRACE_NOGIL', '1'))
 
-# On Mac, require OSX >= 10.9 so we can use te new libc++ targeting C++11
-if sys.platform == "darwin":
-    cmake_args.append("-DCMAKE_OSX_DEPLOYMENT_TARGET:STRING=10.9")
+extra_compile_args = []
+if platform.system() != 'Windows':
+    extra_compile_args.append('-std=c++11')
 
-setup_params = dict(
+extension = Extension(
+    'uharfbuzz._harfbuzz',
+    define_macros=define_macros,
+    include_dirs=['harfbuzz/src'],
+    sources=['src/uharfbuzz/_harfbuzz.pyx', 'harfbuzz/src/harfbuzz.cc'],
+    language='c++',
+    extra_compile_args=extra_compile_args,
+)
+
+setup(
     name="uharfbuzz",
     use_scm_version={"write_to": "src/uharfbuzz/_version.py"},
     description="Streamlined Cython bindings for the harfbuzz shaping engine",
@@ -35,21 +46,10 @@ setup_params = dict(
     packages=["uharfbuzz"],
     zip_safe=False,
     setup_requires=["setuptools_scm"],
-    cmake_args=cmake_args,
     python_requires=">=3.5",
+    ext_modules = cythonize(
+        extension,
+        annotate=bool(int(os.environ.get('CYTHON_ANNOTATE', '0'))),
+        compiler_directives={"linetrace": linetrace},
+    ),
 )
-
-
-if __name__ == "__main__":
-    import sys
-    # cibuildwheel calls setup.py --name to get the package name; no need
-    # to require scikit-build at that stage: it will be installed later with
-    # the rest of the build requirements. Also, creating an sdist can be done
-    # with plain setuptools since there is no cmake involved there, and we
-    # generate the manifest using setuptools_scm anyway.
-    args = sys.argv[1:]
-    if len(args) == 1 and {"--name", "sdist"}.intersection(args):
-        from setuptools import setup
-    else:
-        from skbuild import setup
-    setup(**setup_params)

@@ -1,6 +1,6 @@
 #cython: language_level=3
 from enum import IntEnum
-from charfbuzz cimport *
+from .charfbuzz cimport *
 from libc.stdlib cimport free, malloc
 from libc.string cimport const_char
 from typing import Callable, Dict, List, Tuple

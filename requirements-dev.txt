@@ -1,7 +1,4 @@
 cython>=0.29.1
-scikit-build>=0.8.1
-cmake
-ninja
 
 # we need wheel >= 0.31.0 to support Markdown long_description
 wheel>=0.31
