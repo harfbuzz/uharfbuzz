@@ -13,11 +13,11 @@ here = os.path.abspath(os.path.dirname(__file__))
 with open(os.path.join(here, 'README.md'), encoding='utf-8') as f:
     long_description = f.read()
 
-extra_args = []
+define_macros = [('HB_NO_MT', '1')]
 linetrace = False
 if int(os.environ.get('CYTHON_LINETRACE', '0')):
     linetrace = True
-    extra_args.append(('CYTHON_TRACE_NOGIL', '1'))
+    define_macros.append(('CYTHON_TRACE_NOGIL', '1'))
 
 extra_compile_args = []
 if platform.system() != 'Windows':
@@ -25,7 +25,7 @@ if platform.system() != 'Windows':
 
 extension = Extension(
     'uharfbuzz._harfbuzz',
-    define_macros=[('HB_NO_MT', '1')] + extra_args,
+    define_macros=define_macros,
     include_dirs=['harfbuzz/src'],
     sources=['src/uharfbuzz/_harfbuzz.pyx', 'harfbuzz/src/harfbuzz.cc'],
     language='c++',
