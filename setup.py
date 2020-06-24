@@ -50,6 +50,6 @@ setup(
     ext_modules = cythonize(
         extension,
         annotate=bool(int(os.environ.get('CYTHON_ANNOTATE', '0'))),
-        compiler_directives={"linetrace": linetrace}
+        compiler_directives={"linetrace": linetrace},
     ),
 )
