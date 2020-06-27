@@ -299,6 +299,7 @@ cdef class Face:
             hb_blob = hb_blob_create(
                 blob, len(blob), HB_MEMORY_MODE_READONLY, NULL, NULL)
             self._hb_face = hb_face_create(hb_blob, index)
+            hb_blob_destroy(hb_blob)
         else:
             self._hb_face = NULL
 

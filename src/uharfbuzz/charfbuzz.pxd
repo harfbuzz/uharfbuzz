@@ -68,6 +68,8 @@ cdef extern from "hb.h":
         hb_memory_mode_t mode,
         void* user_data, hb_destroy_func_t destroy)
 
+    void hb_blob_destroy(hb_blob_t* blob)
+
     # hb-buffer.h
     ctypedef struct hb_buffer_t:
         pass
