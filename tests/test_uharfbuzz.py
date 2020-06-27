@@ -22,7 +22,7 @@ def blankfont():
         {gid=8, name="u1F4A9", code=0x1F4A9},  # PILE OF POO
     ]
     """
-    face = hb.Face(ADOBE_BLANK_TTF_PATH.read_bytes())
+    face = hb.Face.from_file_path(str(ADOBE_BLANK_TTF_PATH))
     font = hb.Font(face)
     upem = face.upem
     font.scale = (upem, upem)

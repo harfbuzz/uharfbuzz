@@ -328,6 +328,15 @@ cdef class Face:
         inst._reference_table_func = func
         return inst
 
+    @classmethod
+    def from_file_path(cls, file_path: str, int index=0):
+        cdef bytes path = file_path.encode()
+        cdef hb_blob_t* blob = hb_blob_create_from_file(<char*>path)
+        cdef Face inst = cls(None)
+        inst._hb_face = hb_face_create(blob, index)
+        hb_blob_destroy(blob)
+        return inst
+
     @property
     def upem(self) -> int:
         return hb_face_get_upem(self._hb_face)

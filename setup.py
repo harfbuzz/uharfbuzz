@@ -22,6 +22,9 @@ if int(os.environ.get('CYTHON_LINETRACE', '0')):
 extra_compile_args = []
 if platform.system() != 'Windows':
     extra_compile_args.append('-std=c++11')
+    define_macros.append(('HAVE_MMAP', '1'))
+    define_macros.append(('HAVE_UNISTD_H', '1'))
+    define_macros.append(('HAVE_SYS_MMAN_H', '1'))
 
 extension = Extension(
     'uharfbuzz._harfbuzz',

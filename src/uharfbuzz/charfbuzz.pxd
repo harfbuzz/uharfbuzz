@@ -70,6 +70,8 @@ cdef extern from "hb.h":
 
     void hb_blob_destroy(hb_blob_t* blob)
 
+    hb_blob_t* hb_blob_create_from_file(const char* path)
+
     # hb-buffer.h
     ctypedef struct hb_buffer_t:
         pass
