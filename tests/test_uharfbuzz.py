@@ -322,6 +322,12 @@ class TestCallbacks:
         funcs.draw_glyph(opensans, 1, container)
         assert "".join(container) == "M1120,0L938,465L352,465L172,0L0,0L578,1468L721,1468L1296,0L1120,0ZM885,618L715,1071Q682,1157 647,1282Q625,1186 584,1071L412,618L885,618Z"
 
+    def test_draw_pen(self, opensans):
+        from fontTools.pens.svgPathPen import SVGPathPen
+        pen = SVGPathPen(None)
+        opensans.draw_glyph_to_pen(1, pen)
+        assert pen.getCommands() == "M1120 0 938 465H352L172 0H0L578 1468H721L1296 0H1120ZM885 618 715 1071Q682 1157 647 1282Q625 1186 584 1071L412 618H885Z"
+
 
 class MessageCollector:
     def message(self, message):

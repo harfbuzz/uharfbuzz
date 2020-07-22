@@ -420,6 +420,26 @@ cdef class Font:
         packed = name
         return packed.decode()
 
+    def draw_glyph_to_pen(self, gid: int, pen):
+        funcs = DrawFuncs()
+        def move_to(x,y,c):
+            c.moveTo((x,y))
+        def line_to(x,y,c):
+            c.lineTo((x,y))
+        def cubic_to(c1x,c1y,c2x,c2y,x,y,c):
+            c.curveTo((c1x, c1y), (c2x, c2y), (x,y))
+        def quadratic_to(c1x,c1y,x,y,c):
+            c.qCurveTo((c1x, c1y), (x,y))
+        def close_path(c):
+            c.closePath()
+
+        funcs.set_move_to_func(move_to)
+        funcs.set_line_to_func(line_to)
+        funcs.set_cubic_to_func(cubic_to)
+        funcs.set_quadratic_to_func(quadratic_to)
+        funcs.set_close_path_func(close_path)
+        funcs.draw_glyph(self, gid, pen)
+
 
 cdef hb_position_t _glyph_h_advance_func(hb_font_t* font, void* font_data,
                                          hb_codepoint_t glyph,
