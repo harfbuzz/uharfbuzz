@@ -551,11 +551,13 @@ cdef class FontFuncs:
             self._hb_ffuncs, _nominal_glyph_func, <void*>user_data, NULL)
         self._nominal_glyph_func = func
 
+
 cdef const char ** to_cstring_array(list_str):
     cdef const char **ret = <const char **>malloc(len(list_str) * sizeof(char *))
     for i in range(len(list_str)):
         ret[i] = PyUnicode_AsUTF8(list_str[i])
     return ret
+
 
 def shape(font: Font, buffer: Buffer, features: Dict[str, bool] = None,
         shapers: List[str] = None) -> None:
