@@ -323,10 +323,22 @@ class TestCallbacks:
         assert "".join(container) == "M1120,0L938,465L352,465L172,0L0,0L578,1468L721,1468L1296,0L1120,0ZM885,618L715,1071Q682,1157 647,1282Q625,1186 584,1071L412,618L885,618Z"
 
     def test_draw_pen(self, opensans):
-        from fontTools.pens.svgPathPen import SVGPathPen
-        pen = SVGPathPen(None)
+        class TestPen:
+            def __init__(self):
+                self.value = []
+            def moveTo(self, p0):
+                self.value.append(('moveTo', (p0,)))
+            def lineTo(self, p1):
+                self.value.append(('lineTo', (p1,)))
+            def qCurveTo(self, *points):
+                self.value.append(('qCurveTo', points))
+            def curveTo(self, *points):
+                self.value.append(('curveTo', points))
+            def closePath(self):
+                self.value.append(('closePath', ()))
+        pen = TestPen()
         opensans.draw_glyph_to_pen(1, pen)
-        assert pen.getCommands() == "M1120 0 938 465H352L172 0H0L578 1468H721L1296 0H1120ZM885 618 715 1071Q682 1157 647 1282Q625 1186 584 1071L412 618H885Z"
+        assert pen.value == [('moveTo', ((1120, 0),)), ('lineTo', ((938, 465),)), ('lineTo', ((352, 465),)), ('lineTo', ((172, 0),)), ('lineTo', ((0, 0),)), ('lineTo', ((578, 1468),)), ('lineTo', ((721, 1468),)), ('lineTo', ((1296, 0),)), ('lineTo', ((1120, 0),)), ('closePath', ()), ('moveTo', ((885, 618),)), ('lineTo', ((715, 1071),)), ('qCurveTo', ((682, 1157), (647, 1282))), ('qCurveTo', ((625, 1186), (584, 1071))), ('lineTo', ((412, 618),)), ('lineTo', ((885, 618),)), ('closePath', ())]
 
 
 class MessageCollector:
