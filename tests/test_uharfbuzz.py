@@ -302,17 +302,17 @@ class TestCallbacks:
 
     def test_draw_funcs(self, opensans):
         funcs = hb.DrawFuncs()
-        container = { "output_string": "" }
+        container = []
         def move_to(x,y,c):
-            c["output_string"] = c["output_string"] + f"M{x},{y}"
+            c.append(f"M{x},{y}")
         def line_to(x,y,c):
-            c["output_string"] = c["output_string"] + f"L{x},{y}"
+            c.append(f"L{x},{y}")
         def cubic_to(c1x,c1y,c2x,c2y,x,y,c):
-            c["output_string"] = c["output_string"] + f"C{c1x},{c1y} {c2x},{c2y} {x},{y}"
+            c.append(f"C{c1x},{c1y} {c2x},{c2y} {x},{y}")
         def quadratic_to(c1x,c1y,x,y,c):
-            c["output_string"] = c["output_string"] + f"Q{c1x},{c1y} {x},{y}"
+            c.append(f"Q{c1x},{c1y} {x},{y}")
         def close_path(c):
-            c["output_string"] = c["output_string"] + "Z"
+            c.append("Z")
 
         funcs.set_move_to_func(move_to)
         funcs.set_line_to_func(line_to)
@@ -320,7 +320,7 @@ class TestCallbacks:
         funcs.set_quadratic_to_func(quadratic_to)
         funcs.set_close_path_func(close_path)
         funcs.draw_glyph(opensans, 1, container)
-        assert(container["output_string"] == "M1120,0L938,465L352,465L172,0L0,0L578,1468L721,1468L1296,0L1120,0ZM885,618L715,1071Q682,1157 647,1282Q625,1186 584,1071L412,618L885,618Z")
+        assert("".join(container) == "M1120,0L938,465L352,465L172,0L0,0L578,1468L721,1468L1296,0L1120,0ZM885,618L715,1071Q682,1157 647,1282Q625,1186 584,1071L412,618L885,618Z")
 
 
 class MessageCollector:
