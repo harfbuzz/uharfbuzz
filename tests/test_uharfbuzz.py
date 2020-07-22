@@ -142,6 +142,17 @@ class TestShape:
         infos = [(g.codepoint, g.cluster) for g in buf.glyph_infos]
         assert infos == expected
 
+    def test_shape_set_shaper(self, blankfont):
+        string = "abcde"
+        expected = []
+        buf = hb.Buffer()
+        buf.add_str(string)
+        buf.guess_segment_properties()
+        hb.shape(blankfont, buf, shapers=["fallback"])
+        pos = [g.position for g in buf.glyph_positions]
+        expected = [(0, 0, 0, 0), (0, 0, 0, 0), (0, 0, 0, 0), (0, 0, 0, 0), (0, 0, 0, 0)]
+        assert pos == expected
+
     @pytest.mark.parametrize(
         "string, expected",
         [
