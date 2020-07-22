@@ -776,45 +776,45 @@ cdef class DrawFuncs:
             self._hb_drawfuncs, _move_to_func)
 
     def set_line_to_func(self,
-                                 func: Callable[[
-                                     int,
-                                     int,
-                                     object,  # user_data
-                                 ], None]) -> None:
+                         func: Callable[[
+                             int,
+                             int,
+                             object,  # user_data
+                         ], None]) -> None:
         self._line_to_func = func
         hb_draw_funcs_set_line_to_func(
             self._hb_drawfuncs, _line_to_func)
 
     def set_cubic_to_func(self,
-                                 func: Callable[[
-                                     int,
-                                     int,
-                                     int,
-                                     int,
-                                     int,
-                                     int,
-                                     object,  # user_data
-                                 ], None]) -> None:
+                          func: Callable[[
+                             int,
+                             int,
+                             int,
+                             int,
+                             int,
+                             int,
+                             object,  # user_data
+                          ], None]) -> None:
         self._cubic_to_func = func
         hb_draw_funcs_set_cubic_to_func(
             self._hb_drawfuncs, _cubic_to_func)
 
     def set_quadratic_to_func(self,
-                                 func: Callable[[
-                                     int,
-                                     int,
-                                     int,
-                                     int,
-                                     object,  # user_data
-                                 ], None]) -> None:
+                              func: Callable[[
+                                 int,
+                                 int,
+                                 int,
+                                 int,
+                                 object,  # user_data
+                             ], None]) -> None:
         self._quadratic_to_func = func
         hb_draw_funcs_set_quadratic_to_func(
             self._hb_drawfuncs, _quadratic_to_func)
 
     def set_close_path_func(self,
-                                 func: Callable[[
-                                     object,  # user_data
-                                 ], None]) -> None:
+                            func: Callable[[
+                                object
+                            ], None]) -> None:
         self._close_path_func = func
         hb_draw_funcs_set_close_path_func(
             self._hb_drawfuncs, _close_path_func)
