@@ -320,7 +320,7 @@ class TestCallbacks:
         funcs.set_quadratic_to_func(quadratic_to)
         funcs.set_close_path_func(close_path)
         funcs.draw_glyph(opensans, 1, container)
-        assert("".join(container) == "M1120,0L938,465L352,465L172,0L0,0L578,1468L721,1468L1296,0L1120,0ZM885,618L715,1071Q682,1157 647,1282Q625,1186 584,1071L412,618L885,618Z")
+        assert "".join(container) == "M1120,0L938,465L352,465L172,0L0,0L578,1468L721,1468L1296,0L1120,0ZM885,618L715,1071Q682,1157 647,1282Q625,1186 584,1071L412,618L885,618Z"
 
 
 class MessageCollector:
