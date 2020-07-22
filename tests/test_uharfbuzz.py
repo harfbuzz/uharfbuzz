@@ -301,7 +301,7 @@ class TestCallbacks:
 
 
     def test_draw_funcs(self, opensans):
-        funcs = hb.DrawFuncs.create()
+        funcs = hb.DrawFuncs()
         container = { "output_string": "" }
         def move_to(x,y,c):
             c["output_string"] = c["output_string"] + f"M{x},{y}"

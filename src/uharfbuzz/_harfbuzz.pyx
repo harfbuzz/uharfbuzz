@@ -743,12 +743,6 @@ cdef class DrawFuncs:
         if self._hb_drawfuncs is not NULL:
             hb_draw_funcs_destroy(self._hb_drawfuncs)
 
-    # DEPRECATED: use the normal constructor
-    @classmethod
-    def create(cls):
-        cdef DrawFuncs inst = cls()
-        return inst
-
     def draw_glyph(self, font: Font, gid: int, user_data: object):
         self._user_data = user_data
         hb_font_draw_glyph(font._hb_font, gid, self._hb_drawfuncs, <void*>self);
