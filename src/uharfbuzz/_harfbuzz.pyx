@@ -421,6 +421,26 @@ cdef class Font:
         packed = name
         return packed.decode()
 
+    def draw_glyph_to_pen(self, gid: int, pen):
+        funcs = DrawFuncs()
+        def move_to(x,y,c):
+            c.moveTo((x,y))
+        def line_to(x,y,c):
+            c.lineTo((x,y))
+        def cubic_to(c1x,c1y,c2x,c2y,x,y,c):
+            c.curveTo((c1x, c1y), (c2x, c2y), (x,y))
+        def quadratic_to(c1x,c1y,x,y,c):
+            c.qCurveTo((c1x, c1y), (x,y))
+        def close_path(c):
+            c.closePath()
+
+        funcs.set_move_to_func(move_to)
+        funcs.set_line_to_func(line_to)
+        funcs.set_cubic_to_func(cubic_to)
+        funcs.set_quadratic_to_func(quadratic_to)
+        funcs.set_close_path_func(close_path)
+        funcs.draw_glyph(self, gid, pen)
+
 
 cdef hb_position_t _glyph_h_advance_func(hb_font_t* font, void* font_data,
                                          hb_codepoint_t glyph,
@@ -705,3 +725,131 @@ def ot_layout_get_baseline(font: Font,
 
 def ot_font_set_funcs(Font font):
     hb_ot_font_set_funcs(font._hb_font)
+
+cdef void _move_to_func(hb_position_t to_x,
+                        hb_position_t to_y,
+                        void *user_data):
+    m = (<object>user_data).move_to_func()
+    m(to_x, to_y, (<object>user_data).user_data())
+
+cdef void _line_to_func(hb_position_t to_x,
+                        hb_position_t to_y,
+                        void *user_data):
+    l = (<object>user_data).line_to_func()
+    l(to_x, to_y, (<object>user_data).user_data())
+
+cdef void _close_path_func(void *user_data):
+    cl = (<object>user_data).close_path_func()
+    cl((<object>user_data).user_data())
+
+cdef void _quadratic_to_func(hb_position_t c1_x,
+                        hb_position_t c1_y,
+                        hb_position_t to_x,
+                        hb_position_t to_y,
+                        void *user_data):
+    q = (<object>user_data).quadratic_to_func()
+    q(c1_x, c1_y, to_x, to_y, (<object>user_data).user_data())
+
+cdef void _cubic_to_func(hb_position_t c1_x,
+                        hb_position_t c1_y,
+                        hb_position_t c2_x,
+                        hb_position_t c2_y,
+                        hb_position_t to_x,
+                        hb_position_t to_y,
+                        void *user_data):
+    c = (<object>user_data).cubic_to_func()
+    c(c1_x, c1_y, c2_x, c2_y, to_x, to_y, (<object>user_data).user_data())
+
+
+cdef class DrawFuncs:
+    cdef hb_draw_funcs_t* _hb_drawfuncs
+    cdef object _move_to_func
+    cdef object _line_to_func
+    cdef object _cubic_to_func
+    cdef object _quadratic_to_func
+    cdef object _close_path_func
+    cdef object _user_data
+
+    def __cinit__(self):
+        self._hb_drawfuncs = hb_draw_funcs_create()
+        self._user_data = None
+
+    def __dealloc__(self):
+        if self._hb_drawfuncs is not NULL:
+            hb_draw_funcs_destroy(self._hb_drawfuncs)
+
+    def draw_glyph(self, font: Font, gid: int, user_data: object):
+        self._user_data = user_data
+        hb_font_draw_glyph(font._hb_font, gid, self._hb_drawfuncs, <void*>self);
+
+    def move_to_func(self):
+        return self._move_to_func
+
+    def line_to_func(self):
+        return self._line_to_func
+
+    def cubic_to_func(self):
+        return self._cubic_to_func
+
+    def quadratic_to_func(self):
+        return self._quadratic_to_func
+
+    def close_path_func(self):
+        return self._close_path_func
+
+    def user_data(self):
+        return self._user_data
+
+    def set_move_to_func(self,
+                                 func: Callable[[
+                                     int,
+                                     int,
+                                     object,  # user_data
+                                 ], None]) -> None:
+        self._move_to_func = func
+        hb_draw_funcs_set_move_to_func(
+            self._hb_drawfuncs, _move_to_func)
+
+    def set_line_to_func(self,
+                         func: Callable[[
+                             int,
+                             int,
+                             object,  # user_data
+                         ], None]) -> None:
+        self._line_to_func = func
+        hb_draw_funcs_set_line_to_func(
+            self._hb_drawfuncs, _line_to_func)
+
+    def set_cubic_to_func(self,
+                          func: Callable[[
+                             int,
+                             int,
+                             int,
+                             int,
+                             int,
+                             int,
+                             object,  # user_data
+                          ], None]) -> None:
+        self._cubic_to_func = func
+        hb_draw_funcs_set_cubic_to_func(
+            self._hb_drawfuncs, _cubic_to_func)
+
+    def set_quadratic_to_func(self,
+                              func: Callable[[
+                                 int,
+                                 int,
+                                 int,
+                                 int,
+                                 object,  # user_data
+                             ], None]) -> None:
+        self._quadratic_to_func = func
+        hb_draw_funcs_set_quadratic_to_func(
+            self._hb_drawfuncs, _quadratic_to_func)
+
+    def set_close_path_func(self,
+                            func: Callable[[
+                                object
+                            ], None]) -> None:
+        self._close_path_func = func
+        hb_draw_funcs_set_close_path_func(
+            self._hb_drawfuncs, _close_path_func)

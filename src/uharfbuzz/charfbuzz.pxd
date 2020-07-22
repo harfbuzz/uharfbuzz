@@ -236,6 +236,64 @@ cdef extern from "hb.h":
         unsigned int size)
     void hb_font_destroy(hb_font_t* font)
 
+    ctypedef struct hb_draw_funcs_t:
+        pass
+
+    ctypedef void (*hb_draw_move_to_func_t) (
+        hb_position_t to_x,
+        hb_position_t to_y,
+        void *user_data);
+    ctypedef void (*hb_draw_line_to_func_t) (
+        hb_position_t to_x,
+        hb_position_t to_y,
+        void *user_data);
+    ctypedef void (*hb_draw_quadratic_to_func_t) (
+        hb_position_t control_x,
+        hb_position_t control_y,
+        hb_position_t to_x,
+        hb_position_t to_y,
+        void *user_data);
+    ctypedef void (*hb_draw_cubic_to_func_t) (
+        hb_position_t control1_x,
+        hb_position_t control1_y,
+        hb_position_t control2_x,
+        hb_position_t control2_y,
+        hb_position_t to_x,
+        hb_position_t to_y,
+        void *user_data);
+    ctypedef void (*hb_draw_close_path_func_t) (
+        void *user_data);
+
+    void hb_draw_funcs_set_move_to_func (
+        hb_draw_funcs_t* funcs,
+        hb_draw_move_to_func_t move_to)
+
+    void hb_draw_funcs_set_line_to_func (
+        hb_draw_funcs_t* funcs,
+        hb_draw_line_to_func_t line_to)
+
+    void hb_draw_funcs_set_quadratic_to_func (
+        hb_draw_funcs_t* funcs,
+        hb_draw_quadratic_to_func_t quadratic_to)
+
+    void hb_draw_funcs_set_cubic_to_func (
+        hb_draw_funcs_t* funcs,
+        hb_draw_cubic_to_func_t cubic_to)
+
+    void hb_draw_funcs_set_close_path_func(
+        hb_draw_funcs_t* funcs,
+        hb_draw_close_path_func_t close_path)
+
+    hb_draw_funcs_t* hb_draw_funcs_create()
+
+    void hb_draw_funcs_destroy(hb_draw_funcs_t* funcs)
+
+    hb_bool_t hb_font_draw_glyph(
+        hb_font_t *font,
+        hb_codepoint_t glyph,
+        const hb_draw_funcs_t *funcs,
+        void *user_data)
+
     # hb-shape.h
     void hb_shape(
         hb_font_t* font,

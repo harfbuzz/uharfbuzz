@@ -5,6 +5,7 @@ import pytest
 
 TESTDATA = Path(__file__).parent / "data"
 ADOBE_BLANK_TTF_PATH = TESTDATA / "AdobeBlank.subset.ttf"
+OPEN_SANS_TTF_PATH = TESTDATA / "OpenSans.subset.ttf"
 
 
 @pytest.fixture
@@ -23,6 +24,22 @@ def blankfont():
     ]
     """
     face = hb.Face(ADOBE_BLANK_TTF_PATH.read_bytes())
+    font = hb.Font(face)
+    upem = face.upem
+    font.scale = (upem, upem)
+    hb.ot_font_set_funcs(font)
+    return font
+
+
+@pytest.fixture
+def opensans():
+    """Return a subset of OpenSans.ttf containing the following glyphs/characters:
+    [
+        {gid=0, name=".notdef"},
+        {gid=1, name="A", code=0x41},
+    ]
+    """
+    face = hb.Face(OPEN_SANS_TTF_PATH.read_bytes())
     font = hb.Font(face)
     upem = face.upem
     font.scale = (upem, upem)
@@ -292,6 +309,47 @@ class TestCallbacks:
         message_collector = MessageCollector()
         buf.set_message_func(message_collector.message)
         hb.shape(blankfont, buf)
+
+
+    def test_draw_funcs(self, opensans):
+        funcs = hb.DrawFuncs()
+        container = []
+        def move_to(x,y,c):
+            c.append(f"M{x},{y}")
+        def line_to(x,y,c):
+            c.append(f"L{x},{y}")
+        def cubic_to(c1x,c1y,c2x,c2y,x,y,c):
+            c.append(f"C{c1x},{c1y} {c2x},{c2y} {x},{y}")
+        def quadratic_to(c1x,c1y,x,y,c):
+            c.append(f"Q{c1x},{c1y} {x},{y}")
+        def close_path(c):
+            c.append("Z")
+
+        funcs.set_move_to_func(move_to)
+        funcs.set_line_to_func(line_to)
+        funcs.set_cubic_to_func(cubic_to)
+        funcs.set_quadratic_to_func(quadratic_to)
+        funcs.set_close_path_func(close_path)
+        funcs.draw_glyph(opensans, 1, container)
+        assert "".join(container) == "M1120,0L938,465L352,465L172,0L0,0L578,1468L721,1468L1296,0L1120,0ZM885,618L715,1071Q682,1157 647,1282Q625,1186 584,1071L412,618L885,618Z"
+
+    def test_draw_pen(self, opensans):
+        class TestPen:
+            def __init__(self):
+                self.value = []
+            def moveTo(self, p0):
+                self.value.append(('moveTo', (p0,)))
+            def lineTo(self, p1):
+                self.value.append(('lineTo', (p1,)))
+            def qCurveTo(self, *points):
+                self.value.append(('qCurveTo', points))
+            def curveTo(self, *points):
+                self.value.append(('curveTo', points))
+            def closePath(self):
+                self.value.append(('closePath', ()))
+        pen = TestPen()
+        opensans.draw_glyph_to_pen(1, pen)
+        assert pen.value == [('moveTo', ((1120, 0),)), ('lineTo', ((938, 465),)), ('lineTo', ((352, 465),)), ('lineTo', ((172, 0),)), ('lineTo', ((0, 0),)), ('lineTo', ((578, 1468),)), ('lineTo', ((721, 1468),)), ('lineTo', ((1296, 0),)), ('lineTo', ((1120, 0),)), ('closePath', ()), ('moveTo', ((885, 618),)), ('lineTo', ((715, 1071),)), ('qCurveTo', ((682, 1157), (647, 1282))), ('qCurveTo', ((625, 1186), (584, 1071))), ('lineTo', ((412, 618),)), ('lineTo', ((885, 618),)), ('closePath', ())]
 
 
 class MessageCollector:
