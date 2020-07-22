@@ -13,7 +13,7 @@ here = os.path.abspath(os.path.dirname(__file__))
 with open(os.path.join(here, 'README.md'), encoding='utf-8') as f:
     long_description = f.read()
 
-define_macros = [('HB_NO_MT', '1')]
+define_macros = [('HB_NO_MT', '1'), ('HB_EXPERIMENTAL_API', '1')]
 linetrace = False
 if int(os.environ.get('CYTHON_LINETRACE', '0')):
     linetrace = True
