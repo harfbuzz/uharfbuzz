@@ -348,7 +348,7 @@ class TestCallbacks:
             def closePath(self):
                 self.value.append(('closePath', ()))
         pen = TestPen()
-        opensans.draw_glyph_to_pen(1, pen)
+        opensans.draw_glyph_with_pen(1, pen)
         assert pen.value == [('moveTo', ((1120, 0),)), ('lineTo', ((938, 465),)), ('lineTo', ((352, 465),)), ('lineTo', ((172, 0),)), ('lineTo', ((0, 0),)), ('lineTo', ((578, 1468),)), ('lineTo', ((721, 1468),)), ('lineTo', ((1296, 0),)), ('lineTo', ((1120, 0),)), ('closePath', ()), ('moveTo', ((885, 618),)), ('lineTo', ((715, 1071),)), ('qCurveTo', ((682, 1157), (647, 1282))), ('qCurveTo', ((625, 1186), (584, 1071))), ('lineTo', ((412, 618),)), ('lineTo', ((885, 618),)), ('closePath', ())]
 
 
