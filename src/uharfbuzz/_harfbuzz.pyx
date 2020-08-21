@@ -421,7 +421,7 @@ cdef class Font:
         packed = name
         return packed.decode()
 
-    def draw_glyph_to_pen(self, gid: int, pen):
+    def draw_glyph_with_pen(self, gid: int, pen):
         funcs = DrawFuncs()
         def move_to(x,y,c):
             c.moveTo((x,y))
