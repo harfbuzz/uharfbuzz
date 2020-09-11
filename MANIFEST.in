@@ -1,1 +1,3 @@
-include harfbuzz/src/*
+include harfbuzz/src/*.cc
+include harfbuzz/src/*.h
+include harfbuzz/src/*.hh
