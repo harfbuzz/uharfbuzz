@@ -588,7 +588,7 @@ def shape(font: Font, buffer: Buffer,
     cdef char* cstr
     cdef hb_feature_t feat
     cdef const char **c_shapers
-    if features is None:
+    if not features:
         size = 0
         hb_features = NULL
     else:
