@@ -3,7 +3,7 @@ from enum import IntEnum
 from .charfbuzz cimport *
 from libc.stdlib cimport free, malloc
 from libc.string cimport const_char
-from typing import Callable, Dict, List, Tuple
+from typing import Callable, Dict, List, Sequence, Tuple, Union
 
 
 cdef extern from "Python.h":
@@ -579,7 +579,8 @@ cdef const char ** to_cstring_array(list_str):
     return ret
 
 
-def shape(font: Font, buffer: Buffer, features: Dict[str, bool] = None,
+def shape(font: Font, buffer: Buffer,
+        features: Dict[str,Union[int,bool,Sequence[Tuple[int,int,Union[int,bool]]]]] = None,
         shapers: List[str] = None) -> None:
     cdef unsigned int size
     cdef hb_feature_t* hb_features
@@ -591,14 +592,30 @@ def shape(font: Font, buffer: Buffer, features: Dict[str, bool] = None,
         size = 0
         hb_features = NULL
     else:
-        size = len(features)
+        size = 0
+        for name, value in features.items():
+            if isinstance(value, int):
+                size += 1
+            else:
+                size += len(value)
         hb_features = <hb_feature_t*>malloc(size * sizeof(hb_feature_t))
-        for i, (name, value) in enumerate(features.items()):
+        i = 0
+        for name, value in features.items():
+            assert i < size, "index out of range for feature array capacity"
             packed = name.encode()
             cstr = packed
             hb_feature_from_string(packed, len(packed), &feat)
-            feat.value = value
-            hb_features[i] = feat
+            if isinstance(value, int):
+                feat.value = value
+                hb_features[i] = feat
+                i += 1
+            else:
+                for start, end, value in value:
+                    feat.value = value
+                    feat.start = start
+                    feat.end = end
+                    hb_features[i] = feat
+                    i += 1
     if shapers:
         c_shapers = to_cstring_array(shapers)
         hb_shape_full(font._hb_font, buffer._hb_buffer, hb_features, size, c_shapers)
