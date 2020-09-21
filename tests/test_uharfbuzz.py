@@ -203,6 +203,7 @@ class TestShape:
             ("edcbaedcba", {}, ["e", "d", "a", "b", "a", "e", "d", "a", "b", "a"]),
             ("edcbaedcba", {"calt[2]": False}, ["e", "d", "c", "b", "a", "e", "d", "a", "b", "a"]),
             ("edcbaedcba", {"calt": [(7, 8, False)]}, ["e", "d", "a", "b", "a", "e", "d", "c", "b", "a"]),
+            ("edcbaedcba", {"calt": [(0, 10, False), (7, 8, True)]}, ["e", "d", "c", "b", "a", "e", "d", "a", "b", "a"]),
         ],
     )
     def test_features_slice(self, blankfont, string, features, expected):
