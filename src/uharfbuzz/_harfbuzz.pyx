@@ -604,12 +604,13 @@ def shape(font: Font, buffer: Buffer,
             assert i < size, "index out of range for feature array capacity"
             packed = name.encode()
             cstr = packed
-            hb_feature_from_string(packed, len(packed), &feat)
             if isinstance(value, int):
+                hb_feature_from_string(packed, len(packed), &feat)
                 feat.value = value
                 hb_features[i] = feat
                 i += 1
             else:
+                feat.tag = hb_tag_from_string(packed, -1)
                 for start, end, value in value:
                     feat.value = value
                     feat.start = start
