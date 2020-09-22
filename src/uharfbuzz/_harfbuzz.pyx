@@ -587,42 +587,43 @@ def shape(font: Font, buffer: Buffer,
     cdef bytes packed
     cdef hb_feature_t feat
     cdef const char **c_shapers
-    if not features:
-        size = 0
-        hb_features = NULL
-    else:
-        size = 0
-        for value in features.values():
-            if isinstance(value, int):
-                size += 1
-            else:
-                size += len(value)
-        hb_features = <hb_feature_t*>malloc(size * sizeof(hb_feature_t))
-        i = 0
-        for name, value in features.items():
-            assert i < size, "index out of range for feature array capacity"
-            packed = name.encode()
-            if isinstance(value, int):
-                hb_feature_from_string(packed, len(packed), &feat)
-                feat.value = value
-                hb_features[i] = feat
-                i += 1
-            else:
-                feat.tag = hb_tag_from_string(packed, -1)
-                for start, end, value in value:
+    size = 0
+    hb_features = NULL
+    try:
+        if features:
+            size = 0
+            for value in features.values():
+                if isinstance(value, int):
+                    size += 1
+                else:
+                    size += len(value)
+            hb_features = <hb_feature_t*>malloc(size * sizeof(hb_feature_t))
+            i = 0
+            for name, value in features.items():
+                assert i < size, "index out of range for feature array capacity"
+                packed = name.encode()
+                if isinstance(value, int):
+                    hb_feature_from_string(packed, len(packed), &feat)
                     feat.value = value
-                    feat.start = start
-                    feat.end = end
                     hb_features[i] = feat
                     i += 1
-    if shapers:
-        c_shapers = to_cstring_array(shapers)
-        hb_shape_full(font._hb_font, buffer._hb_buffer, hb_features, size, c_shapers)
-        free(c_shapers)
-    else:
-        hb_shape(font._hb_font, buffer._hb_buffer, hb_features, size)
-    if hb_features is not NULL:
-        free(hb_features)
+                else:
+                    feat.tag = hb_tag_from_string(packed, -1)
+                    for start, end, value in value:
+                        feat.value = value
+                        feat.start = start
+                        feat.end = end
+                        hb_features[i] = feat
+                        i += 1
+        if shapers:
+            c_shapers = to_cstring_array(shapers)
+            hb_shape_full(font._hb_font, buffer._hb_buffer, hb_features, size, c_shapers)
+            free(c_shapers)
+        else:
+            hb_shape(font._hb_font, buffer._hb_buffer, hb_features, size)
+    finally:
+        if hb_features is not NULL:
+            free(hb_features)
 
 
 DEF STATIC_TAGS_ARRAY_SIZE = 128
