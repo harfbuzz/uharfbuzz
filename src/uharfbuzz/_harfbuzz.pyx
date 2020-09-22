@@ -593,7 +593,7 @@ def shape(font: Font, buffer: Buffer,
         hb_features = NULL
     else:
         size = 0
-        for name, value in features.items():
+        for value in features.values():
             if isinstance(value, int):
                 size += 1
             else:
