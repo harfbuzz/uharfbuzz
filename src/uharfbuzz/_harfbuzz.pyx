@@ -585,7 +585,6 @@ def shape(font: Font, buffer: Buffer,
     cdef unsigned int size
     cdef hb_feature_t* hb_features
     cdef bytes packed
-    cdef char* cstr
     cdef hb_feature_t feat
     cdef const char **c_shapers
     if not features:
@@ -603,7 +602,6 @@ def shape(font: Font, buffer: Buffer,
         for name, value in features.items():
             assert i < size, "index out of range for feature array capacity"
             packed = name.encode()
-            cstr = packed
             if isinstance(value, int):
                 hb_feature_from_string(packed, len(packed), &feat)
                 feat.value = value
