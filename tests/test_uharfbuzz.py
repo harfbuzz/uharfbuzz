@@ -196,6 +196,25 @@ class TestShape:
         assert glyph_names == expected
         assert blankfont.glyph_to_string(1000) == 'gid1000'
 
+    @pytest.mark.parametrize(
+        "string, features, expected",
+        [
+            # The calt feature replaces c by a in the context e, d, c', b, a.
+            ("edcbaedcba", {}, ["e", "d", "a", "b", "a", "e", "d", "a", "b", "a"]),
+            ("edcbaedcba", {"calt[2]": False}, ["e", "d", "c", "b", "a", "e", "d", "a", "b", "a"]),
+            ("edcbaedcba", {"calt": [(7, 8, False)]}, ["e", "d", "a", "b", "a", "e", "d", "c", "b", "a"]),
+            ("edcbaedcba", {"calt": [(0, 10, False), (7, 8, True)]}, ["e", "d", "c", "b", "a", "e", "d", "a", "b", "a"]),
+        ],
+    )
+    def test_features_slice(self, blankfont, string, features, expected):
+        buf = hb.Buffer()
+        buf.add_str(string)
+        buf.guess_segment_properties()
+        hb.shape(blankfont, buf, features)
+
+        glyph_names = [blankfont.glyph_to_string(g.codepoint) for g in buf.glyph_infos]
+        assert glyph_names == expected
+
 
 class TestCallbacks:
     def test_nominal_glyph_func(self, blankfont):
