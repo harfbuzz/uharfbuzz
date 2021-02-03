@@ -27,7 +27,6 @@ def blankfont():
     font = hb.Font(face)
     upem = face.upem
     font.scale = (upem, upem)
-    hb.ot_font_set_funcs(font)
     return font
 
 
@@ -43,7 +42,6 @@ def opensans():
     font = hb.Font(face)
     upem = face.upem
     font.scale = (upem, upem)
-    hb.ot_font_set_funcs(font)
     return font
 
 
