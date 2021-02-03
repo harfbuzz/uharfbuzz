@@ -25,9 +25,6 @@ def blankfont():
     """
     face = hb.Face(ADOBE_BLANK_TTF_PATH.read_bytes())
     font = hb.Font(face)
-    upem = face.upem
-    font.scale = (upem, upem)
-    hb.ot_font_set_funcs(font)
     return font
 
 
@@ -41,9 +38,6 @@ def opensans():
     """
     face = hb.Face(OPEN_SANS_TTF_PATH.read_bytes())
     font = hb.Font(face)
-    upem = face.upem
-    font.scale = (upem, upem)
-    hb.ot_font_set_funcs(font)
     return font
 
 

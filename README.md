@@ -22,8 +22,6 @@ text = sys.argv[2]
 
 face = hb.Face(fontdata)
 font = hb.Font(face)
-upem = face.upem
-font.scale = (upem, upem)
 
 buf = hb.Buffer()
 buf.add_str(text)
