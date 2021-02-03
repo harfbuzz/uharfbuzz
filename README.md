@@ -10,8 +10,9 @@ Streamlined Cython bindings for the [HarfBuzz][hb] shaping engine.
 ### Example
 
 ```python
-import uharfbuzz as hb
 import sys
+
+import uharfbuzz as hb
 
 
 with open(sys.argv[1], 'rb') as fontfile:
@@ -22,12 +23,9 @@ text = sys.argv[2]
 face = hb.Face(fontdata)
 font = hb.Font(face)
 upem = face.upem
-
 font.scale = (upem, upem)
-hb.ot_font_set_funcs(font)
 
 buf = hb.Buffer()
-
 buf.add_str(text)
 buf.guess_segment_properties()
 
