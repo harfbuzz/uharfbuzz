@@ -24,7 +24,7 @@ install:
   - git submodule update --init --recursive
   - SET PATH=%PYTHON%;%PYTHON%\Scripts;%PATH%
   - python -m pip install --upgrade pip
-  - pip install cibuildwheel==1.1.0
+  - pip install cibuildwheel
 
 build_script:
   - cibuildwheel --output-dir wheelhouse
