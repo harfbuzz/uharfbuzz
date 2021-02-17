@@ -5,8 +5,8 @@ configuration: Release
 environment:
   global:
     PYTHON: "C:\\Python37-x64"
-    # skip 2.7, 3.4 and 3.5: for now, only build for >= 3.6
-    CIBW_SKIP: "cp27-* cp33-* cp34-* cp35-*"
+    # skip 2.7, 3.4 and 3.5 and pypy3; only build for >= 3.6
+    CIBW_SKIP: "cp27-* cp33-* cp34-* cp35-* pp*"
     CIBW_TEST_REQUIRES: "pytest"
     CIBW_TEST_COMMAND: "cd {project} && pytest"
     TWINE_USERNAME: "anthrotype"
