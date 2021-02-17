@@ -20,7 +20,7 @@ jobs:
         os: [ubuntu-latest, macos-latest]
     env:
       # skip 2.7, 3.4 and 3.5 and pypy; only build for >= 3.6 64-bit
-      CIBW_SKIP: "cp27-* cp33-* cp34-* cp35-* cp*manylinux1_i686 pp*"
+      CIBW_SKIP: "cp27-* cp33-* cp34-* cp35-* *manylinux2010* cp*manylinux1_i686 pp*"
       CIBW_TEST_REQUIRES: "pytest"
       CIBW_TEST_COMMAND: "cd {project} && pytest"
 
