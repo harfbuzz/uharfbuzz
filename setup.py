@@ -20,8 +20,12 @@ if int(os.environ.get('CYTHON_LINETRACE', '0')):
     define_macros.append(('CYTHON_TRACE_NOGIL', '1'))
 
 extra_compile_args = []
+extra_link_args = []
 if platform.system() != 'Windows':
     extra_compile_args.append('-std=c++11')
+if platform.system() == 'Darwin':
+    define_macros.append(('HAVE_CORETEXT', '1'))
+    extra_link_args.extend(['-framework', 'ApplicationServices'])
 
 extension = Extension(
     'uharfbuzz._harfbuzz',
@@ -30,6 +34,7 @@ extension = Extension(
     sources=['src/uharfbuzz/_harfbuzz.pyx', 'harfbuzz/src/harfbuzz.cc'],
     language='c++',
     extra_compile_args=extra_compile_args,
+    extra_link_args=extra_link_args,
 )
 
 setup(
