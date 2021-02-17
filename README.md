@@ -1,4 +1,4 @@
-[![Travis Build Status](https://travis-ci.org/harfbuzz/uharfbuzz.svg?branch=master)](https://travis-ci.org/harfbuzz/uharfbuzz)
+[![Githun CI Status](https://github.com/fonttools/uharfbuzz/workflows/Build%20+%20Deploy/badge.svg)](https://github.com/fonttools/uharfbuzz/actions?query=workflow%3A%22Build+%2B+Deploy%22)
 [![Appveyor Build status](https://ci.appveyor.com/api/projects/status/k52t0vwqb9rhcl9v/branch/master?svg=true)](https://ci.appveyor.com/project/fonttools/uharfbuzz/branch/master)
 [![PyPI](https://img.shields.io/pypi/v/uharfbuzz.svg)](https://pypi.org/project/uharfbuzz)
 
