@@ -414,6 +414,16 @@ cdef class Font:
         else:
             return None
 
+    def get_glyph_extents(self, gid: int):
+        cdef hb_glyph_extents_t extents
+        success = hb_font_get_glyph_extents(self._hb_font, gid, &extents)
+        if success:
+            return (extents.x_bearing, extents.y_bearing,
+                    extents.width, extents.height)
+        else:
+            return None
+
+
     def glyph_to_string(self, gid: int):
         cdef char name[64]
         cdef bytes packed
