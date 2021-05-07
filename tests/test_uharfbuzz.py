@@ -185,7 +185,7 @@ class TestShape:
         ],
         ids=["ascii", "latin1", "ucs2", "ucs4"],
     )
-    def test_glyh_name_no_features(self, blankfont, string, expected):
+    def test_glyph_name_no_features(self, blankfont, string, expected):
         buf = hb.Buffer()
         buf.add_str(string)
         buf.guess_segment_properties()
