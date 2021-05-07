@@ -25,6 +25,11 @@ cdef extern from "hb.h":
         unsigned long value
         unsigned int start
         unsigned int end
+    ctypedef struct hb_glyph_extents_t:
+        hb_position_t x_bearing
+        hb_position_t y_bearing
+        hb_position_t width
+        hb_position_t height
 
     hb_direction_t hb_direction_from_string(const char* str, int len)
     const char* hb_direction_to_string(hb_direction_t direction)
@@ -229,6 +234,10 @@ cdef extern from "hb.h":
         hb_codepoint_t glyph,
         char* name,
         unsigned int size)
+    hb_bool_t hb_font_get_glyph_extents(
+        hb_font_t* font,
+        hb_codepoint_t glyph,
+        hb_glyph_extents_t *extents)
     void hb_font_glyph_to_string(
         hb_font_t* font,
         hb_codepoint_t glyph,
