@@ -140,6 +140,10 @@ class TestFont:
         x, y, w, h = opensans.get_glyph_extents(1)
         assert (0, 1468, 1296, -1468) == (x, y, w, h)
 
+    def test_get_glyph_name(self, blankfont):
+        glyph_name = blankfont.get_glyph_name(1)
+        assert glyph_name == "a"
+
 
 class TestShape:
     @pytest.mark.parametrize(
