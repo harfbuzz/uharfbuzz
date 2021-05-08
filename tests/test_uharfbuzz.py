@@ -147,6 +147,12 @@ class TestFont:
         glyph_name = blankfont.get_glyph_name(1000)
         assert glyph_name is None
 
+    def test_get_nominal_glyph(self, blankfont):
+        gid = blankfont.get_nominal_glyph(ord("a"))
+        assert gid == 1
+        gid = blankfont.get_nominal_glyph(ord("å"))
+        assert gid is None
+
 
 class TestShape:
     @pytest.mark.parametrize(

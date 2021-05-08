@@ -423,6 +423,10 @@ cdef class Font:
         else:
             return None
 
+    def get_nominal_glyph(self, unicode: int):
+        cdef hb_codepoint_t gid
+        success = hb_font_get_nominal_glyph(self._hb_font, unicode, &gid)
+        return gid if success else None
 
     def glyph_to_string(self, gid: int):
         cdef char name[64]
