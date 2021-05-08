@@ -434,6 +434,20 @@ cdef class Font:
         coords = hb_font_get_var_coords_normalized(self._hb_font, &length)
         return [coords[i] / 0x4000 for i in range(length)]
 
+    def set_var_coords_normalized(self, coords):
+        cdef unsigned int length
+        cdef int *coords_2dot14
+        length = len(coords)
+        coords_2dot14 = <int *>malloc(length * sizeof(int))
+        if coords_2dot14 is NULL:
+            raise MemoryError()
+        try:
+            for i in range(length):
+                coords_2dot14[i] = round(coords[i] * 0x4000)
+            hb_font_set_var_coords_normalized(self._hb_font, coords_2dot14, length)
+        finally:
+            free(coords_2dot14)
+
     def glyph_to_string(self, gid: int):
         cdef char name[64]
         cdef bytes packed

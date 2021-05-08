@@ -175,6 +175,20 @@ class TestFont:
         coords = mutatorsans.get_var_coords_normalized()
         assert coords == [0.25, 0.25]
 
+    def test_set_var_coords_normalized(self, mutatorsans):
+        expected_coords = [0.5, 0.25]
+        mutatorsans.set_var_coords_normalized(expected_coords)
+        coords = mutatorsans.get_var_coords_normalized()
+        assert expected_coords == coords
+
+        expected_coords = [0.5]
+        mutatorsans.set_var_coords_normalized(expected_coords)
+        coords = mutatorsans.get_var_coords_normalized()
+        assert expected_coords == coords
+
+        with pytest.raises(TypeError):
+            mutatorsans.set_var_coords_normalized(["a"])
+
 
 class TestShape:
     @pytest.mark.parametrize(
