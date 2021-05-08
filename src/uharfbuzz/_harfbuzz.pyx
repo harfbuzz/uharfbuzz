@@ -428,6 +428,12 @@ cdef class Font:
         success = hb_font_get_nominal_glyph(self._hb_font, unicode, &gid)
         return gid if success else None
 
+    def get_var_coords_normalized(self):
+        cdef unsigned int length
+        cdef const int *coords
+        coords = hb_font_get_var_coords_normalized(self._hb_font, &length)
+        return [coords[i] / 0x4000 for i in range(length)]
+
     def glyph_to_string(self, gid: int):
         cdef char name[64]
         cdef bytes packed

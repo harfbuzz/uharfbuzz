@@ -6,6 +6,7 @@ import pytest
 TESTDATA = Path(__file__).parent / "data"
 ADOBE_BLANK_TTF_PATH = TESTDATA / "AdobeBlank.subset.ttf"
 OPEN_SANS_TTF_PATH = TESTDATA / "OpenSans.subset.ttf"
+MUTATOR_SANS_TTF_PATH = TESTDATA / "MutatorSans-VF.subset.ttf"
 
 
 @pytest.fixture
@@ -37,6 +38,14 @@ def opensans():
     ]
     """
     face = hb.Face(OPEN_SANS_TTF_PATH.read_bytes())
+    font = hb.Font(face)
+    return font
+
+
+@pytest.fixture
+def mutatorsans():
+    """Return a subset of MutatorSans-VF with a wdth and wght axis."""
+    face = hb.Face(MUTATOR_SANS_TTF_PATH.read_bytes())
     font = hb.Font(face)
     return font
 
@@ -152,6 +161,19 @@ class TestFont:
         assert gid == 1
         gid = blankfont.get_nominal_glyph(ord("å"))
         assert gid is None
+
+    def test_get_var_coords_normalized(self, mutatorsans):
+        coords = mutatorsans.get_var_coords_normalized()
+        assert coords == []
+        mutatorsans.set_variations({"wght": 500})
+        coords = mutatorsans.get_var_coords_normalized()
+        assert coords == [0, 0.5]
+        mutatorsans.set_variations({"wdth": 1000})
+        coords = mutatorsans.get_var_coords_normalized()
+        assert coords == [1.0, 0]
+        mutatorsans.set_variations({"wdth": 250, "wght": 250})
+        coords = mutatorsans.get_var_coords_normalized()
+        assert coords == [0.25, 0.25]
 
 
 class TestShape:
