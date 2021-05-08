@@ -137,8 +137,12 @@ class TestBuffer:
 class TestFont:
     def test_get_glyph_extents(self, opensans):
         # <TTGlyph name="A" xMin="0" yMin="0" xMax="1296" yMax="1468">
-        x, y, w, h = opensans.get_glyph_extents(1)
-        assert (0, 1468, 1296, -1468) == (x, y, w, h)
+        extents = opensans.get_glyph_extents(1)
+        assert (0, 1468, 1296, -1468) == extents
+        assert 0 == extents.x_bearing
+        assert 1468 == extents.y_bearing
+        assert 1296 == extents.width
+        assert -1468 == extents.height
         assert opensans.get_glyph_extents(1000) is None
 
     def test_get_glyph_name(self, blankfont):

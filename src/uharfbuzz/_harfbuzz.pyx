@@ -3,6 +3,7 @@ from enum import IntEnum
 from .charfbuzz cimport *
 from libc.stdlib cimport free, malloc
 from libc.string cimport const_char
+from collections import namedtuple
 from typing import Callable, Dict, List, Sequence, Tuple, Union
 
 
@@ -338,6 +339,12 @@ cdef class Face:
         hb_face_set_upem(self._hb_face, value)
 
 
+# typing.NamedTuple doesn't seem to work with cython
+GlyphExtents = namedtuple(
+    "GlyphExtents", ["x_bearing", "y_bearing", "width", "height"]
+)
+
+
 cdef class Font:
     cdef hb_font_t* _hb_font
     # GC bookkeeping
@@ -418,8 +425,12 @@ cdef class Font:
         cdef hb_glyph_extents_t extents
         success = hb_font_get_glyph_extents(self._hb_font, gid, &extents)
         if success:
-            return (extents.x_bearing, extents.y_bearing,
-                    extents.width, extents.height)
+            return GlyphExtents(
+                extents.x_bearing,
+                extents.y_bearing,
+                extents.width,
+                extents.height,
+            )
         else:
             return None
 
