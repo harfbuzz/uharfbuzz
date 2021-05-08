@@ -443,6 +443,7 @@ cdef class Font:
         cdef unsigned int length
         cdef const int *coords
         coords = hb_font_get_var_coords_normalized(self._hb_font, &length)
+        # Convert from 2.14 fixed to float: divide by 1 << 14
         return [coords[i] / 0x4000 for i in range(length)]
 
     def set_var_coords_normalized(self, coords):
@@ -454,6 +455,7 @@ cdef class Font:
             raise MemoryError()
         try:
             for i in range(length):
+                # Convert from float to 2.14 fixed: multiply by 1 << 14
                 coords_2dot14[i] = round(coords[i] * 0x4000)
             hb_font_set_var_coords_normalized(self._hb_font, coords_2dot14, length)
         finally:
