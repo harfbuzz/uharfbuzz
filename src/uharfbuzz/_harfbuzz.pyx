@@ -339,7 +339,7 @@ cdef class Face:
         hb_face_set_upem(self._hb_face, value)
 
 
-# I can't get typing.NamedTuple to work with cython
+# typing.NamedTuple doesn't seem to work with cython
 GlyphExtents = namedtuple(
     "GlyphExtents", ["x_bearing", "y_bearing", "width", "height"]
 )
