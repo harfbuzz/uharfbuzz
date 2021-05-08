@@ -238,6 +238,17 @@ cdef extern from "hb.h":
         hb_font_t* font,
         hb_codepoint_t glyph,
         hb_glyph_extents_t *extents)
+    hb_bool_t hb_font_get_nominal_glyph(
+        hb_font_t *font,
+        hb_codepoint_t unicode,
+        hb_codepoint_t *glyph)
+    const int * hb_font_get_var_coords_normalized(
+        hb_font_t *font,
+        unsigned int *length)
+    void hb_font_set_var_coords_normalized(
+        hb_font_t *font,
+        const int *coords,
+        unsigned int coords_length)
     void hb_font_glyph_to_string(
         hb_font_t* font,
         hb_codepoint_t glyph,
