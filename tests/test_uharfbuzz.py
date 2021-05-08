@@ -134,6 +134,20 @@ class TestBuffer:
         assert buf.cluster_level == 1
 
 
+class TestFont:
+    def test_get_glyph_extents(self, opensans):
+        # <TTGlyph name="A" xMin="0" yMin="0" xMax="1296" yMax="1468">
+        x, y, w, h = opensans.get_glyph_extents(1)
+        assert (0, 1468, 1296, -1468) == (x, y, w, h)
+        assert opensans.get_glyph_extents(1000) is None
+
+    def test_get_glyph_name(self, blankfont):
+        glyph_name = blankfont.get_glyph_name(1)
+        assert glyph_name == "a"
+        glyph_name = blankfont.get_glyph_name(1000)
+        assert glyph_name is None
+
+
 class TestShape:
     @pytest.mark.parametrize(
         "string, expected",
