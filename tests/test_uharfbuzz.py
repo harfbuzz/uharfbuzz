@@ -509,4 +509,5 @@ def test_uharfbuzz_version():
 def test_sparsefont_coretext(sparsefont):
     buf = hb.Buffer()
     buf.add_str("ABC")
+    buf.guess_segment_properties()
     hb.shape(sparsefont, buf, shapers=["coretext"])
