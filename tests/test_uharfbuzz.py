@@ -1,5 +1,6 @@
 import uharfbuzz as hb
 from pathlib import Path
+import sys
 import pytest
 
 
@@ -7,6 +8,7 @@ TESTDATA = Path(__file__).parent / "data"
 ADOBE_BLANK_TTF_PATH = TESTDATA / "AdobeBlank.subset.ttf"
 OPEN_SANS_TTF_PATH = TESTDATA / "OpenSans.subset.ttf"
 MUTATOR_SANS_TTF_PATH = TESTDATA / "MutatorSans-VF.subset.ttf"
+SPARSE_FONT_TTF_PATH = TESTDATA / "SparseFont.ttf"
 
 
 @pytest.fixture
@@ -46,6 +48,15 @@ def opensans():
 def mutatorsans():
     """Return a subset of MutatorSans-VF with a wdth and wght axis."""
     face = hb.Face(MUTATOR_SANS_TTF_PATH.read_bytes())
+    font = hb.Font(face)
+    return font
+
+
+@pytest.fixture
+def sparsefont():
+    """Return a font that only has a few tables:
+    GPOS, cmap, head, maxp and post"""
+    face = hb.Face(SPARSE_FONT_TTF_PATH.read_bytes())
     font = hb.Font(face)
     return font
 
@@ -492,3 +503,10 @@ def test_uharfbuzz_version():
     v = hb.__version__
     assert isinstance(v, str)
     assert "unknown" not in v
+
+
+@pytest.mark.skipif(sys.platform != "darwin", reason="requires macOS")
+def test_sparsefont_coretext(sparsefont):
+    buf = hb.Buffer()
+    buf.add_str("ABC")
+    hb.shape(sparsefont, buf, shapers=["coretext"])
