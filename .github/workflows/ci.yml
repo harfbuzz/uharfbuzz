@@ -17,7 +17,7 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        os: [ubuntu-latest, macos-latest]
+        os: [ubuntu-latest, macos-latest, windows-latest]
     env:
       # skip 2.7, 3.4 and 3.5 and pypy; only build for >= 3.6 64-bit
       CIBW_SKIP: "cp27-* cp33-* cp34-* cp35-* *-manylinux_i686 pp*"
