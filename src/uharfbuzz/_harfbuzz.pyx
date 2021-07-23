@@ -159,6 +159,8 @@ cdef class Buffer:
     def language(self) -> str:
         cdef const_char* cstr = hb_language_to_string(
             hb_buffer_get_language(self._hb_buffer))
+        if cstr is NULL:
+            return ''
         cdef bytes packed = cstr
         return packed.decode()
 

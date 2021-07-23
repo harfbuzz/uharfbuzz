@@ -123,6 +123,12 @@ class TestBuffer:
         buf.set_language_from_ot_tag("BGR")
         assert buf.language == "bg"
 
+    def test_empty_buffer_props(self):
+        buf = hb.Buffer()
+        assert buf.script == ""
+        assert buf.language == ""
+        assert buf.direction == "invalid"
+
     def test_cluster_level(self):
         buf = hb.Buffer()
 
