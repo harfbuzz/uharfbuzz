@@ -369,9 +369,8 @@ class TestCallbacks:
         assert gids_trace == [[5, 4, 3, 2, 1], [5, 4, 3, 2, 1], [5, 4, 1, 2, 1],
                               [5, 4, 1, 2, 1], [5, 4, 1, 2, 1], [5, 4, 1, 2, 1],
                               [5, 4, 1, 2, 1], [5, 4, 1, 2, 1]]
-        advances_trace = [[g.x_advance for g in pos] for pos in positions_trace]
-        assert advances_trace == [[0, 0, 0, 0, 0], [0, 0, 0, 0, 0], [0, 0, 0, 0, 0],
-                                  [0, 0, 0, 0, 0], [0, 0, 0, 0, 0], [0, 0, 0, 0, 0],
+        advances_trace = [[g.x_advance for g in pos] for pos in positions_trace if pos]
+        assert advances_trace == [[0, 0, 0, 0, 0], [0, 0, 0, 0, 0],
                                   [0, 0, 0, 100, 0], [0, 0, 0, 100, 0]]
 
     def test_message_func_crash(self, blankfont):
