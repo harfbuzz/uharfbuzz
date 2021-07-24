@@ -142,6 +142,8 @@ cdef class Buffer:
         cdef unsigned int count
         cdef hb_glyph_position_t* glyph_positions = \
             hb_buffer_get_glyph_positions(self._hb_buffer, &count)
+        if glyph_positions is NULL:
+            return None
         cdef list positions = []
         cdef GlyphPosition position
         cdef unsigned int i
