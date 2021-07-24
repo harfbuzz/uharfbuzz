@@ -21,8 +21,14 @@ if int(os.environ.get('CYTHON_LINETRACE', '0')):
 
 extra_compile_args = []
 extra_link_args = []
+libraries = []
 if platform.system() != 'Windows':
     extra_compile_args.append('-std=c++11')
+else:
+    define_macros.append(('HAVE_DIRECTWRITE', '1'))
+    define_macros.append(('HAVE_UNISCRIBE', '1'))
+    libraries += ['usp10', 'gdi32', 'user32', 'rpcrt4', 'dwrite']
+
 if platform.system() == 'Darwin':
     define_macros.append(('HAVE_CORETEXT', '1'))
     extra_link_args.extend(['-framework', 'ApplicationServices'])
@@ -33,6 +39,7 @@ extension = Extension(
     include_dirs=['harfbuzz/src'],
     sources=['src/uharfbuzz/_harfbuzz.pyx', 'harfbuzz/src/harfbuzz.cc'],
     language='c++',
+    libraries=libraries,
     extra_compile_args=extra_compile_args,
     extra_link_args=extra_link_args,
 )
