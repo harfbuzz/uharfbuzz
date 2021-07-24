@@ -21,7 +21,6 @@ cdef extern from "Python.h":
     int PyUnicode_1BYTE_KIND
     int PyUnicode_2BYTE_KIND
     int PyUnicode_4BYTE_KIND
-    char* PyUnicode_AsUTF8(object unicode)
 
 
 cdef int msgcallback(hb_buffer_t *buffer, hb_font_t *font, const char* message, void* userdata):
@@ -619,14 +618,6 @@ cdef class FontFuncs:
         self._nominal_glyph_func = func
 
 
-cdef const char ** to_cstring_array(list_str):
-    cdef const char **ret = <const char **>malloc((len(list_str) + 1) * sizeof(char *))
-    for i in range(len(list_str)):
-        ret[i] = PyUnicode_AsUTF8(list_str[i])
-    ret[i + 1] = NULL
-    return ret
-
-
 def shape(font: Font, buffer: Buffer,
         features: Dict[str,Union[int,bool,Sequence[Tuple[int,int,Union[int,bool]]]]] = None,
         shapers: List[str] = None) -> None:
@@ -634,7 +625,7 @@ def shape(font: Font, buffer: Buffer,
     cdef hb_feature_t* hb_features
     cdef bytes packed
     cdef hb_feature_t feat
-    cdef const char **c_shapers
+    cdef const char* c_shapers[10]
     size = 0
     hb_features = NULL
     try:
@@ -663,9 +654,11 @@ def shape(font: Font, buffer: Buffer,
                         hb_features[i] = feat
                         i += 1
         if shapers:
-            c_shapers = to_cstring_array(shapers)
+            for i, shaper in enumerate(shapers[:9]):
+                packed = shaper.encode()
+                c_shapers[i] = packed
+            c_shapers[i + 1] = NULL
             hb_shape_full(font._hb_font, buffer._hb_buffer, hb_features, size, c_shapers)
-            free(c_shapers)
         else:
             hb_shape(font._hb_font, buffer._hb_buffer, hb_features, size)
     finally:
