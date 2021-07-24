@@ -160,7 +160,7 @@ cdef class Buffer:
         cdef const_char* cstr = hb_language_to_string(
             hb_buffer_get_language(self._hb_buffer))
         if cstr is NULL:
-            return ''
+            return None
         cdef bytes packed = cstr
         return packed.decode()
 
@@ -176,6 +176,8 @@ cdef class Buffer:
         cdef char cstr[5]
         hb_tag_to_string(hb_buffer_get_script(self._hb_buffer), cstr)
         cstr[4] = b'\0'
+        if cstr[0] == b'\0':
+            return None
         cdef bytes packed = cstr
         return packed.decode()
 

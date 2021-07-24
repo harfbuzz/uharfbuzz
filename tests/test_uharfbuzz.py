@@ -125,8 +125,8 @@ class TestBuffer:
 
     def test_empty_buffer_props(self):
         buf = hb.Buffer()
-        assert buf.script == ""
-        assert buf.language == ""
+        assert buf.script == None
+        assert buf.language == None
         assert buf.direction == "invalid"
 
     def test_cluster_level(self):
