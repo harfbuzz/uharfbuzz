@@ -247,6 +247,7 @@ class TestShape:
         expected = [(0, 0, 0, 0), (0, 0, 0, 0), (0, 0, 0, 0), (0, 0, 0, 0), (0, 0, 0, 0)]
         assert pos == expected
 
+    @pytest.mark.xfail
     @pytest.mark.skipif(sys.platform != "win32", reason="requires Windows")
     def test_shape_set_shaper_uniscribe(self, blankfont):
         string = "abcde"

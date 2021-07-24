@@ -26,7 +26,7 @@ if platform.system() != 'Windows':
     extra_compile_args.append('-std=c++11')
 else:
     define_macros.append(('HAVE_DIRECTWRITE', '1'))
-    define_macros.append(('HAVE_UNISCRIBE', '1'))
+    #define_macros.append(('HAVE_UNISCRIBE', '1'))
     libraries += ['usp10', 'gdi32', 'user32', 'rpcrt4', 'dwrite']
 
 if platform.system() == 'Darwin':
