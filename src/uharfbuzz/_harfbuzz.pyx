@@ -620,9 +620,10 @@ cdef class FontFuncs:
 
 
 cdef const char ** to_cstring_array(list_str):
-    cdef const char **ret = <const char **>malloc(len(list_str) * sizeof(char *))
+    cdef const char **ret = <const char **>malloc((len(list_str) + 1) * sizeof(char *))
     for i in range(len(list_str)):
         ret[i] = PyUnicode_AsUTF8(list_str[i])
+    ret[i + 1] = NULL
     return ret
 
 
