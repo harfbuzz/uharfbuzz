@@ -660,7 +660,9 @@ def shape(font: Font, buffer: Buffer,
                 packed = shaper.encode()
                 c_shapers[i] = packed
             c_shapers[i + 1] = NULL
-            hb_shape_full(font._hb_font, buffer._hb_buffer, hb_features, size, c_shapers)
+            ret = hb_shape_full(font._hb_font, buffer._hb_buffer, hb_features, size, c_shapers)
+            if not ret:
+                raise RuntimeError("All shapers failed")
         else:
             hb_shape(font._hb_font, buffer._hb_buffer, hb_features, size)
     finally:
