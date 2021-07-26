@@ -22,7 +22,7 @@ jobs:
       # skip 2.7, 3.4 and 3.5 and pypy; only build for >= 3.6 64-bit
       CIBW_SKIP: "cp27-* cp33-* cp34-* cp35-* *-manylinux_i686 pp*"
       CIBW_TEST_REQUIRES: "pytest"
-      CIBW_TEST_COMMAND: "cd {project} && pytest"
+      CIBW_TEST_COMMAND: "pushd {project} && pytest"
       CIBW_MANYLINUX_X86_64_IMAGE: "manylinux1"
       CIBW_MANYLINUX_I686_IMAGE: "manylinux1"
 
