@@ -34,20 +34,13 @@ jobs:
       uses: actions/setup-python@v2
       with:
         python-version: "3.x"
-    - name: Set up environment variables
-      run: |
-        if [ "macos-latest" == "${{ matrix.os }}" ]; then
-          echo "TRAVIS_OS_NAME=osx" >> $GITHUB_ENV
-        else
-          echo "TRAVIS_OS_NAME=ubuntu" >> $GITHUB_ENV
-        fi
     - name: Install dependencies
       run: pip install cibuildwheel
     - name: Build Wheels
       run: python -m cibuildwheel --output-dir wheelhouse
     - uses: actions/upload-artifact@v2
       with:
-        name: uharfbuzz-${{ env.TRAVIS_OS_NAME }}
+        name: uharfbuzz-${{ matrix.os }}
         path: wheelhouse/*.whl
 
   deploy:
