@@ -5,6 +5,7 @@ from libc.stdlib cimport free, malloc
 from libc.string cimport const_char
 from collections import namedtuple
 from typing import Callable, Dict, List, Sequence, Tuple, Union
+from pathlib import Path
 
 
 cdef extern from "Python.h":
@@ -274,6 +275,31 @@ cdef class Buffer:
     def set_message_func(self, callback) -> None:
         self._message_callback = callback
         hb_buffer_set_message_func(self._hb_buffer, msgcallback, <void*>callback, NULL)
+
+
+cdef class Blob:
+    cdef hb_blob_t* _hb_blob
+    cdef object _data
+
+    def __cinit__(self, bytes data):
+        if data is not None:
+            self._data = data
+            self._hb_blob = hb_blob_create(
+                data, len(data), HB_MEMORY_MODE_READONLY, NULL, NULL)
+        else:
+            self._hb_blob = NULL
+
+    @classmethod
+    def from_file_path(cls, filename: Union[str, Path]):
+        cdef bytes packed = str(filename).encode()
+        cdef Blob inst = cls(None)
+        inst._hb_blob = hb_blob_create_from_file(<char*>packed)
+        return inst
+
+    def __dealloc__(self):
+        if self._hb_blob is not NULL:
+            hb_blob_destroy(self._hb_blob)
+        self._data = None
 
 
 cdef hb_user_data_key_t k
