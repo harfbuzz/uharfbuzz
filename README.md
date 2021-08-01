@@ -14,12 +14,11 @@ import sys
 import uharfbuzz as hb
 
 
-with open(sys.argv[1], 'rb') as fontfile:
-    fontdata = fontfile.read()
-
+fontfile = sys.argv[1]
 text = sys.argv[2]
 
-face = hb.Face(fontdata)
+blob = hb.Blob.from_file_path(fontfile)
+face = hb.Face(blob)
 font = hb.Font(face)
 
 buf = hb.Buffer()

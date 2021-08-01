@@ -325,22 +325,22 @@ cdef hb_blob_t* _reference_table_func(
 cdef class Face:
     cdef hb_face_t* _hb_face
     cdef object _reference_table_func
-    cdef object _blob
+    cdef Blob _blob
 
-    def __cinit__(self, bytes blob, int index=0):
-        cdef hb_blob_t* hb_blob
+    def __cinit__(self, blob: Union[Blob, bytes], int index=0):
         if blob is not None:
-            self._blob = blob
-            hb_blob = hb_blob_create(
-                blob, len(blob), HB_MEMORY_MODE_READONLY, NULL, NULL)
-            self._hb_face = hb_face_create(hb_blob, index)
-            hb_blob_destroy(hb_blob)
+            if not isinstance(blob, Blob):
+                self._blob = Blob(blob)
+            else:
+                self._blob = blob
+            self._hb_face = hb_face_create(self._blob._hb_blob, index)
         else:
             self._hb_face = NULL
 
     def __dealloc__(self):
         if self._hb_face is not NULL:
             hb_face_destroy(self._hb_face)
+        self._blob = None
 
     # DEPRECATED: use the normal constructor
     @classmethod
