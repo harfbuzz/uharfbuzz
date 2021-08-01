@@ -103,8 +103,7 @@ cdef class Buffer:
         self._message_callback = None
 
     def __dealloc__(self):
-        if self._hb_buffer is not NULL:
-            hb_buffer_destroy(self._hb_buffer)
+        hb_buffer_destroy(self._hb_buffer)
 
     # DEPRECATED: use the normal constructor
     @classmethod
@@ -287,7 +286,7 @@ cdef class Blob:
             self._hb_blob = hb_blob_create(
                 data, len(data), HB_MEMORY_MODE_READONLY, NULL, NULL)
         else:
-            self._hb_blob = NULL
+            self._hb_blob = hb_blob_get_empty()
 
     @classmethod
     def from_file_path(cls, filename: Union[str, Path]):
@@ -297,8 +296,7 @@ cdef class Blob:
         return inst
 
     def __dealloc__(self):
-        if self._hb_blob is not NULL:
-            hb_blob_destroy(self._hb_blob)
+        hb_blob_destroy(self._hb_blob)
         self._data = None
 
 
@@ -335,11 +333,10 @@ cdef class Face:
                 self._blob = blob
             self._hb_face = hb_face_create(self._blob._hb_blob, index)
         else:
-            self._hb_face = NULL
+            self._hb_face = hb_face_get_empty()
 
     def __dealloc__(self):
-        if self._hb_face is not NULL:
-            hb_face_destroy(self._hb_face)
+        hb_face_destroy(self._hb_face)
         self._blob = None
 
     # DEPRECATED: use the normal constructor
@@ -389,8 +386,7 @@ cdef class Font:
         self._face = face
 
     def __dealloc__(self):
-        if self._hb_font is not NULL:
-            hb_font_destroy(self._hb_font)
+        hb_font_destroy(self._hb_font)
         self._face = self._ffuncs = None
 
     # DEPRECATED: use the normal constructor
@@ -587,8 +583,7 @@ cdef class FontFuncs:
         self._hb_ffuncs = hb_font_funcs_create()
 
     def __dealloc__(self):
-        if self._hb_ffuncs is not NULL:
-            hb_font_funcs_destroy(self._hb_ffuncs)
+        hb_font_funcs_destroy(self._hb_ffuncs)
 
     # DEPRECATED: use the normal constructor
     @classmethod
@@ -868,8 +863,7 @@ cdef class DrawFuncs:
         self._user_data = None
 
     def __dealloc__(self):
-        if self._hb_drawfuncs is not NULL:
-            hb_draw_funcs_destroy(self._hb_drawfuncs)
+        hb_draw_funcs_destroy(self._hb_drawfuncs)
 
     def draw_glyph(self, font: Font, gid: int, user_data: object):
         self._user_data = user_data
