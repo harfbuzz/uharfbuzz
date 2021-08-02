@@ -1,4 +1,5 @@
 #cython: language_level=3
+import os
 from enum import IntEnum
 from .charfbuzz cimport *
 from libc.stdlib cimport free, malloc
@@ -290,7 +291,7 @@ cdef class Blob:
 
     @classmethod
     def from_file_path(cls, filename: Union[str, Path]):
-        cdef bytes packed = str(filename).encode()
+        cdef bytes packed = os.fsencode(filename)
         cdef Blob inst = cls(None)
         inst._hb_blob = hb_blob_create_from_file(<char*>packed)
         return inst
