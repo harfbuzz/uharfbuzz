@@ -24,6 +24,9 @@ extra_link_args = []
 libraries = []
 if platform.system() != 'Windows':
     extra_compile_args.append('-std=c++11')
+    define_macros.append(('HAVE_MMAP', '1'))
+    define_macros.append(('HAVE_UNISTD_H', '1'))
+    define_macros.append(('HAVE_SYS_MMAN_H', '1'))
 else:
     define_macros.append(('HAVE_DIRECTWRITE', '1'))
     #define_macros.append(('HAVE_UNISCRIBE', '1'))

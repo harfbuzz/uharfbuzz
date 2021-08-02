@@ -73,7 +73,18 @@ cdef extern from "hb.h":
         hb_memory_mode_t mode,
         void* user_data, hb_destroy_func_t destroy)
 
+    hb_blob_t* hb_blob_create_from_file(
+        const char *file_name)
+
     void hb_blob_destroy(hb_blob_t* blob)
+
+    const char* hb_blob_get_data(
+        hb_blob_t *blob, unsigned int *length)
+
+    unsigned int hb_blob_get_length(
+        hb_blob_t *blob)
+
+    hb_blob_t* hb_blob_get_empty()
 
     # hb-buffer.h
     ctypedef struct hb_buffer_t:
@@ -163,6 +174,8 @@ cdef extern from "hb.h":
         void* data, hb_destroy_func_t destroy,
         hb_bool_t replace)
     void hb_face_destroy(hb_face_t* face)
+
+    hb_face_t* hb_face_get_empty()
 
     # hb-font.h
     ctypedef struct hb_font_funcs_t:

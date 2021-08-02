@@ -1,10 +1,12 @@
 #cython: language_level=3
+import os
 from enum import IntEnum
 from .charfbuzz cimport *
 from libc.stdlib cimport free, malloc
 from libc.string cimport const_char
 from collections import namedtuple
 from typing import Callable, Dict, List, Sequence, Tuple, Union
+from pathlib import Path
 
 
 cdef extern from "Python.h":
@@ -102,8 +104,7 @@ cdef class Buffer:
         self._message_callback = None
 
     def __dealloc__(self):
-        if self._hb_buffer is not NULL:
-            hb_buffer_destroy(self._hb_buffer)
+        hb_buffer_destroy(self._hb_buffer)
 
     # DEPRECATED: use the normal constructor
     @classmethod
@@ -276,6 +277,30 @@ cdef class Buffer:
         hb_buffer_set_message_func(self._hb_buffer, msgcallback, <void*>callback, NULL)
 
 
+cdef class Blob:
+    cdef hb_blob_t* _hb_blob
+    cdef object _data
+
+    def __cinit__(self, bytes data):
+        if data is not None:
+            self._data = data
+            self._hb_blob = hb_blob_create(
+                data, len(data), HB_MEMORY_MODE_READONLY, NULL, NULL)
+        else:
+            self._hb_blob = hb_blob_get_empty()
+
+    @classmethod
+    def from_file_path(cls, filename: Union[str, Path]):
+        cdef bytes packed = os.fsencode(filename)
+        cdef Blob inst = cls(None)
+        inst._hb_blob = hb_blob_create_from_file(<char*>packed)
+        return inst
+
+    def __dealloc__(self):
+        hb_blob_destroy(self._hb_blob)
+        self._data = None
+
+
 cdef hb_user_data_key_t k
 
 
@@ -299,22 +324,21 @@ cdef hb_blob_t* _reference_table_func(
 cdef class Face:
     cdef hb_face_t* _hb_face
     cdef object _reference_table_func
-    cdef object _blob
+    cdef Blob _blob
 
-    def __cinit__(self, bytes blob, int index=0):
-        cdef hb_blob_t* hb_blob
+    def __cinit__(self, blob: Union[Blob, bytes], int index=0):
         if blob is not None:
-            self._blob = blob
-            hb_blob = hb_blob_create(
-                blob, len(blob), HB_MEMORY_MODE_READONLY, NULL, NULL)
-            self._hb_face = hb_face_create(hb_blob, index)
-            hb_blob_destroy(hb_blob)
+            if not isinstance(blob, Blob):
+                self._blob = Blob(blob)
+            else:
+                self._blob = blob
+            self._hb_face = hb_face_create(self._blob._hb_blob, index)
         else:
-            self._hb_face = NULL
+            self._hb_face = hb_face_get_empty()
 
     def __dealloc__(self):
-        if self._hb_face is not NULL:
-            hb_face_destroy(self._hb_face)
+        hb_face_destroy(self._hb_face)
+        self._blob = None
 
     # DEPRECATED: use the normal constructor
     @classmethod
@@ -363,8 +387,7 @@ cdef class Font:
         self._face = face
 
     def __dealloc__(self):
-        if self._hb_font is not NULL:
-            hb_font_destroy(self._hb_font)
+        hb_font_destroy(self._hb_font)
         self._face = self._ffuncs = None
 
     # DEPRECATED: use the normal constructor
@@ -561,8 +584,7 @@ cdef class FontFuncs:
         self._hb_ffuncs = hb_font_funcs_create()
 
     def __dealloc__(self):
-        if self._hb_ffuncs is not NULL:
-            hb_font_funcs_destroy(self._hb_ffuncs)
+        hb_font_funcs_destroy(self._hb_ffuncs)
 
     # DEPRECATED: use the normal constructor
     @classmethod
@@ -842,8 +864,7 @@ cdef class DrawFuncs:
         self._user_data = None
 
     def __dealloc__(self):
-        if self._hb_drawfuncs is not NULL:
-            hb_draw_funcs_destroy(self._hb_drawfuncs)
+        hb_draw_funcs_destroy(self._hb_drawfuncs)
 
     def draw_glyph(self, font: Font, gid: int, user_data: object):
         self._user_data = user_data
