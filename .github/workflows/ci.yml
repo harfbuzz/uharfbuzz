@@ -25,6 +25,7 @@ jobs:
       CIBW_TEST_COMMAND: "pushd {project} && pytest"
       CIBW_MANYLINUX_X86_64_IMAGE: "manylinux1"
       CIBW_MANYLINUX_I686_IMAGE: "manylinux1"
+      CIBW_ARCHS_MACOS: "x86_64 universal2 arm64"
 
     steps:
     - uses: actions/checkout@v2
