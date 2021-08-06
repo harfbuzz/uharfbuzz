@@ -6,3 +6,16 @@ requires = [
     "cython >= 0.28.1",
 ]
 build-backend = "setuptools.build_meta"
+
+[tool.cibuildwheel]
+# skip 2.7, 3.3, 3.4 and 3.5: for now, only build for >= 3.6 64-bit
+skip = ["cp27-*", "cp33-*", "cp34-*", "cp35-*", "*-manylinux_i686"]
+
+test-requires = "pytest"
+test-command = "pushd {project} && pytest"
+
+manylinux-x86_64-image = "manylinux1"
+manylinux-i686-image = "manylinux1"
+
+[tool.cibuildwheel.macos]
+archs = ["x86_64", "universal2", "arm64"]
