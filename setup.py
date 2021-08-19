@@ -29,7 +29,7 @@ if platform.system() != 'Windows':
     define_macros.append(('HAVE_SYS_MMAN_H', '1'))
 else:
     define_macros.append(('HAVE_DIRECTWRITE', '1'))
-    #define_macros.append(('HAVE_UNISCRIBE', '1'))
+    define_macros.append(('HAVE_UNISCRIBE', '1'))
     libraries += ['usp10', 'gdi32', 'user32', 'rpcrt4', 'dwrite']
 
 if platform.system() == 'Darwin':
