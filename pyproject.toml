@@ -14,8 +14,5 @@ skip = ["*-manylinux_i686"]
 test-requires = "pytest"
 test-command = "pushd {project} && pytest"
 
-manylinux-x86_64-image = "manylinux1"
-manylinux-i686-image = "manylinux1"
-
 [tool.cibuildwheel.macos]
 archs = ["x86_64", "universal2", "arm64"]
