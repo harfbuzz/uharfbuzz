@@ -12,7 +12,7 @@ build-backend = "setuptools.build_meta"
 skip = ["*-manylinux_i686"]
 
 test-requires = "pytest"
-test-command = "pushd {project} && pytest"
+test-command = "pytest {project}/tests"
 
 [tool.cibuildwheel.macos]
 archs = ["x86_64", "universal2", "arm64"]
