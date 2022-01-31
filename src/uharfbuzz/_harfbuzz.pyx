@@ -375,6 +375,9 @@ GlyphExtents = namedtuple(
     "GlyphExtents", ["x_bearing", "y_bearing", "width", "height"]
 )
 
+FontExtents = namedtuple(
+    "FontExtents", ["ascender", "descender", "line_gap"]
+)
 
 cdef class Font:
     cdef hb_font_t* _hb_font
@@ -463,6 +466,21 @@ cdef class Font:
             )
         else:
             return None
+
+    def get_font_extents(self, direction: str):
+        cdef hb_font_extents_t extents
+        cdef hb_direction_t hb_direction
+        cdef bytes packed
+        packed = direction.encode()
+        hb_direction = hb_direction_from_string(<char*>packed, -1)
+        hb_font_get_extents_for_direction(
+            self._hb_font, hb_direction, &extents
+        )
+        return FontExtents(
+            extents.ascender,
+            extents.descender,
+            extents.line_gap
+        )
 
     def get_nominal_glyph(self, unicode: int):
         cdef hb_codepoint_t gid
@@ -572,6 +590,40 @@ cdef hb_bool_t _nominal_glyph_func(hb_font_t* font, void* font_data,
     return int(glyph[0] != 0)
 
 
+cdef hb_bool_t _font_h_extents_func(hb_font_t* font, void* font_data,
+                                    hb_font_extents_t *extents,
+                                    void* user_data):
+    cdef Font py_font = <Font>font_data
+    font_extents = (<FontFuncs>py_font.funcs)._font_h_extents_func(
+        py_font, <object>user_data)
+    if font_extents is not None:
+        if font_extents.ascender is not None:
+            extents.ascender = font_extents.ascender
+        if font_extents.descender is not None:
+            extents.descender = font_extents.descender
+        if font_extents.line_gap is not None:
+            extents.line_gap = font_extents.line_gap
+        return 1
+    return 0
+
+
+cdef hb_bool_t _font_v_extents_func(hb_font_t* font, void* font_data,
+                                    hb_font_extents_t *extents,
+                                    void* user_data):
+    cdef Font py_font = <Font>font_data
+    font_extents = (<FontFuncs>py_font.funcs)._font_v_extents_func(
+        py_font, <object>user_data)
+    if font_extents is not None:
+        if font_extents.ascender is not None:
+            extents.ascender = font_extents.ascender
+        if font_extents.descender is not None:
+            extents.descender = font_extents.descender
+        if font_extents.line_gap is not None:
+            extents.line_gap = font_extents.line_gap
+        return 1
+    return 0
+
+
 cdef class FontFuncs:
     cdef hb_font_funcs_t* _hb_ffuncs
     cdef object _glyph_h_advance_func
@@ -579,6 +631,8 @@ cdef class FontFuncs:
     cdef object _glyph_v_origin_func
     cdef object _glyph_name_func
     cdef object _nominal_glyph_func
+    cdef object _font_h_extents_func
+    cdef object _font_v_extents_func
 
     def __cinit__(self):
         self._hb_ffuncs = hb_font_funcs_create()
@@ -647,6 +701,25 @@ cdef class FontFuncs:
             self._hb_ffuncs, _nominal_glyph_func, <void*>user_data, NULL)
         self._nominal_glyph_func = func
 
+    def set_font_h_extents_func(self,
+                                func: Callable[[
+                                    Font,
+                                    object,  # user_data
+                                ], FontExtents],  # extents
+                                user_data: object) -> None:
+        hb_font_funcs_set_font_h_extents_func(
+            self._hb_ffuncs, _font_h_extents_func, <void*>user_data, NULL)
+        self._font_h_extents_func = func
+
+    def set_font_v_extents_func(self,
+                                func: Callable[[
+                                    Font,
+                                    object,  # user_data
+                                ], FontExtents],  # extents
+                                user_data: object) -> None:
+        hb_font_funcs_set_font_v_extents_func(
+            self._hb_ffuncs, _font_v_extents_func, <void*>user_data, NULL)
+        self._font_v_extents_func = func
 
 def shape(font: Font, buffer: Buffer,
         features: Dict[str,Union[int,bool,Sequence[Tuple[int,int,Union[int,bool]]]]] = None,

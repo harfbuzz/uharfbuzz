@@ -173,6 +173,18 @@ class TestFont:
         assert -1468 == extents.height
         assert opensans.get_glyph_extents(1000) is None
 
+    def test_get_font_extents(self, blankfont):
+        extents = blankfont.get_font_extents('ltr')
+        assert (880, -120, 0) == extents
+        assert 880 == extents.ascender
+        assert -120 == extents.descender
+        assert 0 == extents.line_gap
+        extents = blankfont.get_font_extents('ttb')
+        assert (500, -500, 0) == extents
+        assert 500 == extents.ascender
+        assert -500 == extents.descender
+        assert 0 == extents.line_gap
+
     def test_get_glyph_name(self, blankfont):
         glyph_name = blankfont.get_glyph_name(1)
         assert glyph_name == "a"
@@ -385,6 +397,20 @@ class TestCallbacks:
         hb.shape(blankfont, buf)
         infos = [(pos.y_advance, pos.x_offset, pos.y_offset) for pos in buf.glyph_positions]
         assert infos == expected
+
+    def test_font_extents_funcs(self, blankfont):
+        def font_h_extents_func(font, data):
+            return hb.FontExtents(123, -456, 789)
+
+        def font_v_extents_func(font, data):
+            return hb.FontExtents(987, -654, 321)
+
+        funcs = hb.FontFuncs.create()
+        funcs.set_font_h_extents_func(font_h_extents_func, None)
+        funcs.set_font_v_extents_func(font_v_extents_func, None)
+        blankfont.funcs = funcs
+        assert (123, -456, 789) == blankfont.get_font_extents('ltr')
+        assert (987, -654, 321) == blankfont.get_font_extents('ttb')
 
     def test_message_func(self, blankfont):
         # Glyph IDs 1, 2, 3, 4, 5 map to glyphs a, b, c, d, e.

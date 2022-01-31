@@ -204,9 +204,28 @@ cdef extern from "hb.h":
         hb_codepoint_t glyph,
         char *name, unsigned int size,
         void *user_data)
+    ctypedef hb_bool_t (*hb_font_get_font_extents_func_t) (
+        hb_font_t *font, void *font_data,
+        hb_font_extents_t *extents,
+        void *user_data)
+    ctypedef hb_font_get_font_extents_func_t hb_font_get_font_h_extents_func_t;
+    ctypedef hb_font_get_font_extents_func_t hb_font_get_font_v_extents_func_t;
     ctypedef struct hb_variation_t:
         hb_tag_t tag
         float value
+    ctypedef struct hb_font_extents_t:
+        hb_position_t ascender
+        hb_position_t descender
+        hb_position_t line_gap
+        hb_position_t reserved9
+        hb_position_t reserved8
+        hb_position_t reserved7
+        hb_position_t reserved6
+        hb_position_t reserved5
+        hb_position_t reserved4
+        hb_position_t reserved3
+        hb_position_t reserved2
+        hb_position_t reserved1
 
     hb_font_funcs_t* hb_font_funcs_create()
     void hb_font_funcs_set_glyph_h_advance_func(
@@ -229,6 +248,14 @@ cdef extern from "hb.h":
         hb_font_funcs_t* ffuncs,
         hb_font_get_nominal_glyph_func_t func,
         void* user_data, hb_destroy_func_t destroy)
+    void hb_font_funcs_set_font_h_extents_func(
+        hb_font_funcs_t *ffuncs,
+        hb_font_get_font_h_extents_func_t func,
+        void *user_data, hb_destroy_func_t destroy)
+    void hb_font_funcs_set_font_v_extents_func(
+        hb_font_funcs_t *ffuncs,
+        hb_font_get_font_v_extents_func_t func,
+        void *user_data, hb_destroy_func_t destroy)
     void hb_font_funcs_destroy(hb_font_funcs_t* ffuncs)
 
     hb_font_t* hb_font_create(hb_face_t* face)
@@ -251,6 +278,10 @@ cdef extern from "hb.h":
         hb_font_t* font,
         hb_codepoint_t glyph,
         hb_glyph_extents_t *extents)
+    void hb_font_get_extents_for_direction(hb_font_t *font,
+        hb_direction_t direction, hb_font_extents_t *extents)
+    hb_bool_t hb_font_get_h_extents(hb_font_t *font, hb_font_extents_t *extents)
+    hb_bool_t hb_font_get_v_extents(hb_font_t *font, hb_font_extents_t *extents)
     hb_bool_t hb_font_get_nominal_glyph(
         hb_font_t *font,
         hb_codepoint_t unicode,
