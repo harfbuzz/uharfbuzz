@@ -246,7 +246,6 @@ class TestShape:
 
     def test_shape_set_shaper(self, blankfont):
         string = "abcde"
-        expected = []
         buf = hb.Buffer()
         buf.add_str(string)
         buf.guess_segment_properties()
@@ -258,7 +257,6 @@ class TestShape:
     @pytest.mark.skipif(sys.platform != "win32", reason="requires Windows")
     def test_shape_set_shaper_directwrite(self, blankfont):
         string = "abcde"
-        expected = []
         buf = hb.Buffer()
         buf.add_str(string)
         buf.guess_segment_properties()
@@ -270,7 +268,6 @@ class TestShape:
     @pytest.mark.skipif(sys.platform != "win32", reason="requires Windows")
     def test_shape_set_shaper_uniscribe(self, blankfont):
         string = "abcde"
-        expected = []
         buf = hb.Buffer()
         buf.add_str(string)
         buf.guess_segment_properties()
@@ -282,7 +279,6 @@ class TestShape:
     @pytest.mark.skipif(sys.platform != "darwin", reason="requires macOS")
     def test_shape_set_shaper_coretext(self, blankfont):
         string = "abcde"
-        expected = []
         buf = hb.Buffer()
         buf.add_str(string)
         buf.guess_segment_properties()
