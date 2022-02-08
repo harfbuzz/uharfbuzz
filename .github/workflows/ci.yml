@@ -95,7 +95,7 @@ jobs:
       with:
         tag_name: ${{ github.ref }}
         release_name: ${{ env.RELEASE_NAME }}
-        body_path: "${{ runner.temp }}/release_notes.md"
+        body_path: "${{ runner.temp }}/release_body.md"
         draft: false
         prerelease: ${{ env.IS_PRERELEASE }}
     - name: Build and publish
