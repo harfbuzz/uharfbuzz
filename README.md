@@ -47,7 +47,7 @@ Use `git tag -a` to make a new annotated tag, or `git tag -s` for a GPG-signed a
 
 Name the new tag with with a leading ‘v’ followed by three MAJOR.MINOR.PATCH digits, like in semantic versioning. Look at the existing tags for examples.
 
-In the tag message write some short release notes describing the changes since the previous tag.
+In the tag message write some short release notes describing the changes since the previous tag. The subject line will be the release name and the message body will be the release notes.
 
 Finally, push the tag to the remote repository (e.g. assuming upstream is called origin):
 
