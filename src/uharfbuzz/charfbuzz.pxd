@@ -59,6 +59,15 @@ cdef extern from "hb.h":
         unsigned short u8[4]
         short i8[4]
 
+    ctypedef union hb_var_num_t:
+        float f
+        unsigned long u32
+        long i32
+        unsigned int u16[2]
+        int i16[2]
+        unsigned short u8[4]
+        short i8[4]
+
     # hb-blob.h
     ctypedef struct hb_blob_t:
         pass
@@ -300,63 +309,102 @@ cdef extern from "hb.h":
         unsigned int size)
     void hb_font_destroy(hb_font_t* font)
 
+    ctypedef struct hb_draw_state_t:
+        hb_bool_t path_open
+        float path_start_x
+        float path_start_y
+        float current_x
+        float current_y
+        hb_var_num_t   reserved1
+        hb_var_num_t   reserved2
+        hb_var_num_t   reserved3
+        hb_var_num_t   reserved4
+        hb_var_num_t   reserved5
+        hb_var_num_t   reserved6
+        hb_var_num_t   reserved7
+
     ctypedef struct hb_draw_funcs_t:
         pass
 
     ctypedef void (*hb_draw_move_to_func_t) (
-        hb_position_t to_x,
-        hb_position_t to_y,
+        hb_draw_funcs_t* dfuncs,
+        void* draw_data,
+        hb_draw_state_t *st,
+        float to_x,
+        float to_y,
         void *user_data);
     ctypedef void (*hb_draw_line_to_func_t) (
-        hb_position_t to_x,
-        hb_position_t to_y,
+        hb_draw_funcs_t* dfuncs,
+        void* draw_data,
+        hb_draw_state_t *st,
+        float to_x,
+        float to_y,
         void *user_data);
     ctypedef void (*hb_draw_quadratic_to_func_t) (
-        hb_position_t control_x,
-        hb_position_t control_y,
-        hb_position_t to_x,
-        hb_position_t to_y,
+        hb_draw_funcs_t* dfuncs,
+        void* draw_data,
+        hb_draw_state_t *st,
+        float control_x,
+        float control_y,
+        float to_x,
+        float to_y,
         void *user_data);
     ctypedef void (*hb_draw_cubic_to_func_t) (
-        hb_position_t control1_x,
-        hb_position_t control1_y,
-        hb_position_t control2_x,
-        hb_position_t control2_y,
-        hb_position_t to_x,
-        hb_position_t to_y,
+        hb_draw_funcs_t* dfuncs,
+        void* draw_data,
+        hb_draw_state_t *st,
+        float control1_x,
+        float control1_y,
+        float control2_x,
+        float control2_y,
+        float to_x,
+        float to_y,
         void *user_data);
     ctypedef void (*hb_draw_close_path_func_t) (
+        hb_draw_funcs_t* dfuncs,
+        void* draw_data,
+        hb_draw_state_t *st,
         void *user_data);
 
     void hb_draw_funcs_set_move_to_func (
         hb_draw_funcs_t* funcs,
-        hb_draw_move_to_func_t move_to)
+        hb_draw_move_to_func_t move_to,
+        void *user_data,
+        hb_destroy_func_t destroy)
 
     void hb_draw_funcs_set_line_to_func (
         hb_draw_funcs_t* funcs,
-        hb_draw_line_to_func_t line_to)
+        hb_draw_line_to_func_t line_to,
+        void *user_data,
+        hb_destroy_func_t destroy)
 
     void hb_draw_funcs_set_quadratic_to_func (
         hb_draw_funcs_t* funcs,
-        hb_draw_quadratic_to_func_t quadratic_to)
+        hb_draw_quadratic_to_func_t quadratic_to,
+        void *user_data,
+        hb_destroy_func_t destroy)
 
     void hb_draw_funcs_set_cubic_to_func (
         hb_draw_funcs_t* funcs,
-        hb_draw_cubic_to_func_t cubic_to)
+        hb_draw_cubic_to_func_t cubic_to,
+        void *user_data,
+        hb_destroy_func_t destroy)
 
     void hb_draw_funcs_set_close_path_func(
         hb_draw_funcs_t* funcs,
-        hb_draw_close_path_func_t close_path)
+        hb_draw_close_path_func_t close_path,
+        void *user_data,
+        hb_destroy_func_t destroy)
 
     hb_draw_funcs_t* hb_draw_funcs_create()
 
     void hb_draw_funcs_destroy(hb_draw_funcs_t* funcs)
 
-    hb_bool_t hb_font_draw_glyph(
+    hb_bool_t hb_font_get_glyph_shape (
         hb_font_t *font,
-        hb_codepoint_t glyph,
-        const hb_draw_funcs_t *funcs,
-        void *user_data)
+	hb_codepoint_t glyph,
+	hb_draw_funcs_t *dfuncs,
+	void *draw_data);
 
     # hb-shape.h
     void hb_shape(

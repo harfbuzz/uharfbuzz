@@ -500,13 +500,13 @@ class TestCallbacks:
         funcs = hb.DrawFuncs()
         container = []
         def move_to(x,y,c):
-            c.append(f"M{x},{y}")
+            c.append(f"M{int(x)},{int(y)}")
         def line_to(x,y,c):
-            c.append(f"L{x},{y}")
+            c.append(f"L{int(x)},{int(y)}")
         def cubic_to(c1x,c1y,c2x,c2y,x,y,c):
-            c.append(f"C{c1x},{c1y} {c2x},{c2y} {x},{y}")
+            c.append(f"C{int(c1x)},{int(c1y)} {int(c2x)},{int(c2y)} {int(x)},{int(y)}")
         def quadratic_to(c1x,c1y,x,y,c):
-            c.append(f"Q{c1x},{c1y} {x},{y}")
+            c.append(f"Q{int(c1x)},{int(c1y)} {int(x)},{int(y)}")
         def close_path(c):
             c.append("Z")
 

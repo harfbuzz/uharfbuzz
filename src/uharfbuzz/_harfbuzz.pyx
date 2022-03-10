@@ -888,36 +888,53 @@ def ot_layout_get_baseline(font: Font,
 def ot_font_set_funcs(Font font):
     hb_ot_font_set_funcs(font._hb_font)
 
-cdef void _move_to_func(hb_position_t to_x,
-                        hb_position_t to_y,
+cdef void _move_to_func(hb_draw_funcs_t *dfuncs,
+                        void* draw_data,
+                        hb_draw_state_t *st,
+                        float to_x,
+                        float to_y,
                         void *user_data):
     m = (<object>user_data).move_to_func()
     m(to_x, to_y, (<object>user_data).user_data())
 
-cdef void _line_to_func(hb_position_t to_x,
-                        hb_position_t to_y,
+cdef void _line_to_func(hb_draw_funcs_t *dfuncs,
+                        void* draw_data,
+                        hb_draw_state_t *st,
+                        float to_x,
+                        float to_y,
                         void *user_data):
     l = (<object>user_data).line_to_func()
     l(to_x, to_y, (<object>user_data).user_data())
 
-cdef void _close_path_func(void *user_data):
+cdef void _close_path_func(hb_draw_funcs_t *dfuncs,
+                           void* draw_data,
+                           hb_draw_state_t *st,
+                           void *user_data):
     cl = (<object>user_data).close_path_func()
     cl((<object>user_data).user_data())
 
-cdef void _quadratic_to_func(hb_position_t c1_x,
-                        hb_position_t c1_y,
-                        hb_position_t to_x,
-                        hb_position_t to_y,
+cdef void _quadratic_to_func(
+                        hb_draw_funcs_t *dfuncs,
+                        void* draw_data,
+                        hb_draw_state_t *st,
+                        float c1_x,
+                        float c1_y,
+                        float to_x,
+                        float to_y,
                         void *user_data):
     q = (<object>user_data).quadratic_to_func()
     q(c1_x, c1_y, to_x, to_y, (<object>user_data).user_data())
 
-cdef void _cubic_to_func(hb_position_t c1_x,
-                        hb_position_t c1_y,
-                        hb_position_t c2_x,
-                        hb_position_t c2_y,
-                        hb_position_t to_x,
-                        hb_position_t to_y,
+cdef void _cubic_to_func(
+                        hb_draw_funcs_t *dfuncs,
+                        void* draw_data,
+                        hb_draw_state_t *st,
+                        float c1_x,
+                        float c1_y,
+                        float c2_x,
+                        float c2_y,
+                        float to_x,
+                        float to_y,
                         void *user_data):
     c = (<object>user_data).cubic_to_func()
     c(c1_x, c1_y, c2_x, c2_y, to_x, to_y, (<object>user_data).user_data())
@@ -941,7 +958,7 @@ cdef class DrawFuncs:
 
     def draw_glyph(self, font: Font, gid: int, user_data: object):
         self._user_data = user_data
-        hb_font_draw_glyph(font._hb_font, gid, self._hb_drawfuncs, <void*>self);
+        hb_font_get_glyph_shape(font._hb_font, gid, self._hb_drawfuncs, <void*>self);
 
     def move_to_func(self):
         return self._move_to_func
@@ -962,50 +979,50 @@ cdef class DrawFuncs:
         return self._user_data
 
     def set_move_to_func(self,
-                                 func: Callable[[
-                                     int,
-                                     int,
-                                     object,  # user_data
-                                 ], None]) -> None:
+                         func: Callable[[
+                             float,
+                             float,
+                             object,  # user_data
+                         ], None]) -> None:
         self._move_to_func = func
         hb_draw_funcs_set_move_to_func(
-            self._hb_drawfuncs, _move_to_func)
+            self._hb_drawfuncs, _move_to_func, <void*>self, NULL)
 
     def set_line_to_func(self,
                          func: Callable[[
-                             int,
-                             int,
+                             float,
+                             float,
                              object,  # user_data
                          ], None]) -> None:
         self._line_to_func = func
         hb_draw_funcs_set_line_to_func(
-            self._hb_drawfuncs, _line_to_func)
+            self._hb_drawfuncs, _line_to_func, <void*>self, NULL)
 
     def set_cubic_to_func(self,
                           func: Callable[[
-                             int,
-                             int,
-                             int,
-                             int,
-                             int,
-                             int,
+                             float,
+                             float,
+                             float,
+                             float,
+                             float,
+                             float,
                              object,  # user_data
                           ], None]) -> None:
         self._cubic_to_func = func
         hb_draw_funcs_set_cubic_to_func(
-            self._hb_drawfuncs, _cubic_to_func)
+            self._hb_drawfuncs, _cubic_to_func, <void*>self, NULL)
 
     def set_quadratic_to_func(self,
                               func: Callable[[
-                                 int,
-                                 int,
-                                 int,
-                                 int,
+                                 float,
+                                 float,
+                                 float,
+                                 float,
                                  object,  # user_data
                              ], None]) -> None:
         self._quadratic_to_func = func
         hb_draw_funcs_set_quadratic_to_func(
-            self._hb_drawfuncs, _quadratic_to_func)
+            self._hb_drawfuncs, _quadratic_to_func, <void*>self, NULL)
 
     def set_close_path_func(self,
                             func: Callable[[
@@ -1013,4 +1030,4 @@ cdef class DrawFuncs:
                             ], None]) -> None:
         self._close_path_func = func
         hb_draw_funcs_set_close_path_func(
-            self._hb_drawfuncs, _close_path_func)
+            self._hb_drawfuncs, _close_path_func, <void*>self, NULL)
