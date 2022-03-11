@@ -1,5 +1,6 @@
 #cython: language_level=3
 import os
+import warnings
 from enum import IntEnum
 from .charfbuzz cimport *
 from libc.stdlib cimport free, malloc
@@ -529,12 +530,12 @@ cdef class Font:
         def close_path(c):
             c.closePath()
 
-        funcs.set_move_to_func(move_to)
-        funcs.set_line_to_func(line_to)
-        funcs.set_cubic_to_func(cubic_to)
-        funcs.set_quadratic_to_func(quadratic_to)
-        funcs.set_close_path_func(close_path)
-        funcs.draw_glyph(self, gid, pen)
+        funcs.set_move_to_func(move_to, pen)
+        funcs.set_line_to_func(line_to, pen)
+        funcs.set_cubic_to_func(cubic_to, pen)
+        funcs.set_quadratic_to_func(quadratic_to, pen)
+        funcs.set_close_path_func(close_path, pen)
+        funcs.get_glyph_shape(self, gid)
 
 
 cdef hb_position_t _glyph_h_advance_func(hb_font_t* font, void* font_data,
@@ -888,39 +889,69 @@ def ot_layout_get_baseline(font: Font,
 def ot_font_set_funcs(Font font):
     hb_ot_font_set_funcs(font._hb_font)
 
-cdef void _move_to_func(hb_position_t to_x,
-                        hb_position_t to_y,
+cdef void _move_to_func(hb_draw_funcs_t *dfuncs,
+                        void *draw_data,
+                        hb_draw_state_t *st,
+                        float to_x,
+                        float to_y,
                         void *user_data):
-    m = (<object>user_data).move_to_func()
-    m(to_x, to_y, (<object>user_data).user_data())
+    m = (<object>draw_data).move_to_func()
+    userdata = <object>user_data
+    if userdata is None:
+        userdata = (<object>draw_data).user_data()
+    m(to_x, to_y, userdata)
 
-cdef void _line_to_func(hb_position_t to_x,
-                        hb_position_t to_y,
+cdef void _line_to_func(hb_draw_funcs_t *dfuncs,
+                        void *draw_data,
+                        hb_draw_state_t *st,
+                        float to_x,
+                        float to_y,
                         void *user_data):
-    l = (<object>user_data).line_to_func()
-    l(to_x, to_y, (<object>user_data).user_data())
+    l = (<object>draw_data).line_to_func()
+    userdata = <object>user_data
+    if userdata is None:
+        userdata = (<object>draw_data).user_data()
+    l(to_x, to_y, userdata)
 
-cdef void _close_path_func(void *user_data):
-    cl = (<object>user_data).close_path_func()
-    cl((<object>user_data).user_data())
+cdef void _close_path_func(hb_draw_funcs_t *dfuncs,
+                           void *draw_data,
+                           hb_draw_state_t *st,
+                           void *user_data):
+    cl = (<object>draw_data).close_path_func()
+    userdata = <object>user_data
+    if userdata is None:
+        userdata = (<object>draw_data).user_data()
+    cl(userdata)
 
-cdef void _quadratic_to_func(hb_position_t c1_x,
-                        hb_position_t c1_y,
-                        hb_position_t to_x,
-                        hb_position_t to_y,
-                        void *user_data):
-    q = (<object>user_data).quadratic_to_func()
-    q(c1_x, c1_y, to_x, to_y, (<object>user_data).user_data())
+cdef void _quadratic_to_func(hb_draw_funcs_t *dfuncs,
+                             void *draw_data,
+                             hb_draw_state_t *st,
+                             float c1_x,
+                             float c1_y,
+                             float to_x,
+                             float to_y,
+                             void *user_data):
+    q = (<object>draw_data).quadratic_to_func()
+    userdata = <object>user_data
+    if userdata is None:
+        userdata = (<object>draw_data).user_data()
+    q(c1_x, c1_y, to_x, to_y, userdata)
 
-cdef void _cubic_to_func(hb_position_t c1_x,
-                        hb_position_t c1_y,
-                        hb_position_t c2_x,
-                        hb_position_t c2_y,
-                        hb_position_t to_x,
-                        hb_position_t to_y,
-                        void *user_data):
-    c = (<object>user_data).cubic_to_func()
-    c(c1_x, c1_y, c2_x, c2_y, to_x, to_y, (<object>user_data).user_data())
+cdef void _cubic_to_func(hb_draw_funcs_t *dfuncs,
+                         void *draw_data,
+                         hb_draw_state_t *st,
+                         float c1_x,
+                         float c1_y,
+                         float c2_x,
+                         float c2_y,
+                         float to_x,
+                         float to_y,
+                         void *user_data):
+    c = (<object>draw_data).cubic_to_func()
+    userdata = <object>user_data
+    if userdata is None:
+        userdata = (<object>draw_data).user_data()
+    c(c1_x, c1_y, c2_x, c2_y, to_x, to_y, userdata)
 
 
 cdef class DrawFuncs:
@@ -939,9 +970,16 @@ cdef class DrawFuncs:
     def __dealloc__(self):
         hb_draw_funcs_destroy(self._hb_drawfuncs)
 
+    def get_glyph_shape(self, font: Font, gid: int):
+        hb_font_get_glyph_shape(font._hb_font, gid, self._hb_drawfuncs, <void*>self);
+
     def draw_glyph(self, font: Font, gid: int, user_data: object):
+        warnings.warn(
+            "draw_glyph() is deprecated, use get_glyph_shape() instead",
+            DeprecationWarning,
+        )
         self._user_data = user_data
-        hb_font_draw_glyph(font._hb_font, gid, self._hb_drawfuncs, <void*>self);
+        self.get_glyph_shape(font, gid)
 
     def move_to_func(self):
         return self._move_to_func
@@ -963,54 +1001,59 @@ cdef class DrawFuncs:
 
     def set_move_to_func(self,
                                  func: Callable[[
-                                     int,
-                                     int,
+                                     float,
+                                     float,
                                      object,  # user_data
-                                 ], None]) -> None:
+                                 ], None],
+                                 user_data: object = None) -> None:
         self._move_to_func = func
         hb_draw_funcs_set_move_to_func(
-            self._hb_drawfuncs, _move_to_func)
+            self._hb_drawfuncs, _move_to_func, <void*>user_data, NULL)
 
     def set_line_to_func(self,
                          func: Callable[[
-                             int,
-                             int,
+                             float,
+                             float,
                              object,  # user_data
-                         ], None]) -> None:
+                         ], None],
+                         user_data: object = None) -> None:
         self._line_to_func = func
         hb_draw_funcs_set_line_to_func(
-            self._hb_drawfuncs, _line_to_func)
+            self._hb_drawfuncs, _line_to_func, <void*>user_data, NULL)
 
     def set_cubic_to_func(self,
                           func: Callable[[
-                             int,
-                             int,
-                             int,
-                             int,
-                             int,
-                             int,
+                             float,
+                             float,
+                             float,
+                             float,
+                             float,
+                             float,
                              object,  # user_data
-                          ], None]) -> None:
+                          ], None],
+                          user_data: object = None) -> None:
         self._cubic_to_func = func
         hb_draw_funcs_set_cubic_to_func(
-            self._hb_drawfuncs, _cubic_to_func)
+            self._hb_drawfuncs, _cubic_to_func, <void*>user_data, NULL)
 
     def set_quadratic_to_func(self,
                               func: Callable[[
-                                 int,
-                                 int,
-                                 int,
-                                 int,
+                                 float,
+                                 float,
+                                 float,
+                                 float,
                                  object,  # user_data
-                             ], None]) -> None:
+                              ], None],
+                              user_data: object = None) -> None:
         self._quadratic_to_func = func
         hb_draw_funcs_set_quadratic_to_func(
-            self._hb_drawfuncs, _quadratic_to_func)
+            self._hb_drawfuncs, _quadratic_to_func, <void*>user_data, NULL)
 
     def set_close_path_func(self,
                             func: Callable[[
                                 object
-                            ], None]) -> None:
+                            ], None],
+                            user_data: object = None) -> None:
         self._close_path_func = func
         hb_draw_funcs_set_close_path_func(
-            self._hb_drawfuncs, _close_path_func)
+            self._hb_drawfuncs, _close_path_func, <void*>user_data, NULL)
