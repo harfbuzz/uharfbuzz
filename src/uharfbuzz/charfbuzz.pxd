@@ -467,3 +467,21 @@ cdef extern from "hb-ot.h":
 
     # hb-ot-font.h
     void hb_ot_font_set_funcs(hb_font_t* font)
+
+cdef extern from "hb-subset-repacker.h":
+
+    ctypedef struct hb_link_t:
+        unsigned int width
+        unsigned int position
+        unsigned int objidx
+    ctypedef struct hb_object_t:
+        char *head
+        char *tail
+        unsigned int num_real_links
+        hb_link_t *real_links
+        unsigned int num_virtual_links
+        hb_link_t *virtual_links
+
+    hb_blob_t* hb_subset_repack_or_fail (
+        hb_object_t* hb_objects,
+        unsigned int num_hb_objs)
