@@ -40,7 +40,11 @@ extension = Extension(
     'uharfbuzz._harfbuzz',
     define_macros=define_macros,
     include_dirs=['harfbuzz/src'],
-    sources=['src/uharfbuzz/_harfbuzz.pyx', 'harfbuzz/src/harfbuzz.cc'],
+    sources=[
+        'src/uharfbuzz/_harfbuzz.pyx',
+        'harfbuzz/src/harfbuzz.cc',
+        'harfbuzz/src/hb-subset-repacker.cc',
+    ],
     language='c++',
     libraries=libraries,
     extra_compile_args=extra_compile_args,

@@ -627,6 +627,44 @@ def test_uharfbuzz_version():
     assert isinstance(v, str)
     assert "unknown" not in v
 
+def test_harfbuzz_repacker():
+    table_data = [
+                   bytes(b'\x00\x00\xff\xff\x00\x01\x00\x00'),
+                   bytes(b'\x00\x00\x00\x00'),
+                   bytes(b'\x00\x01latn\x00\x00'),
+                   bytes(b'\x00\x00\x00\x01\x00\x01'),
+                   bytes(b'\x00\x01test\x00\x00'),
+                   bytes(b'\x00\x01\x00\x01\x00\x02'),
+                   bytes(b'\x00\x01\x00\x00\x00\x01'),
+                   bytes(b'\x00\x01\x00\x00\x00\x01\x00\x00'),
+                   bytes(b'\x00\x01\x00\x01\x00\x01'),
+                   bytes(b'\x00\x02\x00\x01\x00\x02\x00\x01\x00\x00'),
+                   bytes(b'\x00\x01\x00\x00'),
+                   bytes(b'\x00\x01\x00\x00\x00\x01\x00\x00'),
+                   bytes(b'\x00\x05\x00\x00\x00\x01\x00\x00'),
+                   bytes(b'\x00\x02\x00\x00\x00\x00'),
+                   bytes(b'\x00\x01\x00\x00\x00\x00\x00\x00\x00\x00'),
+                 ]
+    obj_list = [
+                 ([], []),
+                 ([(0,2,1)], []),
+                 ([(6,2,2)], []),
+                 ([], []),
+                 ([(6,2,4)], []),
+                 ([], []),
+                 ([(2,2,6)], []),
+                 ([(6,2,7)], []),
+                 ([], []),
+                 ([], []),
+                 ([(2,2,10)], []),
+                 ([(2,2,9), (6,2,11)], []),
+                 ([(6,2,12)], []),
+                 ([(2,2,8), (4,2,13)], []),
+                 ([(4,2,3), (6,2,5), (8,2,14)], []),
+               ]
+    expected_data = bytes(b'\x00\x01\x00\x00\x00\n\x00\x12\x00\x1a\x00\x01latn\x00\x16\x00\x01test\x00\x12\x00\x02\x00\x10\x00\x18\x00\x1a\x00\x00\x00\x00\x00\x01\x00\x01\x00\x01\x00\x00\x00\x01\x00\x18\x00\x05\x00\x00\x00\x01\x00\x16\x00\x00\xff\xff\x00\x01\x00\x00\x00\x01\x00\x0e\x00\x01\x00\x01\x00\x0e\x00\x01\x00\x14\x00\x01\x00\x01\x00\x02\x00\x01\x00\x01\x00\x01\x00\x01\x00\x04\x00\x02\x00\x01\x00\x02\x00\x01\x00\x00')
+    packed_data = hb.repack(table_data, obj_list)
+    assert expected_data == packed_data
 
 @pytest.mark.skipif(sys.platform != "darwin", reason="requires macOS")
 def test_sparsefont_coretext(sparsefont):
