@@ -162,6 +162,12 @@ class TestBuffer:
         assert buf.cluster_level == 1
 
 
+class TestBlob:
+    def test_from_file_path_fail(self):
+        with pytest.raises(hb.HarfBuzzError, match="Failed to open: DOES-NOT-EXIST"):
+            blob = hb.Blob.from_file_path("DOES-NOT-EXIST")
+
+
 class TestFont:
     def test_get_glyph_extents(self, opensans):
         # <TTGlyph name="A" xMin="0" yMin="0" xMax="1296" yMax="1468">
