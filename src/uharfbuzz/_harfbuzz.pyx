@@ -38,6 +38,11 @@ def version_string() -> str:
     cdef bytes packed = cstr
     return packed.decode()
 
+
+class HarfBuzzError(Exception):
+    pass
+
+
 cdef class GlyphInfo:
     cdef hb_glyph_info_t _hb_glyph_info
     # could maybe store Buffer to prevent GC
@@ -293,8 +298,11 @@ cdef class Blob:
     @classmethod
     def from_file_path(cls, filename: Union[str, Path]):
         cdef bytes packed = os.fsencode(filename)
+        cdef hb_blob_t* blob = hb_blob_create_from_file_or_fail(<char*>packed)
+        if blob == NULL:
+            raise HarfBuzzError(f"Failed to open: {filename}")
         cdef Blob inst = cls(None)
-        inst._hb_blob = hb_blob_create_from_file(<char*>packed)
+        inst._hb_blob = blob
         return inst
 
     def __dealloc__(self):
