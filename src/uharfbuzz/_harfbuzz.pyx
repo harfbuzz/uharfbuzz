@@ -425,6 +425,25 @@ cdef class Font:
         x, y = value
         hb_font_set_scale(self._hb_font, x, y)
 
+    @property
+    def ppem(self) -> Tuple[int, int]:
+        cdef unsigned int x, y
+        hb_font_get_ppem(self._hb_font, &x, &y)
+        return (x, y)
+
+    @ppem.setter
+    def ppem(self, value: Tuple[int, int]):
+        x, y = value
+        hb_font_set_ppem(self._hb_font, x, y)
+
+    @property
+    def ptem(self) -> float:
+        return hb_font_get_ptem(self._hb_font)
+
+    @ptem.setter
+    def ptem(self, value: float):
+        hb_font_set_ptem(self._hb_font, value)
+
     def set_variations(self, variations: Dict[str, float]) -> None:
         cdef unsigned int size
         cdef hb_variation_t* hb_variations

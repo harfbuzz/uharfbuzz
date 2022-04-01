@@ -274,6 +274,10 @@ cdef extern from "hb.h":
         void* font_data, hb_destroy_func_t destroy)
     void hb_font_get_scale(hb_font_t* font, int* x_scale, int* y_scale)
     void hb_font_set_scale(hb_font_t* font, int x_scale, int y_scale)
+    void hb_font_get_ppem(hb_font_t* font, unsigned int* x_ppem, unsigned int* y_ppem)
+    void hb_font_set_ppem(hb_font_t* font, unsigned int x_ppem, unsigned int y_ppem)
+    float hb_font_get_ptem(hb_font_t* font)
+    void hb_font_set_ptem(hb_font_t* font, float ptem)
     void hb_font_set_variations(
         hb_font_t* font,
         const hb_variation_t* variations,
