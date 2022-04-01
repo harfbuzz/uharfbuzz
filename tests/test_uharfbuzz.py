@@ -224,6 +224,17 @@ class TestFont:
         with pytest.raises(TypeError):
             mutatorsans.set_var_coords_normalized(["a"])
 
+    def test_get_set_scale(self, blankfont):
+        blankfont.scale = (5, 7)
+        assert blankfont.scale == (5, 7)
+
+    def test_get_set_ppem(self, blankfont):
+        blankfont.ppem = (5, 7)
+        assert blankfont.ppem == (5, 7)
+
+    def test_get_set_ptem(self, blankfont):
+        blankfont.ptem = 7
+        assert blankfont.ptem == 7
 
 class TestShape:
     @pytest.mark.parametrize(
