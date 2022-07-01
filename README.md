@@ -17,9 +17,7 @@ import uharfbuzz as hb
 fontfile = sys.argv[1]
 text = sys.argv[2]
 
-blob = hb.Blob.from_file_path(fontfile)
-face = hb.Face(blob)
-font = hb.Font(face)
+font = hb.Font.from_file_path(fontfile)
 
 buf = hb.Buffer()
 buf.add_str(text)

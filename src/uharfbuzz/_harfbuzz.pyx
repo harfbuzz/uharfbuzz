@@ -408,6 +408,23 @@ cdef class Font:
         cdef Font inst = cls(face)
         return inst
 
+    @classmethod
+    def from_file_path(cls, filename: Union[str, Path], face_index: int = 0):
+        """Returns a font object from a file path, with an optionally selected
+        face.
+
+        Convenient if all you want to load is a plain old TrueType or OpenType
+        flavored font (*.ttf, *.otf).
+        
+        Args:
+            * filename: The path to the font.
+            * face_index: Optionally, the face of the font when loading
+                TrueType/OpenType Collection fonts (*.ttc, *.otc).
+        """
+        blob = Blob.from_file_path(filename)
+        face = Face(blob, face_index)
+        return cls(face)
+
     @property
     def face(self):
         return self._face

@@ -26,10 +26,7 @@ def blankfont():
         {gid=8, name="u1F4A9", code=0x1F4A9},  # PILE OF POO
     ]
     """
-    blob = hb.Blob.from_file_path(ADOBE_BLANK_TTF_PATH)
-    face = hb.Face(blob)
-    font = hb.Font(face)
-    return font
+    return hb.Font.from_file_path(ADOBE_BLANK_TTF_PATH)
 
 
 @pytest.fixture
