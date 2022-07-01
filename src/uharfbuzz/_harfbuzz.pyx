@@ -409,7 +409,7 @@ cdef class Font:
         return inst
 
     @classmethod
-    def from_file_path(cls, filename: Union[str, Path], face_index: int = 0):
+    def from_file_path(cls, filename: os.PathLike[str], *, face_index: int = 0):
         """Returns a font object from a file path, with an optionally selected
         face.
 
