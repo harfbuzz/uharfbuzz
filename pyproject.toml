@@ -12,7 +12,7 @@ name = "uharfbuzz"
 description = "Streamlined Cython bindings for the HarfBuzz shaping engine"
 readme = "README.md"
 license = {file = "LICENSE"}
-requires-python = ">=3.5"
+requires-python = ">=3.7"
 authors = [
     { name = "Adrien Tétar", email = "adri-from-59@hotmail.fr" },
 ]
