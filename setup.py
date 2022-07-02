@@ -1,12 +1,9 @@
 #!/usr/bin/env python3
 import os
 import platform
-from io import open
 
 from Cython.Build import cythonize
 from setuptools import Extension, setup
-
-here = os.path.abspath(os.path.dirname(__file__))
 
 define_macros = [("HB_NO_MT", "1"), ("HB_EXPERIMENTAL_API", "1")]
 linetrace = False
