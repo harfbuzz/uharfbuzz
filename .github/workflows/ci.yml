@@ -28,9 +28,11 @@ jobs:
       with:
         python-version: "3.x"
     - name: Install dependencies
-      run: pip install cibuildwheel
+      run: pip install cibuildwheel twine
     - name: Build Wheels
-      run: python -m cibuildwheel --output-dir wheelhouse
+      run: |
+        python -m cibuildwheel --output-dir wheelhouse
+        twine check wheelhouse/*
     - uses: actions/upload-artifact@v2
       with:
         name: uharfbuzz-${{ matrix.os }}
