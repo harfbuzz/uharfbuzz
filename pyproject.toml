@@ -15,6 +15,9 @@ license = {file = "LICENSE"}
 requires-python = ">=3.7"
 authors = [
     { name = "Adrien Tétar", email = "adri-from-59@hotmail.fr" },
+    { name = "Cosimo Lupo", email = "clupo@google.com" },
+    { name = "Just van Rossum", email = "justvanrossum@gmail.com" },
+    { name = "خالد حسني (Khaled Hosny)", email = "khaled@aliftype.com" },
 ]
 dynamic = [
     "version",
