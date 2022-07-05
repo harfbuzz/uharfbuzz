@@ -45,6 +45,7 @@ extension = Extension(
 
 setup(
     zip_safe=False,
+    include_package_data=False, # Do not include Cython sources in wheel distributions.
     ext_modules = cythonize(
         extension,
         annotate=bool(int(os.environ.get('CYTHON_ANNOTATE', '0'))),
