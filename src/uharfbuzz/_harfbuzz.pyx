@@ -6,6 +6,7 @@ from .charfbuzz cimport *
 from libc.stdlib cimport free, malloc, calloc
 from libc.string cimport const_char
 from collections import namedtuple
+from cpython.pycapsule cimport PyCapsule_GetPointer, PyCapsule_IsValid
 from typing import Callable, Dict, List, Sequence, Tuple, Union
 from pathlib import Path
 
@@ -1033,9 +1034,15 @@ cdef class DrawFuncs:
                                      object,  # user_data
                                  ], None],
                                  user_data: object = None) -> None:
-        self._move_to_func = func
+        cdef hb_draw_move_to_func_t func_p
+        if PyCapsule_IsValid(func, NULL):
+            self._move_to_func = None
+            func_p = <hb_draw_move_to_func_t>PyCapsule_GetPointer(func, NULL)
+        else:
+            self._move_to_func = func
+            func_p = _move_to_func
         hb_draw_funcs_set_move_to_func(
-            self._hb_drawfuncs, _move_to_func, <void*>user_data, NULL)
+            self._hb_drawfuncs, func_p, <void*>user_data, NULL)
 
     def set_line_to_func(self,
                          func: Callable[[
@@ -1044,9 +1051,15 @@ cdef class DrawFuncs:
                              object,  # user_data
                          ], None],
                          user_data: object = None) -> None:
-        self._line_to_func = func
+        cdef hb_draw_line_to_func_t func_p
+        if PyCapsule_IsValid(func, NULL):
+            self._line_to_func = None
+            func_p = <hb_draw_line_to_func_t>PyCapsule_GetPointer(func, NULL)
+        else:
+            self._line_to_func = func
+            func_p = _line_to_func
         hb_draw_funcs_set_line_to_func(
-            self._hb_drawfuncs, _line_to_func, <void*>user_data, NULL)
+            self._hb_drawfuncs, func_p, <void*>user_data, NULL)
 
     def set_cubic_to_func(self,
                           func: Callable[[
@@ -1059,9 +1072,15 @@ cdef class DrawFuncs:
                              object,  # user_data
                           ], None],
                           user_data: object = None) -> None:
-        self._cubic_to_func = func
+        cdef hb_draw_cubic_to_func_t func_p
+        if PyCapsule_IsValid(func, NULL):
+            self._cubic_to_func = None
+            func_p = <hb_draw_cubic_to_func_t>PyCapsule_GetPointer(func, NULL)
+        else:
+            self._cubic_to_func = func
+            func_p = _cubic_to_func
         hb_draw_funcs_set_cubic_to_func(
-            self._hb_drawfuncs, _cubic_to_func, <void*>user_data, NULL)
+            self._hb_drawfuncs, func_p, <void*>user_data, NULL)
 
     def set_quadratic_to_func(self,
                               func: Callable[[
@@ -1072,18 +1091,30 @@ cdef class DrawFuncs:
                                  object,  # user_data
                               ], None],
                               user_data: object = None) -> None:
-        self._quadratic_to_func = func
+        cdef hb_draw_quadratic_to_func_t func_p
+        if PyCapsule_IsValid(func, NULL):
+            self._quadratic_to_func = None
+            func_p = <hb_draw_quadratic_to_func_t>PyCapsule_GetPointer(func, NULL)
+        else:
+            self._quadratic_to_func = func
+            func_p = _quadratic_to_func
         hb_draw_funcs_set_quadratic_to_func(
-            self._hb_drawfuncs, _quadratic_to_func, <void*>user_data, NULL)
+            self._hb_drawfuncs, func_p, <void*>user_data, NULL)
 
     def set_close_path_func(self,
                             func: Callable[[
                                 object
                             ], None],
                             user_data: object = None) -> None:
-        self._close_path_func = func
+        cdef hb_draw_close_path_func_t func_p
+        if PyCapsule_IsValid(func, NULL):
+            self._close_path_func = None
+            func_p = <hb_draw_close_path_func_t>PyCapsule_GetPointer(func, NULL)
+        else:
+            self._close_path_func = func
+            func_p = _close_path_func
         hb_draw_funcs_set_close_path_func(
-            self._hb_drawfuncs, _close_path_func, <void*>user_data, NULL)
+            self._hb_drawfuncs, func_p, <void*>user_data, NULL)
 
 cdef class HBObject:
     cdef hb_object_t* _hb_obj_list
