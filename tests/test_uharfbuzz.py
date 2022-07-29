@@ -557,6 +557,32 @@ class TestCallbacks:
             funcs.draw_glyph(opensans, 1, container)
         assert "".join(container) == "M1120,0L938,465L352,465L172,0L0,0L578,1468L721,1468L1296,0L1120,0ZM885,618L715,1071Q682,1157 647,1282Q625,1186 584,1071L412,618L885,618Z"
 
+    def test_draw_funcs_pycapsule(self, opensans):
+        import ctypes
+        import uharfbuzz._harfbuzz
+
+        funcs = hb.DrawFuncs()
+
+        PyCapsule_New = ctypes.pythonapi.PyCapsule_New
+        PyCapsule_New.restype = ctypes.py_object
+        PyCapsule_New.argtypes = (ctypes.c_void_p, ctypes.c_char_p, ctypes.c_void_p)
+
+        def cap(x):
+            return PyCapsule_New(x, None, None)
+
+        lib = ctypes.cdll.LoadLibrary(uharfbuzz._harfbuzz.__file__)
+        container = ctypes.create_string_buffer(1000)
+        container_cap = cap(container)
+
+        funcs.set_move_to_func(cap(lib._test_move_to), container_cap)
+        funcs.set_line_to_func(cap(lib._test_line_to), container_cap)
+        funcs.set_cubic_to_func(cap(lib._test_cubic_to), container_cap)
+        funcs.set_quadratic_to_func(cap(lib._test_quadratic_to), container_cap)
+        funcs.set_close_path_func(cap(lib._test_close_path), container_cap)
+        funcs.get_glyph_shape(opensans, 1)
+
+        assert container.value == b"M1120,0L938,465L352,465L172,0L0,0L578,1468L721,1468L1296,0L1120,0ZM885,618L715,1071Q682,1157 647,1282Q625,1186 584,1071L412,618L885,618Z"
+
     def test_draw_pen(self, opensans):
         class TestPen:
             def __init__(self):

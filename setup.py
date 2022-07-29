@@ -44,6 +44,7 @@ extension = Extension(
         'src/uharfbuzz/_harfbuzz.pyx',
         'harfbuzz/src/harfbuzz.cc',
         'harfbuzz/src/hb-subset-repacker.cc',
+        'src/uharfbuzz/_draw_test_funcs.cc',
     ],
     language='c++',
     libraries=libraries,
