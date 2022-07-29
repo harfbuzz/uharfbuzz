@@ -1244,10 +1244,19 @@ cdef class HBObject:
 class RepackerError(Exception):
     pass
 
+
 def repack(subtables: List[bytes],
            graphnodes: List[Tuple[List[Tuple[int, int, int]],
-                                  List[Tuple[int, int, int]]
-                                  ]]) -> bytes:
+                            List[Tuple[int, int, int]]
+                            ]]) -> bytes:
+    return repack_with_tag("", subtables, graphnodes)
+
+
+def repack_with_tag(tag: str,
+                    subtables: List[bytes],
+                    graphnodes: List[Tuple[List[Tuple[int, int, int]],
+                                     List[Tuple[int, int, int]]
+                                     ]]) -> bytes:
 
     """The whole table is represented as a Graph
        and the input graphnodes is a flat list of subtables
@@ -1312,7 +1321,11 @@ def repack(subtables: List[bytes],
         if p != NULL:
             obj_list.update_links(i, False, node[1])
 
-    cdef hb_blob_t* packed_blob = hb_subset_repack_or_fail(obj_list._hb_obj_list, num_nodes)
+    cdef bytes tag_packed = tag.encode()
+    cdef char* cstr = tag_packed
+    cdef hb_blob_t* packed_blob = hb_subset_repack_or_fail(hb_tag_from_string(cstr, -1),
+							   obj_list._hb_obj_list,
+							   num_nodes)
     if packed_blob == NULL:
         raise RepackerError()
     
