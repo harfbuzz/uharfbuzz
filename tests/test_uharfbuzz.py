@@ -1,6 +1,7 @@
 import uharfbuzz as hb
 from pathlib import Path
 import sys
+import platform
 import pytest
 
 
@@ -557,6 +558,7 @@ class TestCallbacks:
             funcs.draw_glyph(opensans, 1, container)
         assert "".join(container) == "M1120,0L938,465L352,465L172,0L0,0L578,1468L721,1468L1296,0L1120,0ZM885,618L715,1071Q682,1157 647,1282Q625,1186 584,1071L412,618L885,618Z"
 
+    @pytest.mark.xfail(platform.python_implementation() == "PyPy", reason="PyPy's ctypes has no 'pythonapi' attribute")
     def test_draw_funcs_pycapsule(self, opensans):
         import ctypes
         import uharfbuzz._harfbuzz
