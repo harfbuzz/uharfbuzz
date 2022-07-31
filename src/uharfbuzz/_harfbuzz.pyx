@@ -547,6 +547,8 @@ cdef class Font:
 
     def draw_glyph_with_pen(self, gid: int, pen):
         cdef hb_draw_funcs_t* drawfuncs = hb_draw_funcs_create()
+        # keep local references to the bound pen methods to avoid them being gc'ed
+        # before they're even called
         pen_moveTo = pen.moveTo
         pen_lineTo = pen.lineTo
         pen_curveTo = pen.curveTo
