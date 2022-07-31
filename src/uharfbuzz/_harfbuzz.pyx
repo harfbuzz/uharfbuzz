@@ -547,13 +547,20 @@ cdef class Font:
 
     def draw_glyph_with_pen(self, gid: int, pen):
         cdef hb_draw_funcs_t* drawfuncs = hb_draw_funcs_create()
+        # keep local references to the bound pen methods to avoid them being gc'ed
+        # before they're even called
+        pen_moveTo = pen.moveTo
+        pen_lineTo = pen.lineTo
+        pen_curveTo = pen.curveTo
+        pen_qCurveTo = pen.qCurveTo
+        pen_closePath = pen.closePath
         try:
-            hb_draw_funcs_set_move_to_func(drawfuncs, _pen_move_to_func, NULL, NULL)
-            hb_draw_funcs_set_line_to_func(drawfuncs, _pen_line_to_func, NULL, NULL)
-            hb_draw_funcs_set_cubic_to_func(drawfuncs, _pen_cubic_to_func, NULL, NULL)
-            hb_draw_funcs_set_quadratic_to_func(drawfuncs, _pen_quadratic_to_func, NULL, NULL)
-            hb_draw_funcs_set_close_path_func(drawfuncs, _pen_close_path_func, NULL, NULL)
-            hb_font_get_glyph_shape(self._hb_font, gid, drawfuncs, <void*>pen)
+            hb_draw_funcs_set_move_to_func(drawfuncs, _pen_move_to_func, <void*>pen_moveTo, NULL)
+            hb_draw_funcs_set_line_to_func(drawfuncs, _pen_line_to_func, <void*>pen_lineTo, NULL)
+            hb_draw_funcs_set_cubic_to_func(drawfuncs, _pen_cubic_to_func, <void*>pen_curveTo, NULL)
+            hb_draw_funcs_set_quadratic_to_func(drawfuncs, _pen_quadratic_to_func, <void*>pen_qCurveTo, NULL)
+            hb_draw_funcs_set_close_path_func(drawfuncs, _pen_close_path_func, <void*>pen_closePath, NULL)
+            hb_font_get_glyph_shape(self._hb_font, gid, drawfuncs, NULL)
         finally:
             hb_draw_funcs_destroy(drawfuncs)
 
@@ -564,7 +571,7 @@ cdef void _pen_move_to_func(hb_draw_funcs_t *dfuncs,
                             float to_x,
                             float to_y,
                             void *user_data):
-    (<object>draw_data).moveTo((to_x, to_y))
+    (<object>user_data)((to_x, to_y))
 
 cdef void _pen_line_to_func(hb_draw_funcs_t *dfuncs,
                             void *draw_data,
@@ -572,13 +579,13 @@ cdef void _pen_line_to_func(hb_draw_funcs_t *dfuncs,
                             float to_x,
                             float to_y,
                             void *user_data):
-    (<object>draw_data).lineTo((to_x, to_y))
+    (<object>user_data)((to_x, to_y))
 
 cdef void _pen_close_path_func(hb_draw_funcs_t *dfuncs,
                                void *draw_data,
                                hb_draw_state_t *st,
                                void *user_data):
-    (<object>draw_data).closePath()
+    (<object>user_data)()
 
 cdef void _pen_quadratic_to_func(hb_draw_funcs_t *dfuncs,
                                  void *draw_data,
@@ -588,7 +595,7 @@ cdef void _pen_quadratic_to_func(hb_draw_funcs_t *dfuncs,
                                  float to_x,
                                  float to_y,
                                  void *user_data):
-    (<object>draw_data).qCurveTo((c1_x, c1_y), (to_x, to_y))
+    (<object>user_data)((c1_x, c1_y), (to_x, to_y))
 
 cdef void _pen_cubic_to_func(hb_draw_funcs_t *dfuncs,
                              void *draw_data,
@@ -600,7 +607,7 @@ cdef void _pen_cubic_to_func(hb_draw_funcs_t *dfuncs,
                              float to_x,
                              float to_y,
                              void *user_data):
-    (<object>draw_data).curveTo((c1_x, c1_y), (c2_x, c2_y), (to_x, to_y))
+    (<object>user_data)((c1_x, c1_y), (c2_x, c2_y), (to_x, to_y))
 
 
 cdef hb_position_t _glyph_h_advance_func(hb_font_t* font, void* font_data,
