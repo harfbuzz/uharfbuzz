@@ -271,6 +271,7 @@ cdef extern from "hb.h":
     void hb_font_funcs_destroy(hb_font_funcs_t* ffuncs)
 
     hb_font_t* hb_font_create(hb_face_t* face)
+    hb_font_t* hb_font_create_sub_font(hb_font_t* parent)
     void hb_font_set_funcs(
         hb_font_t* font,
         hb_font_funcs_t* klass,

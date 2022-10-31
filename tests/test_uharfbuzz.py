@@ -680,6 +680,16 @@ def test_uharfbuzz_version():
     assert isinstance(v, str)
     assert "unknown" not in v
 
+
+def test_create_sub_font():
+    blob = hb.Blob.from_file_path(ADOBE_BLANK_TTF_PATH)
+    face = hb.Face(blob)
+    font = hb.Font(face)
+    font2 = font.create_sub_font()
+    assert(font is not font2)
+    assert(font.face is font2.face)
+
+
 def test_harfbuzz_repacker():
     table_data = [
                    bytes(b'\x00\x00\xff\xff\x00\x01\x00\x00'),

@@ -409,6 +409,12 @@ cdef class Font:
         cdef Font inst = cls(face)
         return inst
 
+    def create_sub_font(self):
+        cdef Font inst = self.__class__.__new__(self.__class__)
+        inst._hb_font = hb_font_create_sub_font (self._hb_font)
+        inst._face = self._face
+        return inst
+
     @property
     def face(self):
         return self._face
