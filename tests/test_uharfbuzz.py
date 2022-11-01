@@ -685,7 +685,7 @@ def test_create_sub_font():
     blob = hb.Blob.from_file_path(ADOBE_BLANK_TTF_PATH)
     face = hb.Face(blob)
     font = hb.Font(face)
-    font2 = font.create_sub_font()
+    font2 = hb.Font(font)
     assert(font is not font2)
     assert(font.face is font2.face)
 
