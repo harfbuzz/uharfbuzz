@@ -37,7 +37,7 @@ for info, pos in zip(infos, positions):
     x_advance = pos.x_advance
     x_offset = pos.x_offset
     y_offset = pos.y_offset
-    print(f"gid{gid}={cluster}@{x_advance},{x_offset}+{y_offset}")
+    print(f"gid{gid}={cluster}@{x_advance},{y_offset}+{x_advance}")
 ```
 
 
