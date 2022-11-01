@@ -395,9 +395,19 @@ cdef class Font:
     cdef Face _face
     cdef FontFuncs _ffuncs
 
-    def __cinit__(self, Face face):
+    def __init__(self, face_or_font):
+        if isinstance(face_or_font, Font):
+            self.__create_sub_font(face_or_font)
+            return
+        self.__create(face_or_font)
+
+    cdef __create(self, Face face):
         self._hb_font = hb_font_create(face._hb_face)
         self._face = face
+
+    cdef __create_sub_font(self, Font font):
+        self._hb_font = hb_font_create_sub_font (font._hb_font)
+        self._face = font._face
 
     def __dealloc__(self):
         hb_font_destroy(self._hb_font)
