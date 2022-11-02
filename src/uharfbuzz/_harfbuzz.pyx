@@ -395,7 +395,7 @@ cdef class Font:
     cdef Face _face
     cdef FontFuncs _ffuncs
 
-    def __init__(self, face_or_font):
+    def __cinit__(self, face_or_font):
         if isinstance(face_or_font, Font):
             self.__create_sub_font(face_or_font)
             return
