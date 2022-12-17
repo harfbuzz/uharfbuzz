@@ -452,18 +452,19 @@ class TestCallbacks:
         assert pos == [0, 0, 0, 100, 0]
         expected_messages = [
             'start table GSUB',
-            'start lookup 0',
+            "start lookup 0 feature 'calt'",
             'recursing to lookup 1 at 2',
             'replacing glyph at 2 (single substitution)',
             'replaced glyph at 2 (single substitution)',
             'recursed to lookup 1',
-            'end lookup 0',
+            "end lookup 0 feature 'calt'",
             'end table GSUB',
             'start table GPOS',
-            'start lookup 0',
-            'kerning glyphs at 3,4',
+            "start lookup 0 feature 'kern'",
+            'try kerning glyphs at 3,4',
             'kerned glyphs at 3,4',
-            'end lookup 0',
+            'tried kerning glyphs at 3,4',
+            "end lookup 0 feature 'kern'",
             'end table GPOS',
         ]
         assert messages == expected_messages
@@ -472,10 +473,11 @@ class TestCallbacks:
                               [5, 4, 3, 2, 1], [5, 4, 1, 2, 1], [5, 4, 1, 2, 1],
                               [5, 4, 1, 2, 1], [5, 4, 1, 2, 1], [5, 4, 1, 2, 1],
                               [5, 4, 1, 2, 1], [5, 4, 1, 2, 1], [5, 4, 1, 2, 1],
-                              [5, 4, 1, 2, 1], [5, 4, 1, 2, 1]]
+                              [5, 4, 1, 2, 1], [5, 4, 1, 2, 1], [5, 4, 1, 2, 1]]
         advances_trace = [[g.x_advance for g in pos] for pos in positions_trace if pos]
         assert advances_trace == [[0, 0, 0, 0, 0], [0, 0, 0, 0, 0], [0, 0, 0, 0, 0],
-                                  [0, 0, 0, 100, 0], [0, 0, 0, 100, 0], [0, 0, 0, 100, 0]]
+                                  [0, 0, 0, 100, 0], [0, 0, 0, 100, 0], [0, 0, 0, 100, 0],
+                                  [0, 0, 0, 100, 0]]
 
     def test_message_func_return_false(self, blankfont):
         # Glyph IDs 1, 2, 3, 4, 5 map to glyphs a, b, c, d, e.
