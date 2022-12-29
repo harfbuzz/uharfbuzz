@@ -1,11 +1,30 @@
 [build-system]
 requires = [
-    "setuptools >= 36.4",
+    "setuptools >= 62.5",
     "wheel",
-    "setuptools_scm >= 2.1",
+    "setuptools_scm[toml] >= 6.2",
     "cython >= 0.28.1",
 ]
 build-backend = "setuptools.build_meta"
+
+[project]
+name = "uharfbuzz"
+description = "Streamlined Cython bindings for the HarfBuzz shaping engine"
+readme = "README.md"
+license = {file = "LICENSE"}
+requires-python = ">=3.7"
+authors = [
+    { name = "Adrien Tétar", email = "adri-from-59@hotmail.fr" },
+    { name = "Cosimo Lupo", email = "cosimo@anthrotype.com" },
+    { name = "Just van Rossum", email = "justvanrossum@gmail.com" },
+    { name = "خالد حسني (Khaled Hosny)", email = "khaled@aliftype.com" },
+]
+dynamic = [
+    "version",
+]
+
+[project.urls]
+Homepage = "https://github.com/harfbuzz/uharfbuzz"
 
 [tool.cibuildwheel]
 # only build for 64-bit
@@ -16,3 +35,10 @@ test-command = "pytest {project}/tests"
 
 [tool.cibuildwheel.macos]
 archs = ["x86_64", "universal2", "arm64"]
+
+[tool.setuptools_scm]
+write_to = "src/uharfbuzz/_version.py"
+
+[tool.pytest.ini_options]
+addopts = "-v -r a"
+testpaths = "tests"
