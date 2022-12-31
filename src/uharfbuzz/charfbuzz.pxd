@@ -493,3 +493,54 @@ cdef extern from "hb-subset-repacker.h":
         hb_tag_t table_tag,
         hb_object_t* hb_objects,
         unsigned int num_hb_objs)
+
+cdef extern from "hb-subset.h":
+    ctypedef struct hb_subset_input_t:
+        pass
+    ctypedef struct hb_subset_plan_t:
+        pass
+    ctypedef enum hb_subset_flags_t:
+        HB_SUBSET_FLAGS_DEFAULT
+        HB_SUBSET_FLAGS_NO_HINTING
+        HB_SUBSET_FLAGS_RETAIN_GIDS
+        HB_SUBSET_FLAGS_DESUBROUTINIZE
+        HB_SUBSET_FLAGS_NAME_LEGACY
+        HB_SUBSET_FLAGS_SET_OVERLAPS_FLAG
+        HB_SUBSET_FLAGS_PASSTHROUGH_UNRECOGNIZED
+        HB_SUBSET_FLAGS_NOTDEF_OUTLINE
+        HB_SUBSET_FLAGS_GLYPH_NAMES
+        HB_SUBSET_FLAGS_NO_PRUNE_UNICODE_RANGES
+        # Not supported yet: HB_SUBSET_FLAGS_PATCH_MODE
+        # Not supported yet: HB_SUBSET_FLAGS_OMIT_GLYF
+    ctypedef enum hb_subset_sets_t: 
+        HB_SUBSET_SETS_GLYPH_INDEX
+        HB_SUBSET_SETS_UNICODE
+        HB_SUBSET_SETS_NO_SUBSET_TABLE_TAG
+        HB_SUBSET_SETS_DROP_TABLE_TAG
+        HB_SUBSET_SETS_NAME_ID
+        HB_SUBSET_SETS_NAME_LANG_ID
+        HB_SUBSET_SETS_LAYOUT_FEATURE_TAG
+        HB_SUBSET_SETS_LAYOUT_SCRIPT_TAG
+    hb_subset_input_t* hb_subset_input_create_or_fail()
+    hb_subset_input_t* hb_subset_input_reference(hb_subset_input_t* input)
+    void hb_subset_input_destroy(hb_subset_input_t* input)
+    hb_bool_t hb_subset_input_set_user_data(hb_subset_input_t* input, hb_user_data_key_t* key, void* data, hb_destroy_func_t destroy, hb_bool_t replace)
+    void* hb_subset_input_get_user_data(const hb_subset_input_t* input, hb_user_data_key_t* key)
+    hb_set_t* hb_subset_input_unicode_set(hb_subset_input_t* input)
+    hb_set_t* hb_subset_input_glyph_set(hb_subset_input_t* input)
+    hb_set_t* hb_subset_input_set(hb_subset_input_t* input, hb_subset_sets_t set_type)
+    hb_subset_flags_t hb_subset_input_get_flags(hb_subset_input_t* input)
+    void hb_subset_input_set_flags(hb_subset_input_t* input, unsigned value)
+    hb_bool_t hb_subset_input_pin_axis_to_default(hb_subset_input_t* input, hb_face_t* face, hb_tag_t axis_tag)
+    hb_bool_t hb_subset_input_pin_axis_location(hb_subset_input_t* input, hb_face_t* face, hb_tag_t axis_tag, float axis_value)
+    hb_face_t* hb_subset_preprocess(hb_face_t* source)
+    hb_face_t* hb_subset_or_fail(hb_face_t* source, const hb_subset_input_t* input)
+    hb_face_t* hb_subset_plan_execute_or_fail(hb_subset_plan_t* plan)
+    hb_subset_plan_t* hb_subset_plan_create_or_fail(hb_face_t* face, const hb_subset_input_t* input)
+    void hb_subset_plan_destroy(hb_subset_plan_t* plan)
+    const hb_map_t* hb_subset_plan_old_to_new_glyph_mapping(const hb_subset_plan_t* plan)
+    const hb_map_t* hb_subset_plan_new_to_old_glyph_mapping(const hb_subset_plan_t* plan)
+    const hb_map_t* hb_subset_plan_unicode_to_old_glyph_mapping(const hb_subset_plan_t* plan)
+    hb_subset_plan_t* hb_subset_plan_reference(hb_subset_plan_t* plan)
+    hb_bool_t hb_subset_plan_set_user_data(hb_subset_plan_t* plan, hb_user_data_key_t* key, void* data, hb_destroy_func_t destroy, hb_bool_t replace)
+    void* hb_subset_plan_get_user_data(const hb_subset_plan_t* plan, hb_user_data_key_t* key)
