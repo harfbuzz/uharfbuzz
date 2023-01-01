@@ -431,6 +431,68 @@ cdef extern from "hb.h":
         unsigned int num_features,
         char ** shaper_list)
 
+
+    # hb-map.h
+    ctypedef struct hb_map_t:
+        pass
+    cdef hb_codepoint_t HB_MAP_VALUE_INVALID
+    hb_map_t* hb_map_create()
+    hb_map_t* hb_map_get_empty()
+    hb_map_t* hb_map_reference(hb_map_t* map)
+    void hb_map_destroy(hb_map_t* map)
+    hb_bool_t hb_map_set_user_data(hb_map_t* map, hb_user_data_key_t* key, void* data, hb_destroy_func_t destroy, hb_bool_t replace)
+    void* hb_map_get_user_data(const hb_map_t* map, hb_user_data_key_t* key)
+    hb_bool_t hb_map_allocation_successful(const hb_map_t* map)
+    hb_map_t* hb_map_copy(const hb_map_t* map)
+    void hb_map_clear(hb_map_t* map)
+    hb_bool_t hb_map_is_empty(const hb_map_t* map)
+    unsigned int hb_map_get_population(const hb_map_t* map)
+    hb_bool_t hb_map_is_equal(const hb_map_t* map, const hb_map_t* other)
+    unsigned int hb_map_hash(const hb_map_t* map)
+    void hb_map_set(hb_map_t* map, hb_codepoint_t key, hb_codepoint_t value)
+    hb_codepoint_t hb_map_get(const hb_map_t* map, hb_codepoint_t key)
+    void hb_map_del(hb_map_t* map, hb_codepoint_t key)
+    hb_bool_t hb_map_has(const hb_map_t* map, hb_codepoint_t key)
+
+    # hb-set.h
+    ctypedef struct hb_set_t:
+        pass
+    cdef hb_codepoint_t HB_SET_VALUE_INVALID
+    hb_set_t* hb_set_create();
+    hb_set_t* hb_set_get_empty();
+    hb_set_t* hb_set_reference(hb_set_t* set);
+    void hb_set_destroy(hb_set_t* set);
+    hb_bool_t hb_set_set_user_data(hb_set_t* set, hb_user_data_key_t* key, void* data, hb_destroy_func_t destroy, hb_bool_t replace);
+    void* hb_set_get_user_data(const hb_set_t* set, hb_user_data_key_t* key);
+    hb_bool_t hb_set_allocation_successful(const hb_set_t* set);
+    hb_set_t* hb_set_copy(const hb_set_t* set);
+    void hb_set_clear(hb_set_t* set);
+    hb_bool_t hb_set_is_empty(const hb_set_t* set);
+    void hb_set_invert(hb_set_t* set);
+    hb_bool_t hb_set_has(const hb_set_t* set, hb_codepoint_t codepoint);
+    void hb_set_add(hb_set_t* set, hb_codepoint_t codepoint);
+    void hb_set_add_range(hb_set_t* set, hb_codepoint_t first, hb_codepoint_t last);
+    void hb_set_add_sorted_array(hb_set_t* set, const hb_codepoint_t* sorted_codepoints, unsigned int num_codepoints);
+    void hb_set_del(hb_set_t* set, hb_codepoint_t codepoint);
+    void hb_set_del_range(hb_set_t* set, hb_codepoint_t first, hb_codepoint_t last);
+    hb_bool_t hb_set_is_equal(const hb_set_t* set, const hb_set_t* other);
+    unsigned int hb_set_hash(const hb_set_t* set);
+    hb_bool_t hb_set_is_subset(const hb_set_t* set, const hb_set_t* larger_set);
+    void hb_set_set(hb_set_t* set, const hb_set_t* other);
+    void hb_set_union(hb_set_t* set, const hb_set_t* other);
+    void hb_set_intersect(hb_set_t* set, const hb_set_t* other);
+    void hb_set_subtract(hb_set_t* set, const hb_set_t* other);
+    void hb_set_symmetric_difference(hb_set_t* set, const hb_set_t* other);
+    unsigned int hb_set_get_population(const hb_set_t* set);
+    hb_codepoint_t hb_set_get_min(const hb_set_t* set);
+    hb_codepoint_t hb_set_get_max(const hb_set_t* set);
+    hb_bool_t hb_set_next(const hb_set_t* set, hb_codepoint_t* codepoint);
+    hb_bool_t hb_set_previous(const hb_set_t* set, hb_codepoint_t* codepoint);
+    hb_bool_t hb_set_next_range(const hb_set_t* set, hb_codepoint_t* first, hb_codepoint_t* last);
+    hb_bool_t hb_set_previous_range(const hb_set_t* set, hb_codepoint_t* first, hb_codepoint_t* last);
+    unsigned int hb_set_next_many(const hb_set_t* set, hb_codepoint_t codepoint, hb_codepoint_t* out, unsigned int size);
+
+
 cdef extern from "hb-ot.h":
 
     # hb-ot-layout.h
