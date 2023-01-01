@@ -43,7 +43,13 @@ extension = Extension(
     sources=[
         'src/uharfbuzz/_harfbuzz.pyx',
         'harfbuzz/src/harfbuzz.cc',
+        'harfbuzz/src/hb-subset-cff-common.cc',
+        'harfbuzz/src/hb-subset-cff1.cc',
+        'harfbuzz/src/hb-subset-cff2.cc',
+        'harfbuzz/src/hb-subset-input.cc',
+        'harfbuzz/src/hb-subset-plan.cc',
         'harfbuzz/src/hb-subset-repacker.cc',
+        'harfbuzz/src/hb-subset.cc',
         'harfbuzz/src/graph/gsubgpos-context.cc',
         'src/uharfbuzz/_draw_test_funcs.cc',
     ],
