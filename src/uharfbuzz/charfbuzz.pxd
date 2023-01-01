@@ -186,6 +186,7 @@ cdef extern from "hb.h":
         void* data, hb_destroy_func_t destroy,
         hb_bool_t replace)
     void hb_face_destroy(hb_face_t* face)
+    hb_blob_t* hb_face_reference_blob (hb_face_t *face)
 
     hb_face_t* hb_face_get_empty()
 

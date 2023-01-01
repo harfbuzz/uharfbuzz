@@ -306,9 +306,25 @@ cdef class Blob:
         inst._hb_blob = blob
         return inst
 
+    @classmethod
+    def from_face(cls, face: Face) -> Blob:
+        cdef hb_blob_t* blob = hb_face_reference_blob(face._hb_face)
+        if blob is NULL:
+            raise MemoryError()
+        cdef Blob inst = cls(None)
+        inst._hb_blob = blob
+        cdef unsigned int blob_length
+        cdef const_char* blob_data = hb_blob_get_data(blob, &blob_length)
+        inst._data = blob_data[:blob_length]
+        return inst
+
     def __dealloc__(self):
         hb_blob_destroy(self._hb_blob)
         self._data = None
+
+    @property
+    def data(self) -> bytes:
+        return self._data
 
 
 cdef hb_user_data_key_t k
