@@ -1,7 +1,7 @@
 #cython: language_level=3
 import os
 import warnings
-from enum import IntEnum
+from enum import IntEnum, IntFlag
 from .charfbuzz cimport *
 from libc.stdlib cimport free, malloc, calloc
 from libc.string cimport const_char
@@ -1385,3 +1385,80 @@ def repack_with_tag(tag: str,
     return packed
 
 
+cdef class SubsetInput:
+    cdef hb_subset_input_t* _input
+
+    def __cinit__(self):
+        self._input = hb_subset_input_create_or_fail()
+        if self._input is NULL:
+            raise MemoryError()
+
+    def __dealloc__(self):
+        if self._input is not NULL:
+            hb_subset_input_destroy(self._input)
+
+    def pin_axis_to_default(self, face: Face, tag: str) -> bool:
+        hb_tag = hb_tag_from_string(tag.encode("ascii"), -1)
+        return hb_subset_input_pin_axis_to_default(
+            self._input, face._hb_face, hb_tag
+        )
+
+    def pin_axis_location(self, face: Face, tag: str, value: float) -> bool:
+        hb_tag = hb_tag_from_string(tag.encode("ascii"), -1)
+        return hb_subset_input_pin_axis_location(
+            self._input, face._hb_face, hb_tag, value
+        )
+
+    @property
+    def unicode_set(self):
+        raise NotImplementedError
+
+    @property
+    def glyph_set(self):
+        raise NotImplementedError
+
+    @property
+    def no_subset_table_set(self):
+        raise NotImplementedError
+
+    @property
+    def drop_table_set(self):
+        raise NotImplementedError
+
+    @property
+    def name_id_set(self):
+        raise NotImplementedError
+
+    @property
+    def name_lang_set(self):
+        raise NotImplementedError
+
+    @property
+    def layout_feature_set(self):
+        raise NotImplementedError
+
+    @property
+    def layout_script_set(self):
+        raise NotImplementedError
+
+    @property
+    def flags(self) -> SubsetFlags:
+        cdef unsigned subset_flags = hb_subset_input_get_flags(self._input)
+        return SubsetFlags(subset_flags)
+
+    @property.setter
+    def flags(self, flags: SubsetFlags) -> None:
+        hb_subset_input_set_flags(self._input, int(flags))
+
+
+class SubsetFlags(IntFlag):
+    DEFAULT = HB_SUBSET_FLAGS_DEFAULT
+    NO_HINTING = HB_SUBSET_FLAGS_NO_HINTING
+    RETAIN_GIDS = HB_SUBSET_FLAGS_RETAIN_GIDS
+    DESUBROUTINIZE = HB_SUBSET_FLAGS_DESUBROUTINIZE
+    NAME_LEGACY = HB_SUBSET_FLAGS_NAME_LEGACY
+    SET_OVERLAPS_FLAG = HB_SUBSET_FLAGS_SET_OVERLAPS_FLAG
+    PASSTHROUGH_UNRECOGNIZED = HB_SUBSET_FLAGS_PASSTHROUGH_UNRECOGNIZED
+    NOTDEF_OUTLINE = HB_SUBSET_FLAGS_NOTDEF_OUTLINE
+    GLYPH_NAMES = HB_SUBSET_FLAGS_GLYPH_NAMES
+    NO_PRUNE_UNICODE_RANGES = HB_SUBSET_FLAGS_NO_PRUNE_UNICODE_RANGES
