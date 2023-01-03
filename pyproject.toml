@@ -16,3 +16,8 @@ test-command = "pytest {project}/tests"
 
 [tool.cibuildwheel.macos]
 archs = ["x86_64", "universal2", "arm64"]
+
+# Reduce the size of Linux wheels.
+[[tool.cibuildwheel.overrides]]
+select = "*-manylinux_*"
+environment = { CXXFLAGS="-g0" }
