@@ -1424,35 +1424,35 @@ cdef class SubsetInput:
         )
 
     @property
-    def unicode_set(self):
+    def unicode_set(self) -> Set:
         raise NotImplementedError
 
     @property
-    def glyph_set(self):
+    def glyph_set(self) -> Set:
         raise NotImplementedError
 
     @property
-    def no_subset_table_set(self):
+    def no_subset_table_set(self) -> Set:
         raise NotImplementedError
 
     @property
-    def drop_table_set(self):
+    def drop_table_set(self) -> Set:
         raise NotImplementedError
 
     @property
-    def name_id_set(self):
+    def name_id_set(self) -> Set:
         raise NotImplementedError
 
     @property
-    def name_lang_set(self):
+    def name_lang_set(self) -> Set:
         raise NotImplementedError
 
     @property
-    def layout_feature_set(self):
+    def layout_feature_set(self) -> Set:
         raise NotImplementedError
 
     @property
-    def layout_script_set(self):
+    def layout_script_set(self) -> Set:
         raise NotImplementedError
 
     @property
@@ -1476,3 +1476,29 @@ class SubsetFlags(IntFlag):
     NOTDEF_OUTLINE = HB_SUBSET_FLAGS_NOTDEF_OUTLINE
     GLYPH_NAMES = HB_SUBSET_FLAGS_GLYPH_NAMES
     NO_PRUNE_UNICODE_RANGES = HB_SUBSET_FLAGS_NO_PRUNE_UNICODE_RANGES
+
+
+cdef class Set:
+    cdef hb_set_t* _set
+
+    def __cinit__(self):
+        self._set = hb_set_create()
+        if self._set is NULL:
+            raise MemoryError()
+
+    def __dealloc__(self):
+        if self._set is not NULL:
+            hb_set_destroy(self._set)
+
+
+cdef class Map:
+    cdef hb_map_t* _map
+
+    def __cinit__(self):
+        self._map = hb_map_create()
+        if self._map is NULL:
+            raise MemoryError()
+
+    def __dealloc__(self):
+        if self._map is not NULL:
+            hb_map_destroy(self._map)
