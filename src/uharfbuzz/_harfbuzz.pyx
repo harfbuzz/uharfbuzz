@@ -1411,6 +1411,9 @@ cdef class SubsetInput:
         if self._input is not NULL:
             hb_subset_input_destroy(self._input)
 
+    def keep_everything(self):
+        hb_subset_input_keep_everything(self._input)
+
     def pin_axis_to_default(self, face: Face, tag: str) -> bool:
         hb_tag = hb_tag_from_string(tag.encode("ascii"), -1)
         return hb_subset_input_pin_axis_to_default(

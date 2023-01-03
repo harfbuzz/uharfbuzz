@@ -589,6 +589,7 @@ cdef extern from "hb-subset.h":
     void hb_subset_input_destroy(hb_subset_input_t* input)
     hb_bool_t hb_subset_input_set_user_data(hb_subset_input_t* input, hb_user_data_key_t* key, void* data, hb_destroy_func_t destroy, hb_bool_t replace)
     void* hb_subset_input_get_user_data(const hb_subset_input_t* input, hb_user_data_key_t* key)
+    void hb_subset_input_keep_everything(hb_subset_input_t* input)
     hb_set_t* hb_subset_input_unicode_set(hb_subset_input_t* input)
     hb_set_t* hb_subset_input_glyph_set(hb_subset_input_t* input)
     hb_set_t* hb_subset_input_set(hb_subset_input_t* input, hb_subset_sets_t set_type)
