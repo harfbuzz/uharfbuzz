@@ -1460,7 +1460,7 @@ cdef class SubsetInput:
         cdef unsigned subset_flags = hb_subset_input_get_flags(self._input)
         return SubsetFlags(subset_flags)
 
-    @property.setter
+    @flags.setter
     def flags(self, flags: SubsetFlags) -> None:
         hb_subset_input_set_flags(self._input, int(flags))
 
