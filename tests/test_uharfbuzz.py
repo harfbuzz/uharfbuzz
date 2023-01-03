@@ -816,5 +816,4 @@ def test_subset(blankfont):
     assert font.get_nominal_glyph(ord('c')) is not None
     assert font.get_nominal_glyph(ord('d')) is not None
 
-    blob = face.get_blob()
-    assert len(blob.data) > 0
+    assert len(face.blob.data) > 0

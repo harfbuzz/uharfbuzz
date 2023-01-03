@@ -392,7 +392,8 @@ cdef class Face:
     def upem(self, value: int):
         hb_face_set_upem(self._hb_face, value)
 
-    def get_blob(self) -> Blob:
+    @property
+    def blob(self) -> Blob:
         cdef hb_blob_t* blob = hb_face_reference_blob(self._hb_face)
         if blob is NULL:
             raise MemoryError()
