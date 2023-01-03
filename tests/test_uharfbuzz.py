@@ -797,3 +797,21 @@ def test_map():
     del m1[1]
     assert 1 not in m1
     assert len(m1) == 1
+
+def test_subset(blankfont):
+
+    assert blankfont.get_nominal_glyph(ord('a')) is not None
+    assert blankfont.get_nominal_glyph(ord('b')) is not None
+    assert blankfont.get_nominal_glyph(ord('c')) is not None
+    assert blankfont.get_nominal_glyph(ord('d')) is not None
+
+    inp = hb.SubsetInput()
+    inp.unicode_set.update(ord(c) for c in "cd")
+    face = inp.subset(blankfont.face)
+    assert face is not None
+    font = hb.Font(face)
+
+    assert font.get_nominal_glyph(ord('a')) is None
+    assert font.get_nominal_glyph(ord('b')) is None
+    assert font.get_nominal_glyph(ord('c')) is not None
+    assert font.get_nominal_glyph(ord('d')) is not None

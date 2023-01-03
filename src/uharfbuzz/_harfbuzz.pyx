@@ -340,7 +340,7 @@ cdef class Face:
     cdef object _reference_table_func
     cdef Blob _blob
 
-    def __cinit__(self, blob: Union[Blob, bytes], int index=0):
+    def __cinit__(self, blob: Union[Blob, bytes] = None, int index=0):
         if blob is not None:
             if not isinstance(blob, Blob):
                 self._blob = Blob(blob)
@@ -349,6 +349,7 @@ cdef class Face:
             self._hb_face = hb_face_create(self._blob._hb_blob, index)
         else:
             self._hb_face = hb_face_get_empty()
+            self._blob = None
 
     def __dealloc__(self):
         hb_face_destroy(self._hb_face)
@@ -360,7 +361,6 @@ cdef class Face:
 
         cdef Face wrapper = Face.__new__(Face)
         wrapper._hb_face = hb_face
-        wrapper._blob = wrapper.reference_blob
         return wrapper
 
     # DEPRECATED: use the normal constructor
@@ -392,7 +392,6 @@ cdef class Face:
     def upem(self, value: int):
         hb_face_set_upem(self._hb_face, value)
 
-    @property
     def reference_blob(self) -> Blob:
         cdef hb_blob_t* blob = hb_face_reference_blob(self._hb_face)
         if blob is NULL:
@@ -1422,6 +1421,12 @@ cdef class SubsetInput:
         if self._input is not NULL:
             hb_subset_input_destroy(self._input)
 
+    def subset(self, source: Face) -> Face:
+        new_face = hb_subset_or_fail(source._hb_face, self._input)
+        if new_face == NULL:
+            raise RuntimeError("Subsetting failed")
+        return Face.from_ptr(new_face)
+
     def keep_everything(self):
         hb_subset_input_keep_everything(self._input)
 
@@ -1439,14 +1444,14 @@ cdef class SubsetInput:
 
     @property
     def unicode_set(self) -> Set:
-        return Set.from_ptr(hb_subset_input_unicode_set(self._input))
+        return Set.from_ptr(hb_set_reference (hb_subset_input_unicode_set(self._input)))
 
     @property
     def glyph_set(self) -> Set:
-        return Set.from_ptr(hb_subset_input_glyph_set(self._input))
+        return Set.from_ptr(hb_set_reference (hb_subset_input_glyph_set(self._input)))
 
     def set(self, set_type : SubsetInputSets) -> Set:
-        return Set.from_ptr(hb_subset_input_set(self._input, set_type))
+        return Set.from_ptr(hb_set_reference (hb_subset_input_set(self._input, set_type)))
 
     @property
     def flags(self) -> SubsetFlags:
