@@ -306,18 +306,6 @@ cdef class Blob:
         inst._hb_blob = blob
         return inst
 
-    @classmethod
-    def from_face(cls, face: Face) -> Blob:
-        cdef hb_blob_t* blob = hb_face_reference_blob(face._hb_face)
-        if blob is NULL:
-            raise MemoryError()
-        cdef Blob inst = cls(None)
-        inst._hb_blob = blob
-        cdef unsigned int blob_length
-        cdef const_char* blob_data = hb_blob_get_data(blob, &blob_length)
-        inst._data = blob_data[:blob_length]
-        return inst
-
     def __dealloc__(self):
         hb_blob_destroy(self._hb_blob)
         self._data = None
@@ -366,6 +354,15 @@ cdef class Face:
         hb_face_destroy(self._hb_face)
         self._blob = None
 
+    @staticmethod
+    cdef Face from_ptr(hb_face_t* hb_face):
+        """Create Face from taking ownership of a pointer."""
+
+        cdef Face wrapper = Face.__new__(Face)
+        wrapper._hb_face = hb_face
+        wrapper._blob = wrapper.reference_blob
+        return wrapper
+
     # DEPRECATED: use the normal constructor
     @classmethod
     def create(cls, bytes blob, int index=0):
@@ -394,6 +391,18 @@ cdef class Face:
     @upem.setter
     def upem(self, value: int):
         hb_face_set_upem(self._hb_face, value)
+
+    @property
+    def reference_blob(self) -> Blob:
+        cdef hb_blob_t* blob = hb_face_reference_blob(self._hb_face)
+        if blob is NULL:
+            raise MemoryError()
+        cdef Blob inst = Blob(None)
+        inst._hb_blob = blob
+        cdef unsigned int blob_length
+        cdef const_char* blob_data = hb_blob_get_data(blob, &blob_length)
+        inst._data = blob_data[:blob_length]
+        return inst
 
 
 # typing.NamedTuple doesn't seem to work with cython
@@ -1383,6 +1392,11 @@ def repack_with_tag(tag: str,
     
     hb_blob_destroy(packed_blob)
     return packed
+
+
+def subset_preprocess(face: Face) -> Face:
+    new_face = hb_subset_preprocess(face._hb_face)
+    return Face.from_ptr(new_face)
 
 
 cdef class SubsetInput:
