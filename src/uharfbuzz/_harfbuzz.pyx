@@ -1496,6 +1496,14 @@ cdef class Set:
     def __dealloc__(self):
         hb_set_destroy(self._hb_set)
 
+    @staticmethod
+    cdef Set from_ptr(hb_set_t* hb_set):
+        """Create Set from taking ownership of a pointer."""
+
+        cdef Set wrapper = Set.__new__(Set)
+        wrapper._hb_set = hb_set
+        return wrapper
+
     def copy(self) -> Set:
         c = Set()
         c._hb_set = hb_set_copy(self._hb_set)
@@ -1674,6 +1682,14 @@ cdef class Map:
 
     def __dealloc__(self):
         hb_map_destroy(self._hb_map)
+
+    @staticmethod
+    cdef Map from_ptr(hb_map_t* hb_map):
+        """Create Map from taking ownership of a pointer."""
+
+        cdef Map wrapper = Map.__new__(Map)
+        wrapper._hb_map = hb_map
+        return wrapper
 
     def copy(self) -> Map:
         c = Map()
