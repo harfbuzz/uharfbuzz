@@ -288,13 +288,25 @@ cdef class Blob:
     cdef hb_blob_t* _hb_blob
     cdef object _data
 
-    def __cinit__(self, bytes data):
+    def __cinit__(self, bytes data = None):
         if data is not None:
             self._data = data
             self._hb_blob = hb_blob_create(
                 data, len(data), HB_MEMORY_MODE_READONLY, NULL, NULL)
         else:
+            self._data = None
             self._hb_blob = hb_blob_get_empty()
+
+    @staticmethod
+    cdef Blob from_ptr(hb_blob_t* hb_blob):
+        """Create Blob from taking ownership of a pointer."""
+
+        cdef Blob wrapper = Blob.__new__(Blob)
+        wrapper._hb_blob = hb_blob
+        cdef unsigned int blob_length
+        cdef const_char* blob_data = hb_blob_get_data(hb_blob, &blob_length)
+        wrapper._data = blob_data[:blob_length]
+        return wrapper
 
     @classmethod
     def from_file_path(cls, filename: Union[str, Path]):
@@ -397,12 +409,7 @@ cdef class Face:
         cdef hb_blob_t* blob = hb_face_reference_blob(self._hb_face)
         if blob is NULL:
             raise MemoryError()
-        cdef Blob inst = Blob(None)
-        inst._hb_blob = blob
-        cdef unsigned int blob_length
-        cdef const_char* blob_data = hb_blob_get_data(blob, &blob_length)
-        inst._data = blob_data[:blob_length]
-        return inst
+        return Blob.from_ptr(blob)
 
 
 # typing.NamedTuple doesn't seem to work with cython
