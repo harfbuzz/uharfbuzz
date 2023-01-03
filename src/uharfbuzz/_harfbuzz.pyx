@@ -1399,6 +1399,17 @@ def subset_preprocess(face: Face) -> Face:
     return Face.from_ptr(new_face)
 
 
+class SubsetInputSets(IntEnum):
+    GLYPH_INDEX = HB_SUBSET_SETS_GLYPH_INDEX
+    UNICODE = HB_SUBSET_SETS_UNICODE
+    NO_SUBSET_TABLE_TAG = HB_SUBSET_SETS_NO_SUBSET_TABLE_TAG
+    DROP_TABLE_TAG = HB_SUBSET_SETS_DROP_TABLE_TAG
+    NAME_ID = HB_SUBSET_SETS_NAME_ID
+    NAME_LANG_ID = HB_SUBSET_SETS_NAME_LANG_ID
+    LAYOUT_FEATURE_TAG = HB_SUBSET_SETS_LAYOUT_FEATURE_TAG
+    LAYOUT_SCRIPT_TAG = HB_SUBSET_SETS_LAYOUT_SCRIPT_TAG
+
+
 cdef class SubsetInput:
     cdef hb_subset_input_t* _input
 
@@ -1428,35 +1439,14 @@ cdef class SubsetInput:
 
     @property
     def unicode_set(self) -> Set:
-        raise NotImplementedError
+        return Set.from_ptr(hb_subset_input_unicode_set(self._input))
 
     @property
     def glyph_set(self) -> Set:
-        raise NotImplementedError
+        return Set.from_ptr(hb_subset_input_glyph_set(self._input))
 
-    @property
-    def no_subset_table_set(self) -> Set:
-        raise NotImplementedError
-
-    @property
-    def drop_table_set(self) -> Set:
-        raise NotImplementedError
-
-    @property
-    def name_id_set(self) -> Set:
-        raise NotImplementedError
-
-    @property
-    def name_lang_set(self) -> Set:
-        raise NotImplementedError
-
-    @property
-    def layout_feature_set(self) -> Set:
-        raise NotImplementedError
-
-    @property
-    def layout_script_set(self) -> Set:
-        raise NotImplementedError
+    def set(self, set_type : SubsetInputSets) -> Set:
+        return Set.from_ptr(hb_subset_input_set(self._input, set_type))
 
     @property
     def flags(self) -> SubsetFlags:
