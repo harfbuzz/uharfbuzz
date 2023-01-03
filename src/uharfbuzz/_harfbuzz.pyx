@@ -294,7 +294,7 @@ cdef class Blob:
             self._hb_blob = hb_blob_create(
                 data, len(data), HB_MEMORY_MODE_READONLY, NULL, NULL)
         else:
-            self._data = None
+            self._data = bytes()
             self._hb_blob = hb_blob_get_empty()
 
     @staticmethod
