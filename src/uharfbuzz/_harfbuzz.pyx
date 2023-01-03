@@ -1479,26 +1479,268 @@ class SubsetFlags(IntFlag):
 
 
 cdef class Set:
-    cdef hb_set_t* _set
+    cdef hb_set_t* _hb_set
 
-    def __cinit__(self):
-        self._set = hb_set_create()
-        if self._set is NULL:
+    INVALID_VALUE = HB_SET_VALUE_INVALID
+
+    def __cinit__(self, init = set()):
+        self._hb_set = hb_set_create()
+        if not hb_set_allocation_successful(self._hb_set):
             raise MemoryError()
 
+        self.set(init)
+
     def __dealloc__(self):
-        if self._set is not NULL:
-            hb_set_destroy(self._set)
+        hb_set_destroy(self._hb_set)
+
+    def copy(self) -> Set:
+        c = Set()
+        c._hb_set = hb_set_copy(self._hb_set)
+        return c
+
+    def clear(self):
+        hb_set_clear(self._hb_set)
+
+    def is_empty(self) -> bool:
+        return hb_set_is_empty(self._hb_set)
+
+    def __bool__(self) -> bool:
+        return not self.is_empty()
+
+    def invert(self):
+        hb_set_invert(self._hb_set)
+
+    def has(self, c: int) -> bool:
+        return hb_set_has(self._hb_set, c)
+
+    def __contains__(self, c) -> bool:
+        if type(c) != int: # TODO Small-int?
+            return False
+        return self.has(c)
+
+    def add(self, c: int):
+        hb_set_add(self._hb_set, c)
+        if not hb_set_allocation_successful(self._hb_set):
+            raise MemoryError()
+
+    def add_range(self, first: int, last: int):
+        hb_set_add_range(self._hb_set, first, last)
+        if not hb_set_allocation_successful(self._hb_set):
+            raise MemoryError()
+
+    def remove(self, c: int):
+        if not c in self:
+            raise KeyError, c
+        hb_set_del(self._hb_set, c)
+        if not hb_set_allocation_successful(self._hb_set):
+            raise MemoryError()
+
+    def discard(self, c: int):
+        hb_set_del(self._hb_set, c)
+        if not hb_set_allocation_successful(self._hb_set):
+            raise MemoryError()
+
+    def del_range(self, first: int, last: int):
+        hb_set_del_range(self._hb_set, first, last)
+        if not hb_set_allocation_successful(self._hb_set):
+            raise MemoryError()
+
+    def __delitem__(self, c: int):
+        self.remove(c)
+
+    def is_equal(self, other: Set) -> bool:
+        return hb_set_is_equal(self._hb_set, other._hb_set)
+
+    def __eq__(self, other):
+        if type(other) != Set:
+            return NotImplemented
+        return self.is_equal(other)
+
+    def hash(self) -> int:
+        return hb_set_hash(self._hb_set)
+
+    def __hash__(self) -> int:
+        return self.hash()
+
+    def issubset(self, larger_set: Set) -> bool:
+        return hb_set_is_subset(self._hb_set, larger_set._hb_set)
+
+    def issuperset(self, smaller_set: Set) -> bool:
+        return hb_set_is_subset(smaller_set._hb_set, self._hb_set)
+
+    def _set(self, other: Set):
+        hb_set_set(self._hb_set, other._hb_set)
+
+    def set(self, other):
+        if type(other) == Set:
+            self._set(other)
+        else:
+            for c in other:
+                self.add(c)
+
+        if not hb_set_allocation_successful(self._hb_set):
+            raise MemoryError()
+
+    def _update(self, other: Set):
+        hb_set_union(self._hb_set, other._hb_set)
+
+    def update(self, other):
+        if type(other) == Set:
+            self._update(other)
+        else:
+            for c in other:
+                self.add(c)
+        if not hb_set_allocation_successful(self._hb_set):
+            raise MemoryError()
+
+    def __ior__(self, other):
+        self.update(other)
+        return self
+
+    def intersection_update(self, other: Set):
+        hb_set_intersect(self._hb_set, other._hb_set)
+        if not hb_set_allocation_successful(self._hb_set):
+            raise MemoryError()
+
+    def __iand__(self, other: Set):
+        self.intersection_update(other)
+        return self
+
+    def difference_update(self, other: Set):
+        hb_set_subtract(self._hb_set, other._hb_set)
+        if not hb_set_allocation_successful(self._hb_set):
+            raise MemoryError()
+
+    def __isub__(self, other: Set):
+        self.difference_update(other)
+        return self
+
+    def symmetric_difference_update(self, other: Set):
+        hb_set_symmetric_difference(self._hb_set, other._hb_set)
+        if not hb_set_allocation_successful(self._hb_set):
+            raise MemoryError()
+
+    def __ixor__(self, other: Set):
+        self.symmetric_difference_update(other)
+        return self
+
+    def get_population(self) -> int:
+        return hb_set_get_population(self._hb_set)
+
+    def __len__(self) -> int:
+        return self.get_population()
+
+    def get_min(self) -> int:
+        return hb_set_get_min(self._hb_set)
+
+    def get_max(self) -> int:
+        return hb_set_get_max(self._hb_set)
+
+    def __iter__(self):
+        return SetIter(self)
+
+cdef class SetIter:
+    cdef Set s
+    cdef hb_set_t *_hb_set
+    cdef hb_codepoint_t _c
+
+    def __cinit__(self, s: Set):
+        self.s = s
+        self._hb_set = s._hb_set
+        self._c = s.INVALID_VALUE
+
+    def __next__(self) -> int:
+        ret = hb_set_next(self._hb_set, &self._c)
+        if not ret:
+            raise StopIteration
+        return self._c
 
 
 cdef class Map:
-    cdef hb_map_t* _map
+    cdef hb_map_t* _hb_map
 
-    def __cinit__(self):
-        self._map = hb_map_create()
-        if self._map is NULL:
+    INVALID_VALUE = HB_MAP_VALUE_INVALID
+
+    def __cinit__(self, init = dict()):
+        self._hb_map = hb_map_create()
+        if not hb_map_allocation_successful(self._hb_map):
             raise MemoryError()
 
+        for k,v in init.items():
+            self.set(k, v)
+
     def __dealloc__(self):
-        if self._map is not NULL:
-            hb_map_destroy(self._map)
+        hb_map_destroy(self._hb_map)
+
+    def copy(self) -> Map:
+        c = Map()
+        c._hb_map = hb_map_copy(self._hb_map)
+        return c
+
+    def clear(self):
+        hb_map_clear(self._hb_map)
+
+    def is_empty(self) -> bool:
+        return hb_map_is_empty(self._hb_map)
+
+    def __bool__(self) -> bool:
+        return not self.is_empty()
+
+    def get_population(self) -> int:
+        return hb_map_get_population(self._hb_map)
+
+    def __len__(self) -> int:
+        return self.get_population()
+
+    def is_equal(self, other: Map) -> bool:
+        return hb_map_is_equal(self._hb_map, other._hb_map)
+
+    def __eq__(self, other):
+        if type(other) != Map:
+            return NotImplemented
+        return self.is_equal(other)
+
+    def hash(self) -> int:
+        return hb_map_hash(self._hb_map)
+
+    def __hash__(self) -> int:
+        return self.hash()
+
+    def set(self, k: int, v: int):
+        hb_map_set(self._hb_map, k, v)
+        if not hb_map_allocation_successful(self._hb_map):
+            raise MemoryError()
+
+    def __setitem__(self, k: int, v: int):
+        self.set(k, v)
+
+    def get(self, k: int):
+        v = hb_map_get(self._hb_map, k)
+        if v == self.INVALID_VALUE:
+            v = None
+        return v
+
+    def __getitem__(self, k: int) -> int:
+        v = self.get(k)
+        if v is None:
+            raise KeyError, v
+        return v
+
+    def has(self, k: int) -> bool:
+        return hb_map_has(self._hb_map, k)
+
+    def __contains__(self, k) -> bool:
+        if type(k) != int: # TODO Small-int?
+            return False
+        return self.has(k)
+
+    def remove(self, c: int):
+        if not c in self:
+            raise KeyError, c
+        hb_map_del(self._hb_map, c)
+
+    def discard(self, c: int):
+        hb_map_del(self._hb_map, c)
+
+    def __delitem__(self, c: int):
+        self.remove(c)
