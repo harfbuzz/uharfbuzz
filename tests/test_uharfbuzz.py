@@ -810,6 +810,8 @@ def test_map():
     m5 = hb.Map()
     m5.update(m4)
     assert len(m4) == len(m5) == 2
+    m5.update({10:11})
+    assert len(m5) == 3
 
 def test_subset(blankfont):
 

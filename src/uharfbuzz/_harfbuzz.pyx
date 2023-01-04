@@ -1748,9 +1748,15 @@ cdef class Map:
     def __copy__(self) -> Map:
         return self.copy()
 
+    def _update(self, other : Map):
+        hb_map_update(self._hb_map, other._hb_map)
+
     def update(self, other):
-        for k,v in other.items():
-            hb_map_set(self._hb_map, k, v)
+        if type(other) == Map:
+            self._update(other)
+        else:
+            for k,v in other.items():
+                hb_map_set(self._hb_map, k, v)
 
         if not hb_map_allocation_successful(self._hb_map):
             raise MemoryError()

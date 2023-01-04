@@ -454,6 +454,7 @@ cdef extern from "hb.h":
     hb_codepoint_t hb_map_get(const hb_map_t* map, hb_codepoint_t key)
     void hb_map_del(hb_map_t* map, hb_codepoint_t key)
     hb_bool_t hb_map_has(const hb_map_t* map, hb_codepoint_t key)
+    void hb_map_update(hb_map_t* map, const hb_map_t* other)
     hb_bool_t hb_map_next(const hb_map_t* map, int *idx, hb_codepoint_t *key, hb_codepoint_t *value)
 
     # hb-set.h
