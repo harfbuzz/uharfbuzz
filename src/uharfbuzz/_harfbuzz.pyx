@@ -1856,6 +1856,9 @@ cdef class SetIter:
         self._hb_set = s._hb_set
         self._c = s.INVALID_VALUE
 
+    def __iter__(self):
+        return self
+
     def __next__(self) -> int:
         ret = hb_set_next(self._hb_set, &self._c)
         if not ret:

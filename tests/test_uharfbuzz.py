@@ -829,6 +829,8 @@ def test_set():
     assert s1.min == 4
     assert s1.max == 8
 
+    iter(iter(hb.Set({})))
+
 def test_map():
     m1 = hb.Map()
     m2 = hb.Map({1:2, 3:4})
@@ -866,6 +868,7 @@ def test_map():
     m5.update({10:11})
     assert len(m5) == 3
 
+    iter(iter(hb.Map({})))
 
 def test_subset(blankfont):
 
