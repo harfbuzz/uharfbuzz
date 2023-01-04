@@ -770,7 +770,7 @@ def test_set():
     assert list(s1) == [4]
     s1 ^= hb.Set({5})
     assert list(s1) == [4, 5]
-    s1 |= {8}
+    s1 |= {8} # Update accepts set() as well
     assert list(s1) == [4, 5, 8]
     assert len(s1) == 3
     assert s1.min == 4
