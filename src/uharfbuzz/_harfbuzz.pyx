@@ -1796,3 +1796,36 @@ cdef class Map:
         if not c in self:
             raise KeyError, c
         hb_map_del(self._hb_map, c)
+
+    def items(self):
+        return MapIter(self)
+
+    def keys(self):
+        return (k for k,v in self.items())
+
+    def values(self):
+        return (v for k,v in self.items())
+
+    def __iter__(self):
+        return self.keys()
+
+cdef class MapIter:
+    cdef Map m
+    cdef hb_map_t *_hb_map
+    cdef int _i
+
+    def __cinit__(self, m: Map):
+        self.m = m
+        self._hb_map = m._hb_map
+        self._i = -1
+
+    def __iter__(self):
+        return self
+
+    def __next__(self) -> Tuple[int, int]:
+        cdef hb_codepoint_t k
+        cdef hb_codepoint_t v
+        ret = hb_map_next(self._hb_map, &self._i, &k, &v)
+        if not ret:
+            raise StopIteration
+        return (k, v)

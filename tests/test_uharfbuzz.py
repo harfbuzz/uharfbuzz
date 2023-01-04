@@ -799,6 +799,11 @@ def test_map():
     assert 1 not in m1
     assert len(m1) == 1
 
+    assert set(m2.items()) == {(1,2), (3,4)}
+    assert set(m2.keys()) == {1, 3}
+    assert set(m2) == {1, 3}
+    assert set(m2.values()) == {2, 4}
+
 def test_subset(blankfont):
 
     for planned in (False, True):
