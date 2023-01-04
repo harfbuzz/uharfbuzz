@@ -1406,7 +1406,7 @@ def subset_preprocess(face: Face) -> Face:
     return Face.from_ptr(new_face)
 
 def subset(face: Face, input: SubsetInput) -> Face:
-    new_face = hb_subset_or_fail(face._hb_face, input._input)
+    new_face = hb_subset_or_fail(face._hb_face, input._hb_input)
     if new_face == NULL:
         raise RuntimeError("Subsetting failed")
     return Face.from_ptr(new_face)
@@ -1436,45 +1436,45 @@ class SubsetFlags(IntFlag):
 
 
 cdef class SubsetInput:
-    cdef hb_subset_input_t* _input
+    cdef hb_subset_input_t* _hb_input
 
     def __cinit__(self):
-        self._input = hb_subset_input_create_or_fail()
-        if self._input is NULL:
+        self._hb_input = hb_subset_input_create_or_fail()
+        if self._hb_input is NULL:
             raise MemoryError()
 
     def __dealloc__(self):
-        if self._input is not NULL:
-            hb_subset_input_destroy(self._input)
+        if self._hb_input is not NULL:
+            hb_subset_input_destroy(self._hb_input)
 
     def subset(self, source: Face) -> Face:
         return subset(source, self)
 
     def keep_everything(self):
-        hb_subset_input_keep_everything(self._input)
+        hb_subset_input_keep_everything(self._hb_input)
 
     def pin_axis_to_default(self, face: Face, tag: str) -> bool:
         hb_tag = hb_tag_from_string(tag.encode("ascii"), -1)
         return hb_subset_input_pin_axis_to_default(
-            self._input, face._hb_face, hb_tag
+            self._hb_input, face._hb_face, hb_tag
         )
 
     def pin_axis_location(self, face: Face, tag: str, value: float) -> bool:
         hb_tag = hb_tag_from_string(tag.encode("ascii"), -1)
         return hb_subset_input_pin_axis_location(
-            self._input, face._hb_face, hb_tag, value
+            self._hb_input, face._hb_face, hb_tag, value
         )
 
     @property
     def unicode_set(self) -> Set:
-        return Set.from_ptr(hb_set_reference (hb_subset_input_unicode_set(self._input)))
+        return Set.from_ptr(hb_set_reference (hb_subset_input_unicode_set(self._hb_input)))
 
     @property
     def glyph_set(self) -> Set:
-        return Set.from_ptr(hb_set_reference (hb_subset_input_glyph_set(self._input)))
+        return Set.from_ptr(hb_set_reference (hb_subset_input_glyph_set(self._hb_input)))
 
     def sets(self, set_type : SubsetInputSets) -> Set:
-        return Set.from_ptr(hb_set_reference (hb_subset_input_set(self._input, set_type)))
+        return Set.from_ptr(hb_set_reference (hb_subset_input_set(self._hb_input, set_type)))
 
     @property
     def no_subset_table_tag_set(self) -> Set:
@@ -1502,43 +1502,43 @@ cdef class SubsetInput:
 
     @property
     def flags(self) -> SubsetFlags:
-        cdef unsigned subset_flags = hb_subset_input_get_flags(self._input)
+        cdef unsigned subset_flags = hb_subset_input_get_flags(self._hb_input)
         return SubsetFlags(subset_flags)
 
     @flags.setter
     def flags(self, flags: SubsetFlags) -> None:
-        hb_subset_input_set_flags(self._input, int(flags))
+        hb_subset_input_set_flags(self._hb_input, int(flags))
 
 
 cdef class SubsetPlan:
-    cdef hb_subset_plan_t* _plan
+    cdef hb_subset_plan_t* _hb_plan
 
     def __cinit__(self, face: Face, input: SubsetInput):
-        self._plan = hb_subset_plan_create_or_fail(face._hb_face, input._input)
-        if self._plan is NULL:
+        self._hb_plan = hb_subset_plan_create_or_fail(face._hb_face, input._hb_input)
+        if self._hb_plan is NULL:
             raise MemoryError()
 
     def __dealloc__(self):
-        if self._plan is not NULL:
-            hb_subset_plan_destroy(self._plan)
+        if self._hb_plan is not NULL:
+            hb_subset_plan_destroy(self._hb_plan)
 
     def execute(self) -> Face:
-        new_face = hb_subset_plan_execute_or_fail(self._plan)
+        new_face = hb_subset_plan_execute_or_fail(self._hb_plan)
         if new_face == NULL:
             raise RuntimeError("Subsetting failed")
         return Face.from_ptr(new_face)
 
     @property
     def old_to_new_glyph_mapping(self) -> Map:
-        return Map.from_ptr(hb_map_reference (<hb_map_t*>hb_subset_plan_old_to_new_glyph_mapping(self._plan)))
+        return Map.from_ptr(hb_map_reference (<hb_map_t*>hb_subset_plan_old_to_new_glyph_mapping(self._hb_plan)))
 
     @property
     def new_to_old_glyph_mapping(self) -> Map:
-        return Map.from_ptr(hb_map_reference (<hb_map_t*>hb_subset_plan_new_to_old_glyph_mapping(self._plan)))
+        return Map.from_ptr(hb_map_reference (<hb_map_t*>hb_subset_plan_new_to_old_glyph_mapping(self._hb_plan)))
 
     @property
     def unicode_to_old_glyph_mapping(self) -> Map:
-        return Map.from_ptr(hb_map_reference (<hb_map_t*>hb_subset_plan_unicode_to_old_glyph_mapping(self._plan)))
+        return Map.from_ptr(hb_map_reference (<hb_map_t*>hb_subset_plan_unicode_to_old_glyph_mapping(self._hb_plan)))
 
 
 cdef class Set:
