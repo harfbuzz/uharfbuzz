@@ -809,7 +809,8 @@ def test_subset(blankfont):
         assert blankfont.get_nominal_glyph(ord('e')) is not None
 
         inp = hb.SubsetInput()
-        inp[hb.SubsetInputSets.UNICODE] = {ord('b')}
+        inp.sets(hb.SubsetInputSets.UNICODE).set({ord('b')})
+        inp.sets(hb.SubsetInputSets.LAYOUT_FEATURE_TAG).invert()
         inp.unicode_set.update(ord(c) for c in "cd")
         inp.unicode_set.add(ord("e"))
 

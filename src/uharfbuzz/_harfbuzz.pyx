@@ -1476,12 +1476,29 @@ cdef class SubsetInput:
     def sets(self, set_type : SubsetInputSets) -> Set:
         return Set.from_ptr(hb_set_reference (hb_subset_input_set(self._input, set_type)))
 
-    def __getitem__(self, set_type : SubsetInputSets) -> Set:
-        return self.sets(set_type)
+    @property
+    def no_subset_table_tag_set(self) -> Set:
+        return self.sets(SubsetInputSets.NO_SUBSET_TABLE_TAG)
 
-    def __setitem__(self, set_type : SubsetInputSets, iterable) -> Set:
-        s = self.sets(set_type)
-        s.set(iterable)
+    @property
+    def drop_table_tag_set(self) -> Set:
+        return self.sets(SubsetInputSets.DROP_TABLE_TAG)
+
+    @property
+    def name_id_set(self) -> Set:
+        return self.sets(SubsetInputSets.NAME_ID)
+
+    @property
+    def name_lang_id_set(self) -> Set:
+        return self.sets(SubsetInputSets.NAME_LANG_ID)
+
+    @property
+    def layout_feature_tag_set(self) -> Set:
+        return self.sets(SubsetInputSets.LAYOUT_FEATURE_TAG)
+
+    @property
+    def layout_script_tag_set(self) -> Set:
+        return self.sets(SubsetInputSets.LAYOUT_SCRIPT_TAG)
 
     @property
     def flags(self) -> SubsetFlags:
