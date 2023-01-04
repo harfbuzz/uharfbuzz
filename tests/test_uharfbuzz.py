@@ -806,6 +806,11 @@ def test_map():
     assert set(m2) == {1, 3}
     assert set(m2.values()) == {2, 4}
 
+    m4 = hb.Map(m3)
+    m5 = hb.Map()
+    m5.update(m4)
+    assert len(m4) == len(m5) == 2
+
 def test_subset(blankfont):
 
     for planned in (False, True):

@@ -1748,7 +1748,7 @@ cdef class Map:
     def __copy__(self) -> Map:
         return self.copy()
 
-    def update(self, other: dict):
+    def update(self, other):
         for k,v in other.items():
             hb_map_set(self._hb_map, k, v)
 
