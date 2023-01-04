@@ -191,8 +191,12 @@ cdef extern from "hb.h":
         hb_bool_t replace)
     void hb_face_destroy(hb_face_t* face)
     hb_blob_t* hb_face_reference_blob (hb_face_t *face)
-
     hb_face_t* hb_face_get_empty()
+    unsigned int hb_face_get_table_tags (
+        const hb_face_t *face,
+        unsigned int  start_offset,
+        unsigned int *table_count,
+        hb_tag_t     *table_tags)
 
     # hb-font.h
     ctypedef struct hb_font_funcs_t:

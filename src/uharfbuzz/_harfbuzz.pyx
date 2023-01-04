@@ -11,6 +11,9 @@ from typing import Callable, Dict, List, Sequence, Tuple, Union
 from pathlib import Path
 
 
+DEF STATIC_TAGS_ARRAY_SIZE = 128
+
+
 cdef extern from "Python.h":
     # PEP 393
     bint PyUnicode_IS_READY(object u)
@@ -426,6 +429,25 @@ cdef class Face:
         if blob is NULL:
             raise MemoryError()
         return Blob.from_ptr(blob)
+
+    @property
+    def table_tags(self) -> List[str]:
+        cdef unsigned int tag_count = STATIC_TAGS_ARRAY_SIZE
+        cdef hb_tag_t tags_array[STATIC_TAGS_ARRAY_SIZE]
+        cdef list tags = []
+        cdef char cstr[5]
+        cdef unsigned int i
+        cdef unsigned int start_offset = 0
+        while tag_count == STATIC_TAGS_ARRAY_SIZE:
+            hb_face_get_table_tags(
+                self._hb_face, start_offset, &tag_count, tags_array)
+            for i in range(tag_count):
+                hb_tag_to_string(tags_array[i], cstr)
+                cstr[4] = b'\0'
+                packed = cstr
+                tags.append(packed.decode())
+            start_offset += tag_count
+        return tags
 
 
 # typing.NamedTuple doesn't seem to work with cython
@@ -915,9 +937,6 @@ def shape(font: Font, buffer: Buffer,
     finally:
         if hb_features is not NULL:
             free(hb_features)
-
-
-DEF STATIC_TAGS_ARRAY_SIZE = 128
 
 
 def ot_layout_language_get_feature_tags(

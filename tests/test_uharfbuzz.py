@@ -739,6 +739,15 @@ def test_sparsefont_coretext(sparsefont):
     with pytest.raises(RuntimeError):
         hb.shape(sparsefont, buf, shapers=["coretext"])
 
+def test_face(blankfont):
+
+    face = blankfont.face
+
+    assert face.index == 0
+    assert face.upem == 1000
+    assert face.glyph_count == 9
+    assert face.table_tags == ['BASE', 'GPOS', 'GSUB', 'OS/2', 'cmap', 'cvt ', 'fpgm', 'gasp', 'glyf', 'head', 'hhea', 'hmtx', 'loca', 'maxp', 'name', 'post', 'prep']
+
 def test_set():
     s1 = hb.Set()
     s2 = hb.Set({1, 3, 4})
