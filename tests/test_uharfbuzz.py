@@ -758,7 +758,7 @@ def test_set():
     assert s1 == s2
 
     assert 1 in s1
-    del s1[1]
+    s1.remove(1)
     assert 1 not in s1
 
     assert list(s1) == [3, 4]
@@ -786,7 +786,7 @@ def test_map():
     assert not m1 == m2
     assert not m2 != m3
     assert m2 == m3
-    m1.set(1, 2)
+    m1[1] = 2
     assert m1[1] == 2
     assert m1 != m2
     m1[3] = 4

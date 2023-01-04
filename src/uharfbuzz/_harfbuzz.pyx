@@ -1526,7 +1526,7 @@ cdef class Set:
         hb_set_clear(self._hb_set)
 
     def __bool__(self) -> bool:
-        return hb_set_is_empty(self._hb_set)
+        return not hb_set_is_empty(self._hb_set)
 
     def invert(self):
         hb_set_invert(self._hb_set)
@@ -1562,9 +1562,6 @@ cdef class Set:
         hb_set_del_range(self._hb_set, first, last)
         if not hb_set_allocation_successful(self._hb_set):
             raise MemoryError()
-
-    def __delitem__(self, c: int):
-        self.remove(c)
 
     def is_equal(self, other: Set) -> bool:
         return hb_set_is_equal(self._hb_set, other._hb_set)
@@ -1698,13 +1695,13 @@ cdef class Map:
 
     def update(self, other: dict):
         for k,v in other.items():
-            self.set(k, v)
+            self[k] = v
 
     def clear(self):
         hb_map_clear(self._hb_map)
 
     def __bool__(self) -> bool:
-        return hb_map_is_empty(self._hb_map)
+        return not hb_map_is_empty(self._hb_map)
 
 
     def __len__(self) -> int:
@@ -1740,13 +1737,7 @@ cdef class Map:
             return False
         return hb_map_has(self._hb_map, k)
 
-    def remove(self, c: int):
+    def __delitem__(self, c: int):
         if not c in self:
             raise KeyError, c
         hb_map_del(self._hb_map, c)
-
-    def discard(self, c: int):
-        hb_map_del(self._hb_map, c)
-
-    def __delitem__(self, c: int):
-        self.remove(c)
