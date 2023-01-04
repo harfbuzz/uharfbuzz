@@ -756,6 +756,14 @@ def test_buffer():
     buf.replacement_codepoint = 0
     assert buf.replacement_codepoint == 0
 
+    buf.add_str("ABC")
+    assert len(buf) == 3
+    buf.clear_contents()
+    assert len(buf) == 0
+    assert buf.flags == hb.BufferFlags.BOT | hb.BufferFlags.EOT
+    buf.reset()
+    assert buf.flags == hb.BufferFlags.DEFAULT
+
 def test_font(blankfont):
 
     assert blankfont.scale == (1000, 1000)

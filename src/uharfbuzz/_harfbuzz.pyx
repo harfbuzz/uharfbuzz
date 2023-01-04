@@ -142,6 +142,12 @@ cdef class Buffer:
     def __len__(self) -> int:
         return hb_buffer_get_length(self._hb_buffer)
 
+    def reset(self):
+        hb_buffer_reset (self._hb_buffer)
+
+    def clear_contents(self):
+        hb_buffer_clear_contents(self._hb_buffer)
+
     @property
     def direction(self) -> str:
         cdef const_char* cstr = hb_direction_to_string(
