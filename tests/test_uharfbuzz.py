@@ -742,6 +742,9 @@ def test_sparsefont_coretext(sparsefont):
 def test_buffer():
     buf = hb.Buffer()
 
+    assert buf.flags == hb.BufferFlags.DEFAULT
+    buf.flags = hb.BufferFlags.BOT | hb.BufferFlags.EOT
+    assert buf.flags == hb.BufferFlags.BOT | hb.BufferFlags.EOT
     assert buf.content_type == hb.BufferContentType.INVALID
     buf.content_type = hb.BufferContentType.UNICODE
     assert buf.content_type == hb.BufferContentType.UNICODE

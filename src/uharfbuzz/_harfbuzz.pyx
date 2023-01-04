@@ -96,6 +96,17 @@ cdef class GlyphPosition:
         return self._hb_glyph_position.y_offset
 
 
+class BufferFlags(IntFlag):
+    DEFAULT = HB_BUFFER_FLAG_DEFAULT
+    BOT = HB_BUFFER_FLAG_BOT
+    EOT = HB_BUFFER_FLAG_EOT
+    PRESERVE_DEFAULT_IGNORABLES = HB_BUFFER_FLAG_PRESERVE_DEFAULT_IGNORABLES
+    REMOVE_DEFAULT_IGNORABLES = HB_BUFFER_FLAG_REMOVE_DEFAULT_IGNORABLES
+    DO_NOT_INSERT_DOTTED_CIRCLE = HB_BUFFER_FLAG_DO_NOT_INSERT_DOTTED_CIRCLE
+    VERIFY = HB_BUFFER_FLAG_VERIFY
+    PRODUCE_UNSAFE_TO_CONCAT = HB_BUFFER_FLAG_PRODUCE_UNSAFE_TO_CONCAT
+    PRODUCE_SAFE_TO_INSERT_TATWEEL = HB_BUFFER_FLAG_PRODUCE_SAFE_TO_INSERT_TATWEEL
+
 class BufferClusterLevel(IntEnum):
     MONOTONE_GRAPHEMES = HB_BUFFER_CLUSTER_LEVEL_MONOTONE_GRAPHEMES
     MONOTONE_CHARACTERS = HB_BUFFER_CLUSTER_LEVEL_MONOTONE_CHARACTERS
@@ -206,6 +217,16 @@ cdef class Buffer:
         # exception if invalid
         hb_buffer_set_script(
             self._hb_buffer, hb_script_from_string(cstr, -1))
+
+    @property
+    def flags(self) -> BufferFlags:
+        level = hb_buffer_get_flags(self._hb_buffer)
+        return BufferFlags(level)
+
+    @flags.setter
+    def flags(self, value: BufferFlags):
+        level = BufferFlags(value)
+        hb_buffer_set_flags(self._hb_buffer, level)
 
     @property
     def cluster_level(self) -> BufferClusterLevel:

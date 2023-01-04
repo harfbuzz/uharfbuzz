@@ -126,6 +126,19 @@ cdef extern from "hb.h":
         HB_BUFFER_CLUSTER_LEVEL_CHARACTERS
         HB_BUFFER_CLUSTER_LEVEL_DEFAULT
 
+    ctypedef enum hb_buffer_flags_t:
+        HB_BUFFER_FLAG_DEFAULT
+        HB_BUFFER_FLAG_BOT
+        HB_BUFFER_FLAG_EOT
+        HB_BUFFER_FLAG_PRESERVE_DEFAULT_IGNORABLES
+        HB_BUFFER_FLAG_REMOVE_DEFAULT_IGNORABLES
+        HB_BUFFER_FLAG_DO_NOT_INSERT_DOTTED_CIRCLE
+        HB_BUFFER_FLAG_VERIFY
+        HB_BUFFER_FLAG_PRODUCE_UNSAFE_TO_CONCAT
+        HB_BUFFER_FLAG_PRODUCE_SAFE_TO_INSERT_TATWEEL
+
+        HB_BUFFER_FLAG_DEFINED
+
     hb_buffer_t* hb_buffer_create()
     hb_bool_t hb_buffer_allocation_successful(hb_buffer_t* buffer)
     void hb_buffer_add_codepoints(
@@ -173,7 +186,8 @@ cdef extern from "hb.h":
         hb_buffer_message_func_t func,
         void *user_data,
         void* destroy)
-
+    void hb_buffer_set_flags (hb_buffer_t *buffer, hb_buffer_flags_t  flags)
+    hb_buffer_flags_t hb_buffer_get_flags (const hb_buffer_t *buffer)
     void hb_buffer_set_content_type (hb_buffer_t *buffer, hb_buffer_content_type_t  content_type)
     hb_buffer_content_type_t hb_buffer_get_content_type (const hb_buffer_t *buffer)
     void hb_buffer_set_replacement_codepoint (hb_buffer_t *buffer, hb_codepoint_t  replacement)
