@@ -1519,6 +1519,9 @@ cdef class Set:
         c._hb_set = hb_set_copy(self._hb_set)
         return c
 
+    def __copy__(self) -> Set:
+        return self.copy()
+
     def clear(self):
         hb_set_clear(self._hb_set)
 
@@ -1704,6 +1707,9 @@ cdef class Map:
         c = Map()
         c._hb_map = hb_map_copy(self._hb_map)
         return c
+
+    def __copy__(self) -> Map:
+        return self.copy()
 
     def update(self, other: dict):
         for k,v in other.items():
