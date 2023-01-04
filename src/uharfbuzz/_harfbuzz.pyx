@@ -1636,10 +1636,12 @@ cdef class Set:
     def __len__(self) -> int:
         return hb_set_get_population(self._hb_set)
 
-    def get_min(self) -> int:
+    @property
+    def min(self) -> int:
         return hb_set_get_min(self._hb_set)
 
-    def get_max(self) -> int:
+    @property
+    def max(self) -> int:
         return hb_set_get_max(self._hb_set)
 
     def __iter__(self):
@@ -1702,7 +1704,6 @@ cdef class Map:
 
     def __bool__(self) -> bool:
         return not hb_map_is_empty(self._hb_map)
-
 
     def __len__(self) -> int:
         return hb_map_get_population(self._hb_map)

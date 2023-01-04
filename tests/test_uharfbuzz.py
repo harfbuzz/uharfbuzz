@@ -772,6 +772,8 @@ def test_set():
     s1 |= {8}
     assert list(s1) == [4, 5, 8]
     assert len(s1) == 3
+    assert s1.min == 4
+    assert s1.max == 8
 
 def test_map():
     m1 = hb.Map()
