@@ -1525,22 +1525,16 @@ cdef class Set:
     def clear(self):
         hb_set_clear(self._hb_set)
 
-    def is_empty(self) -> bool:
-        return hb_set_is_empty(self._hb_set)
-
     def __bool__(self) -> bool:
-        return not self.is_empty()
+        return hb_set_is_empty(self._hb_set)
 
     def invert(self):
         hb_set_invert(self._hb_set)
 
-    def has(self, c: int) -> bool:
-        return hb_set_has(self._hb_set, c)
-
     def __contains__(self, c) -> bool:
         if type(c) != int: # TODO Small-int?
             return False
-        return self.has(c)
+        return hb_set_has(self._hb_set, c)
 
     def add(self, c: int):
         hb_set_add(self._hb_set, c)
@@ -1579,12 +1573,6 @@ cdef class Set:
         if type(other) != Set:
             return NotImplemented
         return self.is_equal(other)
-
-    def hash(self) -> int:
-        return hb_set_hash(self._hb_set)
-
-    def __hash__(self) -> int:
-        return self.hash()
 
     def issubset(self, larger_set: Set) -> bool:
         return hb_set_is_subset(self._hb_set, larger_set._hb_set)
@@ -1648,11 +1636,8 @@ cdef class Set:
         self.symmetric_difference_update(other)
         return self
 
-    def get_population(self) -> int:
-        return hb_set_get_population(self._hb_set)
-
     def __len__(self) -> int:
-        return self.get_population()
+        return hb_set_get_population(self._hb_set)
 
     def get_min(self) -> int:
         return hb_set_get_min(self._hb_set)
@@ -1718,17 +1703,12 @@ cdef class Map:
     def clear(self):
         hb_map_clear(self._hb_map)
 
-    def is_empty(self) -> bool:
+    def __bool__(self) -> bool:
         return hb_map_is_empty(self._hb_map)
 
-    def __bool__(self) -> bool:
-        return not self.is_empty()
-
-    def get_population(self) -> int:
-        return hb_map_get_population(self._hb_map)
 
     def __len__(self) -> int:
-        return self.get_population()
+        return hb_map_get_population(self._hb_map)
 
     def is_equal(self, other: Map) -> bool:
         return hb_map_is_equal(self._hb_map, other._hb_map)
@@ -1738,19 +1718,10 @@ cdef class Map:
             return NotImplemented
         return self.is_equal(other)
 
-    def hash(self) -> int:
-        return hb_map_hash(self._hb_map)
-
-    def __hash__(self) -> int:
-        return self.hash()
-
-    def set(self, k: int, v: int):
+    def __setitem__(self, k: int, v: int):
         hb_map_set(self._hb_map, k, v)
         if not hb_map_allocation_successful(self._hb_map):
             raise MemoryError()
-
-    def __setitem__(self, k: int, v: int):
-        self.set(k, v)
 
     def get(self, k: int):
         v = hb_map_get(self._hb_map, k)
@@ -1764,13 +1735,10 @@ cdef class Map:
             raise KeyError, v
         return v
 
-    def has(self, k: int) -> bool:
-        return hb_map_has(self._hb_map, k)
-
     def __contains__(self, k) -> bool:
         if type(k) != int: # TODO Small-int?
             return False
-        return self.has(k)
+        return hb_map_has(self._hb_map, k)
 
     def remove(self, c: int):
         if not c in self:
