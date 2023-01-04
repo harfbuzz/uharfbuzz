@@ -1405,6 +1405,11 @@ def subset_preprocess(face: Face) -> Face:
     new_face = hb_subset_preprocess(face._hb_face)
     return Face.from_ptr(new_face)
 
+def subset(face: Face, input: SubsetInput) -> Face:
+    new_face = hb_subset_or_fail(face._hb_face, input._input)
+    if new_face == NULL:
+        raise RuntimeError("Subsetting failed")
+    return Face.from_ptr(new_face)
 
 class SubsetInputSets(IntEnum):
     GLYPH_INDEX = HB_SUBSET_SETS_GLYPH_INDEX
@@ -1443,10 +1448,7 @@ cdef class SubsetInput:
             hb_subset_input_destroy(self._input)
 
     def subset(self, source: Face) -> Face:
-        new_face = hb_subset_or_fail(source._hb_face, self._input)
-        if new_face == NULL:
-            raise RuntimeError("Subsetting failed")
-        return Face.from_ptr(new_face)
+        return subset(source, self)
 
     def keep_everything(self):
         hb_subset_input_keep_everything(self._input)
