@@ -739,6 +739,19 @@ def test_sparsefont_coretext(sparsefont):
     with pytest.raises(RuntimeError):
         hb.shape(sparsefont, buf, shapers=["coretext"])
 
+def test_buffer():
+    buf = hb.Buffer()
+
+    assert buf.content_type == hb.BufferContentType.INVALID
+    buf.content_type = hb.BufferContentType.UNICODE
+    assert buf.content_type == hb.BufferContentType.UNICODE
+    assert buf.cluster_level == hb.BufferClusterLevel.DEFAULT
+    buf.cluster_level = hb.BufferClusterLevel.CHARACTERS
+    assert buf.cluster_level == hb.BufferClusterLevel.CHARACTERS
+    assert buf.replacement_codepoint == hb.Buffer.DEFAULT_REPLACEMENT_CODEPOINT
+    buf.replacement_codepoint = 0
+    assert buf.replacement_codepoint == 0
+
 def test_font(blankfont):
 
     assert blankfont.scale == (1000, 1000)

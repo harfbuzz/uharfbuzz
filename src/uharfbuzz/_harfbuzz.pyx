@@ -102,10 +102,16 @@ class BufferClusterLevel(IntEnum):
     CHARACTERS = HB_BUFFER_CLUSTER_LEVEL_CHARACTERS
     DEFAULT = HB_BUFFER_CLUSTER_LEVEL_DEFAULT
 
+class BufferContentType(IntEnum):
+    INVALID = HB_BUFFER_CONTENT_TYPE_INVALID
+    UNICODE = HB_BUFFER_CONTENT_TYPE_UNICODE
+    GLYPHS = HB_BUFFER_CONTENT_TYPE_GLYPHS
 
 cdef class Buffer:
     cdef hb_buffer_t* _hb_buffer
     cdef object _message_callback
+
+    DEFAULT_REPLACEMENT_CODEPOINT = HB_BUFFER_REPLACEMENT_CODEPOINT_DEFAULT
 
     def __cinit__(self):
         self._hb_buffer = hb_buffer_create()
@@ -210,6 +216,40 @@ cdef class Buffer:
     def cluster_level(self, value: BufferClusterLevel):
         level = BufferClusterLevel(value)
         hb_buffer_set_cluster_level(self._hb_buffer, level)
+
+    @property
+    def content_type(self) -> BufferContentType:
+        level = hb_buffer_get_content_type(self._hb_buffer)
+        return BufferContentType(level)
+
+    @content_type.setter
+    def content_type(self, value: BufferContentType):
+        level = BufferContentType(value)
+        hb_buffer_set_content_type(self._hb_buffer, level)
+
+    @property
+    def replacement_codepoint(self) -> int:
+        return hb_buffer_get_replacement_codepoint(self._hb_buffer)
+
+    @replacement_codepoint.setter
+    def replacement_codepoint(self, value: int):
+        hb_buffer_set_replacement_codepoint(self._hb_buffer, value)
+
+    @property
+    def invisible_glyph(self) -> int:
+        return hb_buffer_get_invisible_glyph(self._hb_buffer)
+
+    @invisible_glyph.setter
+    def invisible_glyph(self, value: int):
+        hb_buffer_set_invisible_glyph(self._hb_buffer, value)
+
+    @property
+    def not_found_glyph(self) -> int:
+        return hb_buffer_get_not_found_glyph(self._hb_buffer)
+
+    @not_found_glyph.setter
+    def not_found_glyph(self, value: int):
+        hb_buffer_set_not_found_glyph(self._hb_buffer, value)
 
     def set_language_from_ot_tag(self, value: str):
         cdef bytes packed = value.encode()

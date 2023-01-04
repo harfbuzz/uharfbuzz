@@ -102,6 +102,8 @@ cdef extern from "hb.h":
     ctypedef struct hb_buffer_t:
         pass
 
+    cdef hb_codepoint_t HB_BUFFER_REPLACEMENT_CODEPOINT_DEFAULT
+
     ctypedef struct hb_glyph_info_t:
         hb_codepoint_t codepoint
         hb_mask_t mask
@@ -112,6 +114,11 @@ cdef extern from "hb.h":
         hb_position_t x_offset
         hb_position_t y_offset
         hb_var_int_t var
+
+    ctypedef enum hb_buffer_content_type_t:
+        HB_BUFFER_CONTENT_TYPE_INVALID
+        HB_BUFFER_CONTENT_TYPE_UNICODE
+        HB_BUFFER_CONTENT_TYPE_GLYPHS
 
     ctypedef enum hb_buffer_cluster_level_t:
         HB_BUFFER_CLUSTER_LEVEL_MONOTONE_GRAPHEMES
@@ -166,6 +173,16 @@ cdef extern from "hb.h":
         hb_buffer_message_func_t func,
         void *user_data,
         void* destroy)
+
+    void hb_buffer_set_content_type (hb_buffer_t *buffer, hb_buffer_content_type_t  content_type)
+    hb_buffer_content_type_t hb_buffer_get_content_type (const hb_buffer_t *buffer)
+    void hb_buffer_set_replacement_codepoint (hb_buffer_t *buffer, hb_codepoint_t  replacement)
+    hb_codepoint_t hb_buffer_get_replacement_codepoint (const hb_buffer_t *buffer)
+    void hb_buffer_set_invisible_glyph (hb_buffer_t *buffer, hb_codepoint_t  invisible)
+    hb_codepoint_t hb_buffer_get_invisible_glyph (const hb_buffer_t *buffer)
+    void hb_buffer_set_not_found_glyph (hb_buffer_t *buffer, hb_codepoint_t  not_found)
+    hb_codepoint_t hb_buffer_get_not_found_glyph (const hb_buffer_t *buffer)
+
 
     # hb-face.h
     ctypedef struct hb_face_t:
