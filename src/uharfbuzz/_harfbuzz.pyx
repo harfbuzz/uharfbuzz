@@ -302,11 +302,15 @@ cdef class Buffer:
             self._hb_buffer, hb_codepoints, size, item_offset, item_length)
         if hb_codepoints is not NULL:
             free(hb_codepoints)
+        if not hb_buffer_allocation_successful(self._hb_buffer):
+            raise MemoryError()
 
     def add_utf8(self, text: bytes,
                  item_offset: int = 0, item_length: int = -1) -> None:
         hb_buffer_add_utf8(
             self._hb_buffer, text, len(text), item_offset, item_length)
+        if not hb_buffer_allocation_successful(self._hb_buffer):
+            raise MemoryError()
 
     def add_str(self, text: str,
                 item_offset: int = 0, item_length: int = -1) -> None:
@@ -342,6 +346,8 @@ cdef class Buffer:
             )
         else:
             raise AssertionError(kind)
+        if not hb_buffer_allocation_successful(self._hb_buffer):
+            raise MemoryError()
 
     def guess_segment_properties(self) -> None:
         hb_buffer_guess_segment_properties(self._hb_buffer)
@@ -1023,6 +1029,8 @@ def shape(font: Font, buffer: Buffer,
                 raise RuntimeError("All shapers failed")
         else:
             hb_shape(font._hb_font, buffer._hb_buffer, hb_features, size)
+        if not hb_buffer_allocation_successful(buffer._hb_buffer):
+            raise MemoryError()
     finally:
         if hb_features is not NULL:
             free(hb_features)
