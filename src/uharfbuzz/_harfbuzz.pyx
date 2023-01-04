@@ -550,6 +550,14 @@ cdef class Font:
     def ptem(self, value: float):
         hb_font_set_ptem(self._hb_font, value)
 
+    @property
+    def synthetic_slant(self) -> float:
+        return hb_font_get_synthetic_slant(self._hb_font)
+
+    @synthetic_slant.setter
+    def synthetic_slant(self, value: float):
+        hb_font_set_synthetic_slant(self._hb_font, value)
+
     def set_variations(self, variations: Dict[str, float]) -> None:
         cdef unsigned int size
         cdef hb_variation_t* hb_variations

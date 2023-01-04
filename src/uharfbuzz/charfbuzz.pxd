@@ -295,6 +295,8 @@ cdef extern from "hb.h":
     void hb_font_set_ppem(hb_font_t* font, unsigned int x_ppem, unsigned int y_ppem)
     float hb_font_get_ptem(hb_font_t* font)
     void hb_font_set_ptem(hb_font_t* font, float ptem)
+    float hb_font_get_synthetic_slant (hb_font_t *font)
+    void hb_font_set_synthetic_slant (hb_font_t *font, float slant)
     void hb_font_set_variations(
         hb_font_t* font,
         const hb_variation_t* variations,

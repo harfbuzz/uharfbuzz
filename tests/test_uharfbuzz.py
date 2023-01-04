@@ -739,6 +739,21 @@ def test_sparsefont_coretext(sparsefont):
     with pytest.raises(RuntimeError):
         hb.shape(sparsefont, buf, shapers=["coretext"])
 
+def test_font(blankfont):
+
+    assert blankfont.scale == (1000, 1000)
+    blankfont.scale = (1024, 1024)
+    assert blankfont.scale == (1024, 1024)
+    assert blankfont.ppem == (0, 0)
+    blankfont.ppem = (16, 24)
+    assert blankfont.ppem == (16, 24)
+    assert blankfont.ptem == 0
+    blankfont.ptem = 12.
+    assert blankfont.ptem == 12.
+    assert blankfont.synthetic_slant == 0
+    blankfont.synthetic_slant = .2
+    assert blankfont.synthetic_slant == pytest.approx(.2)
+
 def test_face(blankfont):
 
     face = blankfont.face
