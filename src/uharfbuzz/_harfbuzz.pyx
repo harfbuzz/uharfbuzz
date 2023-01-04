@@ -298,16 +298,14 @@ cdef class Buffer:
         cdef unsigned int size = len(codepoints)
         cdef hb_codepoint_t* hb_codepoints
         if not size:
-            hb_codepoints = NULL
-        else:
-            hb_codepoints = <hb_codepoint_t*>malloc(
-                size * sizeof(hb_codepoint_t))
-            for i in range(size):
-                hb_codepoints[i] = codepoints[i]
+            return
+        hb_codepoints = <hb_codepoint_t*>malloc(
+            size * sizeof(hb_codepoint_t))
+        for i in range(size):
+            hb_codepoints[i] = codepoints[i]
         hb_buffer_add_codepoints(
             self._hb_buffer, hb_codepoints, size, item_offset, item_length)
-        if hb_codepoints is not NULL:
-            free(hb_codepoints)
+        free(hb_codepoints)
         if not hb_buffer_allocation_successful(self._hb_buffer):
             raise MemoryError()
 
