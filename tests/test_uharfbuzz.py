@@ -757,6 +757,7 @@ def test_set():
     s1.add_range(3, 4)
     assert s1 == s2
 
+    assert -1 not in s1
     assert 1 in s1
     s1.remove(1)
     assert 1 not in s1
@@ -794,6 +795,7 @@ def test_map():
     m1[3] = 4
     assert m1 == m2
 
+    assert -1 not in m2
     assert 1 in m1
     del m1[1]
     assert 1 not in m1

@@ -1582,7 +1582,9 @@ cdef class Set:
         hb_set_invert(self._hb_set)
 
     def __contains__(self, c) -> bool:
-        if type(c) != int: # TODO Small-int?
+        if type(c) != int:
+            return False
+        if c < 0 or c >= self.INVALID_VALUE:
             return False
         return hb_set_has(self._hb_set, c)
 
@@ -1776,6 +1778,8 @@ cdef class Map:
             raise MemoryError()
 
     def get(self, k: int):
+        if k < 0 or k >= self.INVALID_VALUE:
+            return None
         v = hb_map_get(self._hb_map, k)
         if v == self.INVALID_VALUE:
             v = None
@@ -1788,7 +1792,9 @@ cdef class Map:
         return v
 
     def __contains__(self, k) -> bool:
-        if type(k) != int: # TODO Small-int?
+        if type(k) != int:
+            return False
+        if k < 0 or k >= self.INVALID_VALUE:
             return False
         return hb_map_has(self._hb_map, k)
 
