@@ -449,6 +449,23 @@ cdef class Face:
             start_offset += tag_count
         return tags
 
+    @property
+    def unicodes (self):
+        s = Set()
+        hb_face_collect_unicodes(self._hb_face, s._hb_set)
+        return s
+
+    @property
+    def variation_selectors(self):
+        s = Set()
+        hb_face_collect_variation_selectors(self._hb_face, s._hb_set)
+        return s
+
+    def variation_unicodes(self, variation_selector):
+        s = Set()
+        hb_face_collect_variation_unicodes(self._hb_face, variation_selector, s._hb_set)
+        return s
+
 
 # typing.NamedTuple doesn't seem to work with cython
 GlyphExtents = namedtuple(

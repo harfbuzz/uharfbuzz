@@ -197,6 +197,10 @@ cdef extern from "hb.h":
         unsigned int  start_offset,
         unsigned int *table_count,
         hb_tag_t     *table_tags)
+    void hb_face_collect_unicodes (hb_face_t *face, hb_set_t *out)
+    void hb_face_collect_variation_selectors (hb_face_t *face, hb_set_t *out)
+    void hb_face_collect_variation_unicodes (hb_face_t *face, hb_codepoint_t variation_selector, hb_set_t *out)
+
 
     # hb-font.h
     ctypedef struct hb_font_funcs_t:

@@ -748,6 +748,10 @@ def test_face(blankfont):
     assert face.glyph_count == 9
     assert face.table_tags == ['BASE', 'GPOS', 'GSUB', 'OS/2', 'cmap', 'cvt ', 'fpgm', 'gasp', 'glyf', 'head', 'hhea', 'hmtx', 'loca', 'maxp', 'name', 'post', 'prep']
 
+    assert face.unicodes == hb.Set({0x61, 0x62, 0x63, 0x64, 0x65, 0xe7, 0x431, 0x1f4a9})
+    assert face.variation_selectors == hb.Set()
+    assert face.variation_unicodes(1) == hb.Set()
+
 def test_set():
     s1 = hb.Set()
     s2 = hb.Set({1, 3, 4})
