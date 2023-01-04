@@ -299,7 +299,7 @@ cdef class Blob:
 
     @staticmethod
     cdef Blob from_ptr(hb_blob_t* hb_blob):
-        """Create Blob from taking ownership of a pointer."""
+        """Create Blob from a pointer taking ownership of a it."""
 
         cdef Blob wrapper = Blob.__new__(Blob)
         wrapper._hb_blob = hb_blob
@@ -369,7 +369,7 @@ cdef class Face:
 
     @staticmethod
     cdef Face from_ptr(hb_face_t* hb_face):
-        """Create Face from taking ownership of a pointer."""
+        """Create Face from a pointer taking ownership of a it."""
 
         cdef Face wrapper = Face.__new__(Face)
         wrapper._hb_face = hb_face
@@ -1508,7 +1508,7 @@ cdef class Set:
 
     @staticmethod
     cdef Set from_ptr(hb_set_t* hb_set):
-        """Create Set from taking ownership of a pointer."""
+        """Create Set from a pointer taking ownership of a it."""
 
         cdef Set wrapper = Set.__new__(Set)
         wrapper._hb_set = hb_set
@@ -1695,7 +1695,7 @@ cdef class Map:
 
     @staticmethod
     cdef Map from_ptr(hb_map_t* hb_map):
-        """Create Map from taking ownership of a pointer."""
+        """Create Map from a pointer taking ownership of a it."""
 
         cdef Map wrapper = Map.__new__(Map)
         wrapper._hb_map = hb_map
