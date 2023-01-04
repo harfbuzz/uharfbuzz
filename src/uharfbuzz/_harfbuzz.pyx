@@ -401,6 +401,12 @@ cdef class Blob:
         hb_blob_destroy(self._hb_blob)
         self._data = None
 
+    def __len__(self) -> int:
+        return len(self._data)
+
+    def __bool__(self) -> bool:
+        return bool(self._data)
+
     @property
     def data(self) -> bytes:
         return self._data

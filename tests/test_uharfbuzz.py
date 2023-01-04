@@ -900,7 +900,8 @@ def test_subset(blankfont):
         assert font.get_nominal_glyph(ord('e')) == 4
 
         blob = face.blob
-        assert len(blob.data) > 0
+        assert blob
+        assert len(blob) > 100
         face = hb.Face(blob)
         font = hb.Font(face)
 
