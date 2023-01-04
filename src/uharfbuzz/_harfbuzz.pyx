@@ -1635,7 +1635,7 @@ cdef class Set:
             self._set(other)
         else:
             for c in other:
-                self.add(c)
+                hb_set_add(self._hb_set, c)
 
         if not hb_set_allocation_successful(self._hb_set):
             raise MemoryError()
@@ -1648,7 +1648,8 @@ cdef class Set:
             self._update(other)
         else:
             for c in other:
-                self.add(c)
+                hb_set_add(self._hb_set, c)
+
         if not hb_set_allocation_successful(self._hb_set):
             raise MemoryError()
 
@@ -1747,7 +1748,10 @@ cdef class Map:
 
     def update(self, other: dict):
         for k,v in other.items():
-            self[k] = v
+            hb_map_set(self._hb_map, k, v)
+
+        if not hb_map_allocation_successful(self._hb_map):
+            raise MemoryError()
 
     def clear(self):
         hb_map_clear(self._hb_map)
