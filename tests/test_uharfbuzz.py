@@ -819,4 +819,13 @@ def test_subset(blankfont):
     assert font.get_nominal_glyph(ord('d')) is not None
     assert font.get_nominal_glyph(ord('e')) is not None
 
-    assert len(face.blob.data) > 0
+    blob = face.blob
+    assert len(blob.data) > 0
+    face = hb.Face(blob)
+    font = hb.Font(face)
+
+    assert font.get_nominal_glyph(ord('a')) is None
+    assert font.get_nominal_glyph(ord('b')) is not None
+    assert font.get_nominal_glyph(ord('c')) is not None
+    assert font.get_nominal_glyph(ord('d')) is not None
+    assert font.get_nominal_glyph(ord('e')) is not None
