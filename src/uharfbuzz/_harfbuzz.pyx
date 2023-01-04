@@ -1493,6 +1493,37 @@ cdef class SubsetInput:
         hb_subset_input_set_flags(self._input, int(flags))
 
 
+cdef class SubsetPlan:
+    cdef hb_subset_plan_t* _plan
+
+    def __cinit__(self, face: Face, input: SubsetInput):
+        self._plan = hb_subset_plan_create_or_fail(face._hb_face, input._input)
+        if self._plan is NULL:
+            raise MemoryError()
+
+    def __dealloc__(self):
+        if self._plan is not NULL:
+            hb_subset_plan_destroy(self._plan)
+
+    def execute(self) -> Face:
+        new_face = hb_subset_plan_execute_or_fail(self._plan)
+        if new_face == NULL:
+            raise RuntimeError("Subsetting failed")
+        return Face.from_ptr(new_face)
+
+    @property
+    def old_to_new_glyph_mapping(self) -> Map:
+        return Map.from_ptr(hb_map_reference (<hb_map_t*>hb_subset_plan_old_to_new_glyph_mapping(self._plan)))
+
+    @property
+    def new_to_old_glyph_mapping(self) -> Map:
+        return Map.from_ptr(hb_map_reference (<hb_map_t*>hb_subset_plan_new_to_old_glyph_mapping(self._plan)))
+
+    @property
+    def unicode_to_old_glyph_mapping(self) -> Map:
+        return Map.from_ptr(hb_map_reference (<hb_map_t*>hb_subset_plan_unicode_to_old_glyph_mapping(self._plan)))
+
+
 cdef class Set:
     cdef hb_set_t* _hb_set
 

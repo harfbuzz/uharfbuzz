@@ -801,33 +801,48 @@ def test_map():
 
 def test_subset(blankfont):
 
-    assert blankfont.get_nominal_glyph(ord('a')) is not None
-    assert blankfont.get_nominal_glyph(ord('b')) is not None
-    assert blankfont.get_nominal_glyph(ord('c')) is not None
-    assert blankfont.get_nominal_glyph(ord('d')) is not None
-    assert blankfont.get_nominal_glyph(ord('e')) is not None
+    for planned in (False, True):
+        assert blankfont.get_nominal_glyph(ord('a')) is not None
+        assert blankfont.get_nominal_glyph(ord('b')) is not None
+        assert blankfont.get_nominal_glyph(ord('c')) is not None
+        assert blankfont.get_nominal_glyph(ord('d')) is not None
+        assert blankfont.get_nominal_glyph(ord('e')) is not None
 
-    inp = hb.SubsetInput()
-    inp[hb.SubsetInputSets.UNICODE] = {ord('b')}
-    inp.unicode_set.update(ord(c) for c in "cd")
-    inp.unicode_set.add(ord("e"))
-    face = inp.subset(blankfont.face)
-    assert face is not None
-    font = hb.Font(face)
+        inp = hb.SubsetInput()
+        inp[hb.SubsetInputSets.UNICODE] = {ord('b')}
+        inp.unicode_set.update(ord(c) for c in "cd")
+        inp.unicode_set.add(ord("e"))
 
-    assert font.get_nominal_glyph(ord('a')) is None
-    assert font.get_nominal_glyph(ord('b')) is not None
-    assert font.get_nominal_glyph(ord('c')) is not None
-    assert font.get_nominal_glyph(ord('d')) is not None
-    assert font.get_nominal_glyph(ord('e')) is not None
+        if not planned:
+            face = hb.subset(blankfont.face, inp)
+        else:
+            plan = hb.SubsetPlan(blankfont.face, inp)
+            face = plan.execute()
 
-    blob = face.blob
-    assert len(blob.data) > 0
-    face = hb.Face(blob)
-    font = hb.Font(face)
+        assert face is not None
+        font = hb.Font(face)
 
-    assert font.get_nominal_glyph(ord('a')) is None
-    assert font.get_nominal_glyph(ord('b')) is not None
-    assert font.get_nominal_glyph(ord('c')) is not None
-    assert font.get_nominal_glyph(ord('d')) is not None
-    assert font.get_nominal_glyph(ord('e')) is not None
+        assert font.get_nominal_glyph(ord('a')) is None
+        assert font.get_nominal_glyph(ord('b')) is not None
+        assert font.get_nominal_glyph(ord('c')) is not None
+        assert font.get_nominal_glyph(ord('d')) is not None
+        assert font.get_nominal_glyph(ord('e')) is not None
+
+        blob = face.blob
+        assert len(blob.data) > 0
+        face = hb.Face(blob)
+        font = hb.Font(face)
+
+        assert font.get_nominal_glyph(ord('a')) is None
+        assert font.get_nominal_glyph(ord('b')) is not None
+        assert font.get_nominal_glyph(ord('c')) is not None
+        assert font.get_nominal_glyph(ord('d')) is not None
+        assert font.get_nominal_glyph(ord('e')) is not None
+
+        if planned:
+            mapping = plan.old_to_new_glyph_mapping
+            assert 1 not in mapping
+            assert 2 in mapping
+            assert 3 in mapping
+            cmap = plan.unicode_to_old_glyph_mapping
+            assert cmap[ord('b')] == 2
