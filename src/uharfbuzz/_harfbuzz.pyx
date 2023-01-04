@@ -397,12 +397,28 @@ cdef class Face:
         return inst
 
     @property
+    def index(self) -> int:
+        return hb_face_get_index(self._hb_face)
+
+    @index.setter
+    def index(self, value: int):
+        hb_face_set_index(self._hb_face, value)
+
+    @property
     def upem(self) -> int:
         return hb_face_get_upem(self._hb_face)
 
     @upem.setter
     def upem(self, value: int):
         hb_face_set_upem(self._hb_face, value)
+
+    @property
+    def glyph_count(self) -> int:
+        return hb_face_get_glyph_count(self._hb_face)
+
+    @glyph_count.setter
+    def glyph_count(self, value: int):
+        hb_face_set_glyph_count(self._hb_face, value)
 
     @property
     def blob(self) -> Blob:
