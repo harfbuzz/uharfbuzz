@@ -1613,13 +1613,13 @@ cdef class Set:
         if not hb_set_allocation_successful(self._hb_set):
             raise MemoryError()
 
-    def is_equal(self, other: Set) -> bool:
+    def _is_equal(self, other: Set) -> bool:
         return hb_set_is_equal(self._hb_set, other._hb_set)
 
     def __eq__(self, other):
         if type(other) != Set:
             return NotImplemented
-        return self.is_equal(other)
+        return self._is_equal(other)
 
     def issubset(self, larger_set: Set) -> bool:
         return hb_set_is_subset(self._hb_set, larger_set._hb_set)
@@ -1762,13 +1762,13 @@ cdef class Map:
     def __len__(self) -> int:
         return hb_map_get_population(self._hb_map)
 
-    def is_equal(self, other: Map) -> bool:
+    def _is_equal(self, other: Map) -> bool:
         return hb_map_is_equal(self._hb_map, other._hb_map)
 
     def __eq__(self, other):
         if type(other) != Map:
             return NotImplemented
-        return self.is_equal(other)
+        return self._is_equal(other)
 
     def __setitem__(self, k: int, v: int):
         hb_map_set(self._hb_map, k, v)
