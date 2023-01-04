@@ -1458,8 +1458,15 @@ cdef class SubsetInput:
     def glyph_set(self) -> Set:
         return Set.from_ptr(hb_set_reference (hb_subset_input_glyph_set(self._input)))
 
-    def set(self, set_type : SubsetInputSets) -> Set:
+    def sets(self, set_type : SubsetInputSets) -> Set:
         return Set.from_ptr(hb_set_reference (hb_subset_input_set(self._input, set_type)))
+
+    def __getitem__(self, set_type : SubsetInputSets) -> Set:
+        return self.sets(set_type)
+
+    def __setitem__(self, set_type : SubsetInputSets, iterable) -> Set:
+        s = self.sets(set_type)
+        s.set(iterable)
 
     @property
     def flags(self) -> SubsetFlags:
