@@ -738,3 +738,133 @@ def test_sparsefont_coretext(sparsefont):
     buf.guess_segment_properties()
     with pytest.raises(RuntimeError):
         hb.shape(sparsefont, buf, shapers=["coretext"])
+
+def test_set():
+    s1 = hb.Set()
+    s2 = hb.Set({1, 3, 4})
+    s3 = hb.Set([1, 3, 4])
+
+    assert s1 != None
+    assert s1 != False
+    assert not s1
+    assert s2
+    assert s1 != s2
+    assert not s1 == s2
+    assert not s2 != s3
+    assert s2 == s3
+
+    s1.add(1)
+    s1.add_range(3, 4)
+    assert s1 == s2
+
+    assert -1 not in s1
+    assert 1 in s1
+    s1.remove(1)
+    assert 1 not in s1
+
+    assert list(s1) == [3, 4]
+
+    s1 &= hb.Set({3, 4, 5})
+    assert list(s1) == [3, 4]
+    s1 -= hb.Set({3})
+    assert list(s1) == [4]
+    s1 ^= hb.Set({5})
+    assert list(s1) == [4, 5]
+    s1 |= {8} # Update accepts set() as well
+    assert list(s1) == [4, 5, 8]
+    assert len(s1) == 3
+    assert s1.min == 4
+    assert s1.max == 8
+
+def test_map():
+    m1 = hb.Map()
+    m2 = hb.Map({1:2, 3:4})
+    m3 = hb.Map({1:2, 3:4})
+
+    assert m1 != None
+    assert m1 != False
+    assert not m1
+    assert m2
+    assert m1 != m2
+    assert not m1 == m2
+    assert not m2 != m3
+    assert m2 == m3
+    m1[1] = 2
+    assert m1[1] == 2
+    assert m1 != m2
+    m1[3] = 4
+    assert m1 == m2
+
+    assert -1 not in m2
+    assert 1 in m1
+    del m1[1]
+    assert 1 not in m1
+    assert len(m1) == 1
+
+    assert set(m2.items()) == {(1,2), (3,4)}
+    assert set(m2.keys()) == {1, 3}
+    assert set(m2) == {1, 3}
+    assert set(m2.values()) == {2, 4}
+
+    m4 = hb.Map(m3)
+    m5 = hb.Map()
+    m5.update(m4)
+    assert len(m4) == len(m5) == 2
+    m5.update({10:11})
+    assert len(m5) == 3
+
+def test_subset(blankfont):
+
+    for planned in (False, True):
+        assert blankfont.get_nominal_glyph(ord('a')) == 1
+        assert blankfont.get_nominal_glyph(ord('b')) == 2
+        assert blankfont.get_nominal_glyph(ord('c')) == 3
+        assert blankfont.get_nominal_glyph(ord('d')) == 4
+        assert blankfont.get_nominal_glyph(ord('e')) == 5
+
+        inp = hb.SubsetInput()
+        inp.sets(hb.SubsetInputSets.UNICODE).set({ord('b')})
+        s = inp.sets(hb.SubsetInputSets.LAYOUT_FEATURE_TAG)
+        s.clear()
+        s.invert()
+        inp.layout_script_tag_set.invert()
+        inp.unicode_set.update(ord(c) for c in "cd")
+        inp.unicode_set.add(ord("e"))
+
+        if not planned:
+            face = hb.subset(blankfont.face, inp)
+        else:
+            plan = hb.SubsetPlan(blankfont.face, inp)
+            face = plan.execute()
+
+        assert face is not None
+        font = hb.Font(face)
+
+        assert font.get_nominal_glyph(ord('a')) is None
+        assert font.get_nominal_glyph(ord('b')) == 1
+        assert font.get_nominal_glyph(ord('c')) == 2
+        assert font.get_nominal_glyph(ord('d')) == 3
+        assert font.get_nominal_glyph(ord('e')) == 4
+
+        blob = face.blob
+        assert len(blob.data) > 0
+        face = hb.Face(blob)
+        font = hb.Font(face)
+
+        assert font.get_nominal_glyph(ord('a')) is None
+        assert font.get_nominal_glyph(ord('b')) == 1
+        assert font.get_nominal_glyph(ord('c')) == 2
+        assert font.get_nominal_glyph(ord('d')) == 3
+        assert font.get_nominal_glyph(ord('e')) == 4
+
+        if planned:
+            mapping = plan.old_to_new_glyph_mapping
+            reverse = plan.new_to_old_glyph_mapping
+            assert 1 not in mapping
+            assert mapping[2] == 1
+            assert mapping[3] == 2
+            assert reverse[mapping[2]] == 2
+            assert reverse[mapping[3]] == 3
+            assert len(reverse) == 5
+            cmap = plan.unicode_to_old_glyph_mapping
+            assert cmap[ord('b')] == 2

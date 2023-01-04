@@ -1,7 +1,7 @@
 #cython: language_level=3
 import os
 import warnings
-from enum import IntEnum
+from enum import IntEnum, IntFlag
 from .charfbuzz cimport *
 from libc.stdlib cimport free, malloc, calloc
 from libc.string cimport const_char
@@ -288,13 +288,25 @@ cdef class Blob:
     cdef hb_blob_t* _hb_blob
     cdef object _data
 
-    def __cinit__(self, bytes data):
+    def __cinit__(self, bytes data = None):
         if data is not None:
             self._data = data
             self._hb_blob = hb_blob_create(
                 data, len(data), HB_MEMORY_MODE_READONLY, NULL, NULL)
         else:
+            self._data = bytes()
             self._hb_blob = hb_blob_get_empty()
+
+    @staticmethod
+    cdef Blob from_ptr(hb_blob_t* hb_blob):
+        """Create Blob from a pointer taking ownership of a it."""
+
+        cdef Blob wrapper = Blob.__new__(Blob)
+        wrapper._hb_blob = hb_blob
+        cdef unsigned int blob_length
+        cdef const_char* blob_data = hb_blob_get_data(hb_blob, &blob_length)
+        wrapper._data = blob_data[:blob_length]
+        return wrapper
 
     @classmethod
     def from_file_path(cls, filename: Union[str, Path]):
@@ -309,6 +321,10 @@ cdef class Blob:
     def __dealloc__(self):
         hb_blob_destroy(self._hb_blob)
         self._data = None
+
+    @property
+    def data(self) -> bytes:
+        return self._data
 
 
 cdef hb_user_data_key_t k
@@ -336,7 +352,7 @@ cdef class Face:
     cdef object _reference_table_func
     cdef Blob _blob
 
-    def __cinit__(self, blob: Union[Blob, bytes], int index=0):
+    def __cinit__(self, blob: Union[Blob, bytes] = None, int index=0):
         if blob is not None:
             if not isinstance(blob, Blob):
                 self._blob = Blob(blob)
@@ -345,10 +361,19 @@ cdef class Face:
             self._hb_face = hb_face_create(self._blob._hb_blob, index)
         else:
             self._hb_face = hb_face_get_empty()
+            self._blob = None
 
     def __dealloc__(self):
         hb_face_destroy(self._hb_face)
         self._blob = None
+
+    @staticmethod
+    cdef Face from_ptr(hb_face_t* hb_face):
+        """Create Face from a pointer taking ownership of a it."""
+
+        cdef Face wrapper = Face.__new__(Face)
+        wrapper._hb_face = hb_face
+        return wrapper
 
     # DEPRECATED: use the normal constructor
     @classmethod
@@ -378,6 +403,13 @@ cdef class Face:
     @upem.setter
     def upem(self, value: int):
         hb_face_set_upem(self._hb_face, value)
+
+    @property
+    def blob(self) -> Blob:
+        cdef hb_blob_t* blob = hb_face_reference_blob(self._hb_face)
+        if blob is NULL:
+            raise MemoryError()
+        return Blob.from_ptr(blob)
 
 
 # typing.NamedTuple doesn't seem to work with cython
@@ -1369,3 +1401,443 @@ def repack_with_tag(tag: str,
     return packed
 
 
+def subset_preprocess(face: Face) -> Face:
+    new_face = hb_subset_preprocess(face._hb_face)
+    return Face.from_ptr(new_face)
+
+def subset(face: Face, input: SubsetInput) -> Face:
+    new_face = hb_subset_or_fail(face._hb_face, input._hb_input)
+    if new_face == NULL:
+        raise RuntimeError("Subsetting failed")
+    return Face.from_ptr(new_face)
+
+class SubsetInputSets(IntEnum):
+    GLYPH_INDEX = HB_SUBSET_SETS_GLYPH_INDEX
+    UNICODE = HB_SUBSET_SETS_UNICODE
+    NO_SUBSET_TABLE_TAG = HB_SUBSET_SETS_NO_SUBSET_TABLE_TAG
+    DROP_TABLE_TAG = HB_SUBSET_SETS_DROP_TABLE_TAG
+    NAME_ID = HB_SUBSET_SETS_NAME_ID
+    NAME_LANG_ID = HB_SUBSET_SETS_NAME_LANG_ID
+    LAYOUT_FEATURE_TAG = HB_SUBSET_SETS_LAYOUT_FEATURE_TAG
+    LAYOUT_SCRIPT_TAG = HB_SUBSET_SETS_LAYOUT_SCRIPT_TAG
+
+
+class SubsetFlags(IntFlag):
+    DEFAULT = HB_SUBSET_FLAGS_DEFAULT
+    NO_HINTING = HB_SUBSET_FLAGS_NO_HINTING
+    RETAIN_GIDS = HB_SUBSET_FLAGS_RETAIN_GIDS
+    DESUBROUTINIZE = HB_SUBSET_FLAGS_DESUBROUTINIZE
+    NAME_LEGACY = HB_SUBSET_FLAGS_NAME_LEGACY
+    SET_OVERLAPS_FLAG = HB_SUBSET_FLAGS_SET_OVERLAPS_FLAG
+    PASSTHROUGH_UNRECOGNIZED = HB_SUBSET_FLAGS_PASSTHROUGH_UNRECOGNIZED
+    NOTDEF_OUTLINE = HB_SUBSET_FLAGS_NOTDEF_OUTLINE
+    GLYPH_NAMES = HB_SUBSET_FLAGS_GLYPH_NAMES
+    NO_PRUNE_UNICODE_RANGES = HB_SUBSET_FLAGS_NO_PRUNE_UNICODE_RANGES
+
+
+cdef class SubsetInput:
+    cdef hb_subset_input_t* _hb_input
+
+    def __cinit__(self):
+        self._hb_input = hb_subset_input_create_or_fail()
+        if self._hb_input is NULL:
+            raise MemoryError()
+
+    def __dealloc__(self):
+        if self._hb_input is not NULL:
+            hb_subset_input_destroy(self._hb_input)
+
+    def subset(self, source: Face) -> Face:
+        return subset(source, self)
+
+    def keep_everything(self):
+        hb_subset_input_keep_everything(self._hb_input)
+
+    def pin_axis_to_default(self, face: Face, tag: str) -> bool:
+        hb_tag = hb_tag_from_string(tag.encode("ascii"), -1)
+        return hb_subset_input_pin_axis_to_default(
+            self._hb_input, face._hb_face, hb_tag
+        )
+
+    def pin_axis_location(self, face: Face, tag: str, value: float) -> bool:
+        hb_tag = hb_tag_from_string(tag.encode("ascii"), -1)
+        return hb_subset_input_pin_axis_location(
+            self._hb_input, face._hb_face, hb_tag, value
+        )
+
+    @property
+    def unicode_set(self) -> Set:
+        return Set.from_ptr(hb_set_reference (hb_subset_input_unicode_set(self._hb_input)))
+
+    @property
+    def glyph_set(self) -> Set:
+        return Set.from_ptr(hb_set_reference (hb_subset_input_glyph_set(self._hb_input)))
+
+    def sets(self, set_type : SubsetInputSets) -> Set:
+        return Set.from_ptr(hb_set_reference (hb_subset_input_set(self._hb_input, set_type)))
+
+    @property
+    def no_subset_table_tag_set(self) -> Set:
+        return self.sets(SubsetInputSets.NO_SUBSET_TABLE_TAG)
+
+    @property
+    def drop_table_tag_set(self) -> Set:
+        return self.sets(SubsetInputSets.DROP_TABLE_TAG)
+
+    @property
+    def name_id_set(self) -> Set:
+        return self.sets(SubsetInputSets.NAME_ID)
+
+    @property
+    def name_lang_id_set(self) -> Set:
+        return self.sets(SubsetInputSets.NAME_LANG_ID)
+
+    @property
+    def layout_feature_tag_set(self) -> Set:
+        return self.sets(SubsetInputSets.LAYOUT_FEATURE_TAG)
+
+    @property
+    def layout_script_tag_set(self) -> Set:
+        return self.sets(SubsetInputSets.LAYOUT_SCRIPT_TAG)
+
+    @property
+    def flags(self) -> SubsetFlags:
+        cdef unsigned subset_flags = hb_subset_input_get_flags(self._hb_input)
+        return SubsetFlags(subset_flags)
+
+    @flags.setter
+    def flags(self, flags: SubsetFlags) -> None:
+        hb_subset_input_set_flags(self._hb_input, int(flags))
+
+
+cdef class SubsetPlan:
+    cdef hb_subset_plan_t* _hb_plan
+
+    def __cinit__(self, face: Face, input: SubsetInput):
+        self._hb_plan = hb_subset_plan_create_or_fail(face._hb_face, input._hb_input)
+        if self._hb_plan is NULL:
+            raise MemoryError()
+
+    def __dealloc__(self):
+        if self._hb_plan is not NULL:
+            hb_subset_plan_destroy(self._hb_plan)
+
+    def execute(self) -> Face:
+        new_face = hb_subset_plan_execute_or_fail(self._hb_plan)
+        if new_face == NULL:
+            raise RuntimeError("Subsetting failed")
+        return Face.from_ptr(new_face)
+
+    @property
+    def old_to_new_glyph_mapping(self) -> Map:
+        return Map.from_ptr(hb_map_reference (<hb_map_t*>hb_subset_plan_old_to_new_glyph_mapping(self._hb_plan)))
+
+    @property
+    def new_to_old_glyph_mapping(self) -> Map:
+        return Map.from_ptr(hb_map_reference (<hb_map_t*>hb_subset_plan_new_to_old_glyph_mapping(self._hb_plan)))
+
+    @property
+    def unicode_to_old_glyph_mapping(self) -> Map:
+        return Map.from_ptr(hb_map_reference (<hb_map_t*>hb_subset_plan_unicode_to_old_glyph_mapping(self._hb_plan)))
+
+
+cdef class Set:
+    cdef hb_set_t* _hb_set
+
+    INVALID_VALUE = HB_SET_VALUE_INVALID
+
+    def __cinit__(self, init = set()):
+        self._hb_set = hb_set_create()
+        if not hb_set_allocation_successful(self._hb_set):
+            raise MemoryError()
+
+        self.set(init)
+
+    def __dealloc__(self):
+        hb_set_destroy(self._hb_set)
+
+    @staticmethod
+    cdef Set from_ptr(hb_set_t* hb_set):
+        """Create Set from a pointer taking ownership of a it."""
+
+        cdef Set wrapper = Set.__new__(Set)
+        wrapper._hb_set = hb_set
+        return wrapper
+
+    def copy(self) -> Set:
+        c = Set()
+        c._hb_set = hb_set_copy(self._hb_set)
+        return c
+
+    def __copy__(self) -> Set:
+        return self.copy()
+
+    def clear(self):
+        hb_set_clear(self._hb_set)
+
+    def __bool__(self) -> bool:
+        return not hb_set_is_empty(self._hb_set)
+
+    def invert(self):
+        hb_set_invert(self._hb_set)
+
+    def __contains__(self, c) -> bool:
+        if type(c) != int:
+            return False
+        if c < 0 or c >= self.INVALID_VALUE:
+            return False
+        return hb_set_has(self._hb_set, c)
+
+    def add(self, c: int):
+        hb_set_add(self._hb_set, c)
+        if not hb_set_allocation_successful(self._hb_set):
+            raise MemoryError()
+
+    def add_range(self, first: int, last: int):
+        hb_set_add_range(self._hb_set, first, last)
+        if not hb_set_allocation_successful(self._hb_set):
+            raise MemoryError()
+
+    def remove(self, c: int):
+        if not c in self:
+            raise KeyError, c
+        hb_set_del(self._hb_set, c)
+        if not hb_set_allocation_successful(self._hb_set):
+            raise MemoryError()
+
+    def discard(self, c: int):
+        hb_set_del(self._hb_set, c)
+        if not hb_set_allocation_successful(self._hb_set):
+            raise MemoryError()
+
+    def del_range(self, first: int, last: int):
+        hb_set_del_range(self._hb_set, first, last)
+        if not hb_set_allocation_successful(self._hb_set):
+            raise MemoryError()
+
+    def _is_equal(self, other: Set) -> bool:
+        return hb_set_is_equal(self._hb_set, other._hb_set)
+
+    def __eq__(self, other):
+        if type(other) != Set:
+            return NotImplemented
+        return self._is_equal(other)
+
+    def issubset(self, larger_set: Set) -> bool:
+        return hb_set_is_subset(self._hb_set, larger_set._hb_set)
+
+    def issuperset(self, smaller_set: Set) -> bool:
+        return hb_set_is_subset(smaller_set._hb_set, self._hb_set)
+
+    def _set(self, other: Set):
+        hb_set_set(self._hb_set, other._hb_set)
+
+    def set(self, other):
+        if type(other) == Set:
+            self._set(other)
+        else:
+            for c in other:
+                hb_set_add(self._hb_set, c)
+
+        if not hb_set_allocation_successful(self._hb_set):
+            raise MemoryError()
+
+    def _update(self, other: Set):
+        hb_set_union(self._hb_set, other._hb_set)
+
+    def update(self, other):
+        if type(other) == Set:
+            self._update(other)
+        else:
+            for c in other:
+                hb_set_add(self._hb_set, c)
+
+        if not hb_set_allocation_successful(self._hb_set):
+            raise MemoryError()
+
+    def __ior__(self, other):
+        self.update(other)
+        return self
+
+    def intersection_update(self, other: Set):
+        hb_set_intersect(self._hb_set, other._hb_set)
+        if not hb_set_allocation_successful(self._hb_set):
+            raise MemoryError()
+
+    def __iand__(self, other: Set):
+        self.intersection_update(other)
+        return self
+
+    def difference_update(self, other: Set):
+        hb_set_subtract(self._hb_set, other._hb_set)
+        if not hb_set_allocation_successful(self._hb_set):
+            raise MemoryError()
+
+    def __isub__(self, other: Set):
+        self.difference_update(other)
+        return self
+
+    def symmetric_difference_update(self, other: Set):
+        hb_set_symmetric_difference(self._hb_set, other._hb_set)
+        if not hb_set_allocation_successful(self._hb_set):
+            raise MemoryError()
+
+    def __ixor__(self, other: Set):
+        self.symmetric_difference_update(other)
+        return self
+
+    def __len__(self) -> int:
+        return hb_set_get_population(self._hb_set)
+
+    @property
+    def min(self) -> int:
+        return hb_set_get_min(self._hb_set)
+
+    @property
+    def max(self) -> int:
+        return hb_set_get_max(self._hb_set)
+
+    def __iter__(self):
+        return SetIter(self)
+
+cdef class SetIter:
+    cdef Set s
+    cdef hb_set_t *_hb_set
+    cdef hb_codepoint_t _c
+
+    def __cinit__(self, s: Set):
+        self.s = s
+        self._hb_set = s._hb_set
+        self._c = s.INVALID_VALUE
+
+    def __next__(self) -> int:
+        ret = hb_set_next(self._hb_set, &self._c)
+        if not ret:
+            raise StopIteration
+        return self._c
+
+
+cdef class Map:
+    cdef hb_map_t* _hb_map
+
+    INVALID_VALUE = HB_MAP_VALUE_INVALID
+
+    def __cinit__(self, init = dict()):
+        self._hb_map = hb_map_create()
+        if not hb_map_allocation_successful(self._hb_map):
+            raise MemoryError()
+
+        self.update(init)
+
+    def __dealloc__(self):
+        hb_map_destroy(self._hb_map)
+
+    @staticmethod
+    cdef Map from_ptr(hb_map_t* hb_map):
+        """Create Map from a pointer taking ownership of a it."""
+
+        cdef Map wrapper = Map.__new__(Map)
+        wrapper._hb_map = hb_map
+        return wrapper
+
+    def copy(self) -> Map:
+        c = Map()
+        c._hb_map = hb_map_copy(self._hb_map)
+        return c
+
+    def __copy__(self) -> Map:
+        return self.copy()
+
+    def _update(self, other : Map):
+        hb_map_update(self._hb_map, other._hb_map)
+
+    def update(self, other):
+        if type(other) == Map:
+            self._update(other)
+        else:
+            for k,v in other.items():
+                hb_map_set(self._hb_map, k, v)
+
+        if not hb_map_allocation_successful(self._hb_map):
+            raise MemoryError()
+
+    def clear(self):
+        hb_map_clear(self._hb_map)
+
+    def __bool__(self) -> bool:
+        return not hb_map_is_empty(self._hb_map)
+
+    def __len__(self) -> int:
+        return hb_map_get_population(self._hb_map)
+
+    def _is_equal(self, other: Map) -> bool:
+        return hb_map_is_equal(self._hb_map, other._hb_map)
+
+    def __eq__(self, other):
+        if type(other) != Map:
+            return NotImplemented
+        return self._is_equal(other)
+
+    def __setitem__(self, k: int, v: int):
+        hb_map_set(self._hb_map, k, v)
+        if not hb_map_allocation_successful(self._hb_map):
+            raise MemoryError()
+
+    def get(self, k: int):
+        if k < 0 or k >= self.INVALID_VALUE:
+            return None
+        v = hb_map_get(self._hb_map, k)
+        if v == self.INVALID_VALUE:
+            v = None
+        return v
+
+    def __getitem__(self, k: int) -> int:
+        v = self.get(k)
+        if v is None:
+            raise KeyError, v
+        return v
+
+    def __contains__(self, k) -> bool:
+        if type(k) != int:
+            return False
+        if k < 0 or k >= self.INVALID_VALUE:
+            return False
+        return hb_map_has(self._hb_map, k)
+
+    def __delitem__(self, c: int):
+        if not c in self:
+            raise KeyError, c
+        hb_map_del(self._hb_map, c)
+
+    def items(self):
+        return MapIter(self)
+
+    def keys(self):
+        return (k for k,v in self.items())
+
+    def values(self):
+        return (v for k,v in self.items())
+
+    def __iter__(self):
+        return self.keys()
+
+cdef class MapIter:
+    cdef Map m
+    cdef hb_map_t *_hb_map
+    cdef int _i
+
+    def __cinit__(self, m: Map):
+        self.m = m
+        self._hb_map = m._hb_map
+        self._i = -1
+
+    def __iter__(self):
+        return self
+
+    def __next__(self) -> Tuple[int, int]:
+        cdef hb_codepoint_t k
+        cdef hb_codepoint_t v
+        ret = hb_map_next(self._hb_map, &self._i, &k, &v)
+        if not ret:
+            raise StopIteration
+        return (k, v)
