@@ -842,8 +842,11 @@ def test_subset(blankfont):
 
         if planned:
             mapping = plan.old_to_new_glyph_mapping
+            reverse = plan.new_to_old_glyph_mapping
             assert 1 not in mapping
             assert 2 in mapping
             assert 3 in mapping
+            assert reverse[mapping[3]] == 3
+            assert len(reverse) == 5
             cmap = plan.unicode_to_old_glyph_mapping
             assert cmap[ord('b')] == 2
