@@ -1687,8 +1687,7 @@ cdef class Map:
         if not hb_map_allocation_successful(self._hb_map):
             raise MemoryError()
 
-        for k,v in init.items():
-            self.set(k, v)
+        self.update(init)
 
     def __dealloc__(self):
         hb_map_destroy(self._hb_map)
@@ -1705,6 +1704,10 @@ cdef class Map:
         c = Map()
         c._hb_map = hb_map_copy(self._hb_map)
         return c
+
+    def update(self, other: dict):
+        for k,v in other.items():
+            self.set(k, v)
 
     def clear(self):
         hb_map_clear(self._hb_map)
