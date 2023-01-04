@@ -1844,6 +1844,10 @@ cdef class Set:
     def __iter__(self):
         return SetIter(self)
 
+    def __repr__(self):
+        s = ', '.join(repr(v) for v in self)
+        return ("Set({%s})" % s)
+
 cdef class SetIter:
     cdef Set s
     cdef hb_set_t *_hb_set
@@ -1964,6 +1968,10 @@ cdef class Map:
 
     def __iter__(self):
         return self.keys()
+
+    def __repr__(self):
+        s = ', '.join("%s: %s" % (repr(k), repr(v)) for k,v in self.items())
+        return ("Map({%s})" % s)
 
 cdef class MapIter:
     cdef Map m
