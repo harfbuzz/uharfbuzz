@@ -164,6 +164,7 @@ cdef extern from "hb.h":
     void hb_buffer_guess_segment_properties(hb_buffer_t* buffer)
     hb_direction_t hb_buffer_get_direction(hb_buffer_t* buffer)
     void hb_buffer_set_direction(hb_buffer_t* buffer, hb_direction_t direction)
+    unsigned int hb_buffer_get_length (const hb_buffer_t *buffer)
     hb_glyph_info_t* hb_buffer_get_glyph_infos(
         hb_buffer_t* buffer, unsigned int* length)
     hb_glyph_position_t* hb_buffer_get_glyph_positions(

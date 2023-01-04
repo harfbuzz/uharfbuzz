@@ -139,6 +139,9 @@ cdef class Buffer:
         cdef Buffer inst = cls()
         return inst
 
+    def __len__(self) -> int:
+        return hb_buffer_get_length(self._hb_buffer)
+
     @property
     def direction(self) -> str:
         cdef const_char* cstr = hb_direction_to_string(
