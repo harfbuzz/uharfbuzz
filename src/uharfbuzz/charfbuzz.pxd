@@ -102,6 +102,8 @@ cdef extern from "hb.h":
     ctypedef struct hb_buffer_t:
         pass
 
+    cdef hb_codepoint_t HB_BUFFER_REPLACEMENT_CODEPOINT_DEFAULT
+
     ctypedef struct hb_glyph_info_t:
         hb_codepoint_t codepoint
         hb_mask_t mask
@@ -113,14 +115,34 @@ cdef extern from "hb.h":
         hb_position_t y_offset
         hb_var_int_t var
 
+    ctypedef enum hb_buffer_content_type_t:
+        HB_BUFFER_CONTENT_TYPE_INVALID
+        HB_BUFFER_CONTENT_TYPE_UNICODE
+        HB_BUFFER_CONTENT_TYPE_GLYPHS
+
     ctypedef enum hb_buffer_cluster_level_t:
         HB_BUFFER_CLUSTER_LEVEL_MONOTONE_GRAPHEMES
         HB_BUFFER_CLUSTER_LEVEL_MONOTONE_CHARACTERS
         HB_BUFFER_CLUSTER_LEVEL_CHARACTERS
         HB_BUFFER_CLUSTER_LEVEL_DEFAULT
 
+    ctypedef enum hb_buffer_flags_t:
+        HB_BUFFER_FLAG_DEFAULT
+        HB_BUFFER_FLAG_BOT
+        HB_BUFFER_FLAG_EOT
+        HB_BUFFER_FLAG_PRESERVE_DEFAULT_IGNORABLES
+        HB_BUFFER_FLAG_REMOVE_DEFAULT_IGNORABLES
+        HB_BUFFER_FLAG_DO_NOT_INSERT_DOTTED_CIRCLE
+        HB_BUFFER_FLAG_VERIFY
+        HB_BUFFER_FLAG_PRODUCE_UNSAFE_TO_CONCAT
+        HB_BUFFER_FLAG_PRODUCE_SAFE_TO_INSERT_TATWEEL
+
+        HB_BUFFER_FLAG_DEFINED
+
     hb_buffer_t* hb_buffer_create()
     hb_bool_t hb_buffer_allocation_successful(hb_buffer_t* buffer)
+    void hb_buffer_reset (hb_buffer_t *buffer)
+    void hb_buffer_clear_contents (hb_buffer_t *buffer)
     void hb_buffer_add_codepoints(
         hb_buffer_t* buffer,
         const hb_codepoint_t* text, int text_length,
@@ -144,6 +166,7 @@ cdef extern from "hb.h":
     void hb_buffer_guess_segment_properties(hb_buffer_t* buffer)
     hb_direction_t hb_buffer_get_direction(hb_buffer_t* buffer)
     void hb_buffer_set_direction(hb_buffer_t* buffer, hb_direction_t direction)
+    unsigned int hb_buffer_get_length (const hb_buffer_t *buffer)
     hb_glyph_info_t* hb_buffer_get_glyph_infos(
         hb_buffer_t* buffer, unsigned int* length)
     hb_glyph_position_t* hb_buffer_get_glyph_positions(
@@ -166,6 +189,17 @@ cdef extern from "hb.h":
         hb_buffer_message_func_t func,
         void *user_data,
         void* destroy)
+    void hb_buffer_set_flags (hb_buffer_t *buffer, hb_buffer_flags_t  flags)
+    hb_buffer_flags_t hb_buffer_get_flags (const hb_buffer_t *buffer)
+    void hb_buffer_set_content_type (hb_buffer_t *buffer, hb_buffer_content_type_t  content_type)
+    hb_buffer_content_type_t hb_buffer_get_content_type (const hb_buffer_t *buffer)
+    void hb_buffer_set_replacement_codepoint (hb_buffer_t *buffer, hb_codepoint_t  replacement)
+    hb_codepoint_t hb_buffer_get_replacement_codepoint (const hb_buffer_t *buffer)
+    void hb_buffer_set_invisible_glyph (hb_buffer_t *buffer, hb_codepoint_t  invisible)
+    hb_codepoint_t hb_buffer_get_invisible_glyph (const hb_buffer_t *buffer)
+    void hb_buffer_set_not_found_glyph (hb_buffer_t *buffer, hb_codepoint_t  not_found)
+    hb_codepoint_t hb_buffer_get_not_found_glyph (const hb_buffer_t *buffer)
+
 
     # hb-face.h
     ctypedef struct hb_face_t:
@@ -197,6 +231,10 @@ cdef extern from "hb.h":
         unsigned int  start_offset,
         unsigned int *table_count,
         hb_tag_t     *table_tags)
+    void hb_face_collect_unicodes (hb_face_t *face, hb_set_t *out)
+    void hb_face_collect_variation_selectors (hb_face_t *face, hb_set_t *out)
+    void hb_face_collect_variation_unicodes (hb_face_t *face, hb_codepoint_t variation_selector, hb_set_t *out)
+
 
     # hb-font.h
     ctypedef struct hb_font_funcs_t:
@@ -291,6 +329,8 @@ cdef extern from "hb.h":
     void hb_font_set_ppem(hb_font_t* font, unsigned int x_ppem, unsigned int y_ppem)
     float hb_font_get_ptem(hb_font_t* font)
     void hb_font_set_ptem(hb_font_t* font, float ptem)
+    float hb_font_get_synthetic_slant (hb_font_t *font)
+    void hb_font_set_synthetic_slant (hb_font_t *font, float slant)
     void hb_font_set_variations(
         hb_font_t* font,
         const hb_variation_t* variations,

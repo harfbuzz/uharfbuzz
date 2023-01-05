@@ -96,16 +96,33 @@ cdef class GlyphPosition:
         return self._hb_glyph_position.y_offset
 
 
+class BufferFlags(IntFlag):
+    DEFAULT = HB_BUFFER_FLAG_DEFAULT
+    BOT = HB_BUFFER_FLAG_BOT
+    EOT = HB_BUFFER_FLAG_EOT
+    PRESERVE_DEFAULT_IGNORABLES = HB_BUFFER_FLAG_PRESERVE_DEFAULT_IGNORABLES
+    REMOVE_DEFAULT_IGNORABLES = HB_BUFFER_FLAG_REMOVE_DEFAULT_IGNORABLES
+    DO_NOT_INSERT_DOTTED_CIRCLE = HB_BUFFER_FLAG_DO_NOT_INSERT_DOTTED_CIRCLE
+    VERIFY = HB_BUFFER_FLAG_VERIFY
+    PRODUCE_UNSAFE_TO_CONCAT = HB_BUFFER_FLAG_PRODUCE_UNSAFE_TO_CONCAT
+    PRODUCE_SAFE_TO_INSERT_TATWEEL = HB_BUFFER_FLAG_PRODUCE_SAFE_TO_INSERT_TATWEEL
+
 class BufferClusterLevel(IntEnum):
     MONOTONE_GRAPHEMES = HB_BUFFER_CLUSTER_LEVEL_MONOTONE_GRAPHEMES
     MONOTONE_CHARACTERS = HB_BUFFER_CLUSTER_LEVEL_MONOTONE_CHARACTERS
     CHARACTERS = HB_BUFFER_CLUSTER_LEVEL_CHARACTERS
     DEFAULT = HB_BUFFER_CLUSTER_LEVEL_DEFAULT
 
+class BufferContentType(IntEnum):
+    INVALID = HB_BUFFER_CONTENT_TYPE_INVALID
+    UNICODE = HB_BUFFER_CONTENT_TYPE_UNICODE
+    GLYPHS = HB_BUFFER_CONTENT_TYPE_GLYPHS
 
 cdef class Buffer:
     cdef hb_buffer_t* _hb_buffer
     cdef object _message_callback
+
+    DEFAULT_REPLACEMENT_CODEPOINT = HB_BUFFER_REPLACEMENT_CODEPOINT_DEFAULT
 
     def __cinit__(self):
         self._hb_buffer = hb_buffer_create()
@@ -121,6 +138,15 @@ cdef class Buffer:
     def create(cls):
         cdef Buffer inst = cls()
         return inst
+
+    def __len__(self) -> int:
+        return hb_buffer_get_length(self._hb_buffer)
+
+    def reset(self):
+        hb_buffer_reset (self._hb_buffer)
+
+    def clear_contents(self):
+        hb_buffer_clear_contents(self._hb_buffer)
 
     @property
     def direction(self) -> str:
@@ -202,6 +228,16 @@ cdef class Buffer:
             self._hb_buffer, hb_script_from_string(cstr, -1))
 
     @property
+    def flags(self) -> BufferFlags:
+        level = hb_buffer_get_flags(self._hb_buffer)
+        return BufferFlags(level)
+
+    @flags.setter
+    def flags(self, value: BufferFlags):
+        level = BufferFlags(value)
+        hb_buffer_set_flags(self._hb_buffer, level)
+
+    @property
     def cluster_level(self) -> BufferClusterLevel:
         level = hb_buffer_get_cluster_level(self._hb_buffer)
         return BufferClusterLevel(level)
@@ -210,6 +246,40 @@ cdef class Buffer:
     def cluster_level(self, value: BufferClusterLevel):
         level = BufferClusterLevel(value)
         hb_buffer_set_cluster_level(self._hb_buffer, level)
+
+    @property
+    def content_type(self) -> BufferContentType:
+        level = hb_buffer_get_content_type(self._hb_buffer)
+        return BufferContentType(level)
+
+    @content_type.setter
+    def content_type(self, value: BufferContentType):
+        level = BufferContentType(value)
+        hb_buffer_set_content_type(self._hb_buffer, level)
+
+    @property
+    def replacement_codepoint(self) -> int:
+        return hb_buffer_get_replacement_codepoint(self._hb_buffer)
+
+    @replacement_codepoint.setter
+    def replacement_codepoint(self, value: int):
+        hb_buffer_set_replacement_codepoint(self._hb_buffer, value)
+
+    @property
+    def invisible_glyph(self) -> int:
+        return hb_buffer_get_invisible_glyph(self._hb_buffer)
+
+    @invisible_glyph.setter
+    def invisible_glyph(self, value: int):
+        hb_buffer_set_invisible_glyph(self._hb_buffer, value)
+
+    @property
+    def not_found_glyph(self) -> int:
+        return hb_buffer_get_not_found_glyph(self._hb_buffer)
+
+    @not_found_glyph.setter
+    def not_found_glyph(self, value: int):
+        hb_buffer_set_not_found_glyph(self._hb_buffer, value)
 
     def set_language_from_ot_tag(self, value: str):
         cdef bytes packed = value.encode()
@@ -228,21 +298,23 @@ cdef class Buffer:
         cdef unsigned int size = len(codepoints)
         cdef hb_codepoint_t* hb_codepoints
         if not size:
-            hb_codepoints = NULL
-        else:
-            hb_codepoints = <hb_codepoint_t*>malloc(
-                size * sizeof(hb_codepoint_t))
-            for i in range(size):
-                hb_codepoints[i] = codepoints[i]
+            return
+        hb_codepoints = <hb_codepoint_t*>malloc(
+            size * sizeof(hb_codepoint_t))
+        for i in range(size):
+            hb_codepoints[i] = codepoints[i]
         hb_buffer_add_codepoints(
             self._hb_buffer, hb_codepoints, size, item_offset, item_length)
-        if hb_codepoints is not NULL:
-            free(hb_codepoints)
+        free(hb_codepoints)
+        if not hb_buffer_allocation_successful(self._hb_buffer):
+            raise MemoryError()
 
     def add_utf8(self, text: bytes,
                  item_offset: int = 0, item_length: int = -1) -> None:
         hb_buffer_add_utf8(
             self._hb_buffer, text, len(text), item_offset, item_length)
+        if not hb_buffer_allocation_successful(self._hb_buffer):
+            raise MemoryError()
 
     def add_str(self, text: str,
                 item_offset: int = 0, item_length: int = -1) -> None:
@@ -278,6 +350,8 @@ cdef class Buffer:
             )
         else:
             raise AssertionError(kind)
+        if not hb_buffer_allocation_successful(self._hb_buffer):
+            raise MemoryError()
 
     def guess_segment_properties(self) -> None:
         hb_buffer_guess_segment_properties(self._hb_buffer)
@@ -324,6 +398,12 @@ cdef class Blob:
     def __dealloc__(self):
         hb_blob_destroy(self._hb_blob)
         self._data = None
+
+    def __len__(self) -> int:
+        return len(self._data)
+
+    def __bool__(self) -> bool:
+        return bool(self._data)
 
     @property
     def data(self) -> bytes:
@@ -449,6 +529,23 @@ cdef class Face:
             start_offset += tag_count
         return tags
 
+    @property
+    def unicodes (self):
+        s = Set()
+        hb_face_collect_unicodes(self._hb_face, s._hb_set)
+        return s
+
+    @property
+    def variation_selectors(self):
+        s = Set()
+        hb_face_collect_variation_selectors(self._hb_face, s._hb_set)
+        return s
+
+    def variation_unicodes(self, variation_selector):
+        s = Set()
+        hb_face_collect_variation_unicodes(self._hb_face, variation_selector, s._hb_set)
+        return s
+
 
 # typing.NamedTuple doesn't seem to work with cython
 GlyphExtents = namedtuple(
@@ -532,6 +629,14 @@ cdef class Font:
     @ptem.setter
     def ptem(self, value: float):
         hb_font_set_ptem(self._hb_font, value)
+
+    @property
+    def synthetic_slant(self) -> float:
+        return hb_font_get_synthetic_slant(self._hb_font)
+
+    @synthetic_slant.setter
+    def synthetic_slant(self, value: float):
+        hb_font_set_synthetic_slant(self._hb_font, value)
 
     def set_variations(self, variations: Dict[str, float]) -> None:
         cdef unsigned int size
@@ -934,6 +1039,8 @@ def shape(font: Font, buffer: Buffer,
                 raise RuntimeError("All shapers failed")
         else:
             hb_shape(font._hb_font, buffer._hb_buffer, hb_features, size)
+        if not hb_buffer_allocation_successful(buffer._hb_buffer):
+            raise MemoryError()
     finally:
         if hb_features is not NULL:
             free(hb_features)
@@ -1735,6 +1842,10 @@ cdef class Set:
     def __iter__(self):
         return SetIter(self)
 
+    def __repr__(self):
+        s = ', '.join(repr(v) for v in self)
+        return ("Set({%s})" % s)
+
 cdef class SetIter:
     cdef Set s
     cdef hb_set_t *_hb_set
@@ -1744,6 +1855,9 @@ cdef class SetIter:
         self.s = s
         self._hb_set = s._hb_set
         self._c = s.INVALID_VALUE
+
+    def __iter__(self):
+        return self
 
     def __next__(self) -> int:
         ret = hb_set_next(self._hb_set, &self._c)
@@ -1855,6 +1969,10 @@ cdef class Map:
 
     def __iter__(self):
         return self.keys()
+
+    def __repr__(self):
+        s = ', '.join("%s: %s" % (repr(k), repr(v)) for k,v in self.items())
+        return ("Map({%s})" % s)
 
 cdef class MapIter:
     cdef Map m

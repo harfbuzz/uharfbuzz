@@ -162,11 +162,56 @@ class TestBuffer:
             buf.cluster_level = 5
         assert buf.cluster_level == 1
 
+    def test_properties(self):
+        buf = hb.Buffer()
+
+        assert len(buf) == 0
+
+        assert buf.flags == hb.BufferFlags.DEFAULT
+        buf.flags = hb.BufferFlags.BOT | hb.BufferFlags.EOT
+        assert buf.flags == hb.BufferFlags.BOT | hb.BufferFlags.EOT
+
+        assert buf.content_type == hb.BufferContentType.INVALID
+        buf.content_type = hb.BufferContentType.UNICODE
+        assert buf.content_type == hb.BufferContentType.UNICODE
+
+        assert buf.cluster_level == hb.BufferClusterLevel.DEFAULT
+        buf.cluster_level = hb.BufferClusterLevel.CHARACTERS
+        assert buf.cluster_level == hb.BufferClusterLevel.CHARACTERS
+
+        assert buf.replacement_codepoint == hb.Buffer.DEFAULT_REPLACEMENT_CODEPOINT
+        buf.replacement_codepoint = 0
+        assert buf.replacement_codepoint == 0
+
+        buf.add_str("ABC")
+        assert len(buf) == 3
+        buf.clear_contents()
+        assert len(buf) == 0
+        assert buf.flags == hb.BufferFlags.BOT | hb.BufferFlags.EOT
+        buf.reset()
+        assert buf.flags == hb.BufferFlags.DEFAULT
+
 
 class TestBlob:
     def test_from_file_path_fail(self):
         with pytest.raises(hb.HarfBuzzError, match="Failed to open: DOES-NOT-EXIST"):
             blob = hb.Blob.from_file_path("DOES-NOT-EXIST")
+
+
+class TestFace:
+
+    def test_properties(self, blankfont):
+
+        face = blankfont.face
+
+        assert face.index == 0
+        assert face.upem == 1000
+        assert face.glyph_count == 9
+        assert face.table_tags == ['BASE', 'GPOS', 'GSUB', 'OS/2', 'cmap', 'cvt ', 'fpgm', 'gasp', 'glyf', 'head', 'hhea', 'hmtx', 'loca', 'maxp', 'name', 'post', 'prep']
+
+        assert face.unicodes == hb.Set({0x61, 0x62, 0x63, 0x64, 0x65, 0xe7, 0x431, 0x1f4a9})
+        assert face.variation_selectors == hb.Set()
+        assert face.variation_unicodes(1) == hb.Set()
 
 
 class TestFont:
@@ -231,17 +276,24 @@ class TestFont:
         with pytest.raises(TypeError):
             mutatorsans.set_var_coords_normalized(["a"])
 
-    def test_get_set_scale(self, blankfont):
-        blankfont.scale = (5, 7)
-        assert blankfont.scale == (5, 7)
+    def test_properties(self, blankfont):
 
-    def test_get_set_ppem(self, blankfont):
-        blankfont.ppem = (5, 7)
-        assert blankfont.ppem == (5, 7)
+        assert blankfont.scale == (1000, 1000)
+        blankfont.scale = (1024, 1024)
+        assert blankfont.scale == (1024, 1024)
 
-    def test_get_set_ptem(self, blankfont):
-        blankfont.ptem = 7
-        assert blankfont.ptem == 7
+        assert blankfont.ppem == (0, 0)
+        blankfont.ppem = (16, 24)
+        assert blankfont.ppem == (16, 24)
+
+        assert blankfont.ptem == 0
+        blankfont.ptem = 12.
+        assert blankfont.ptem == 12.
+
+        assert blankfont.synthetic_slant == 0
+        blankfont.synthetic_slant = .2
+        assert blankfont.synthetic_slant == pytest.approx(.2)
+
 
 class TestShape:
     @pytest.mark.parametrize(
@@ -739,14 +791,6 @@ def test_sparsefont_coretext(sparsefont):
     with pytest.raises(RuntimeError):
         hb.shape(sparsefont, buf, shapers=["coretext"])
 
-def test_face(blankfont):
-
-    face = blankfont.face
-
-    assert face.index == 0
-    assert face.upem == 1000
-    assert face.glyph_count == 9
-    assert face.table_tags == ['BASE', 'GPOS', 'GSUB', 'OS/2', 'cmap', 'cvt ', 'fpgm', 'gasp', 'glyf', 'head', 'hhea', 'hmtx', 'loca', 'maxp', 'name', 'post', 'prep']
 
 def test_set():
     s1 = hb.Set()
@@ -785,6 +829,8 @@ def test_set():
     assert s1.min == 4
     assert s1.max == 8
 
+    iter(iter(hb.Set({})))
+
 def test_map():
     m1 = hb.Map()
     m2 = hb.Map({1:2, 3:4})
@@ -822,6 +868,8 @@ def test_map():
     m5.update({10:11})
     assert len(m5) == 3
 
+    iter(iter(hb.Map({})))
+
 def test_subset(blankfont):
 
     for planned in (False, True):
@@ -856,7 +904,8 @@ def test_subset(blankfont):
         assert font.get_nominal_glyph(ord('e')) == 4
 
         blob = face.blob
-        assert len(blob.data) > 0
+        assert blob
+        assert len(blob) > 100
         face = hb.Face(blob)
         font = hb.Font(face)
 
