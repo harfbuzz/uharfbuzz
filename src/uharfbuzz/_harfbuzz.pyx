@@ -1842,9 +1842,6 @@ cdef class Set:
     def __iter__(self):
         return SetIter(self)
 
-    def __repr__(self):
-        s = ', '.join(repr(v) for v in self)
-        return ("Set({%s})" % s)
 
 cdef class SetIter:
     cdef Set s
