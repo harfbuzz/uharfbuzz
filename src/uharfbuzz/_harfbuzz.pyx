@@ -754,7 +754,7 @@ cdef class Font:
         methods.qCurveTo = <void*>qCurveTo
         methods.closePath = <void*>closePath
 
-        hb_font_get_glyph_shape(self._hb_font, gid, drawfuncs, <void*>&methods)
+        hb_font_draw_glyph(self._hb_font, gid, drawfuncs, <void*>&methods)
 
 cdef struct _pen_methods:
     void *moveTo
@@ -1242,15 +1242,15 @@ cdef class DrawFuncs:
         hb_draw_funcs_destroy(self._hb_drawfuncs)
 
     def get_glyph_shape(self, font: Font, gid: int):
-        hb_font_get_glyph_shape(font._hb_font, gid, self._hb_drawfuncs, <void*>self);
-
-    def draw_glyph(self, font: Font, gid: int, user_data: object):
         warnings.warn(
-            "draw_glyph() is deprecated, use get_glyph_shape() instead",
+            "get_glyph_shape() is deprecated, use draw_glyph() instead",
             DeprecationWarning,
         )
+        self.draw_glyph(font, gid)
+
+    def draw_glyph(self, font: Font, gid: int, user_data: object = None):
         self._user_data = user_data
-        self.get_glyph_shape(font, gid)
+        hb_font_draw_glyph(font._hb_font, gid, self._hb_drawfuncs, <void*>self);
 
     def move_to_func(self):
         return self._move_to_func

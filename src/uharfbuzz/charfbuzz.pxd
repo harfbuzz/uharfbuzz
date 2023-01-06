@@ -461,7 +461,7 @@ cdef extern from "hb.h":
 
     void hb_draw_funcs_destroy(hb_draw_funcs_t* funcs)
 
-    void hb_font_get_glyph_shape(
+    void hb_font_draw_glyph(
         hb_font_t *font,
         hb_codepoint_t glyph,
         const hb_draw_funcs_t *dfuncs,
