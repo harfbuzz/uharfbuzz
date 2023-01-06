@@ -520,6 +520,7 @@ cdef extern from "hb.h":
     void hb_set_clear(hb_set_t* set);
     hb_bool_t hb_set_is_empty(const hb_set_t* set);
     void hb_set_invert(hb_set_t* set);
+    hb_bool_t hb_set_is_inverted(const hb_set_t* set);
     hb_bool_t hb_set_has(const hb_set_t* set, hb_codepoint_t codepoint);
     void hb_set_add(hb_set_t* set, hb_codepoint_t codepoint);
     void hb_set_add_range(hb_set_t* set, hb_codepoint_t first, hb_codepoint_t last);

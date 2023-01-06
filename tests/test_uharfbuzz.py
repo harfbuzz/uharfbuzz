@@ -824,10 +824,16 @@ def test_set():
     s1 ^= hb.Set({5})
     assert list(s1) == [4, 5]
     s1 |= {8} # Update accepts set() as well
+
     assert list(s1) == [4, 5, 8]
     assert len(s1) == 3
+
     assert s1.min == 4
     assert s1.max == 8
+
+    assert repr(s1) == "Set({4, 5, 8})"
+    s1.invert()
+    assert repr(s1) == "Set({...})"
 
     iter(iter(hb.Set({})))
 
@@ -864,9 +870,12 @@ def test_map():
     m4 = hb.Map(m3)
     m5 = hb.Map()
     m5.update(m4)
+
     assert len(m4) == len(m5) == 2
-    m5.update({10:11})
+    m5.update({10: 11})
     assert len(m5) == 3
+
+    assert repr(m5) == "Map({1: 2, 3: 4, 10: 11})"
 
     iter(iter(hb.Map({})))
 

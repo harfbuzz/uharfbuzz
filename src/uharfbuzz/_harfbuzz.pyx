@@ -1723,6 +1723,9 @@ cdef class Set:
     def invert(self):
         hb_set_invert(self._hb_set)
 
+    def is_inverted(self) -> bool:
+        return hb_set_is_inverted(self._hb_set)
+
     def __contains__(self, c) -> bool:
         if type(c) != int:
             return False
@@ -1843,8 +1846,11 @@ cdef class Set:
         return SetIter(self)
 
     def __repr__(self):
-        s = ', '.join(repr(v) for v in self)
-        return ("Set({%s})" % s)
+        if self.is_inverted():
+            return "Set({...})"
+        else:
+            s = ', '.join(repr(v) for v in self)
+            return ("Set({%s})" % s)
 
 cdef class SetIter:
     cdef Set s
@@ -1971,7 +1977,7 @@ cdef class Map:
         return self.keys()
 
     def __repr__(self):
-        s = ', '.join("%s: %s" % (repr(k), repr(v)) for k,v in self.items())
+        s = ', '.join("%s: %s" % (repr(k), repr(v)) for k,v in sorted(self.items()))
         return ("Map({%s})" % s)
 
 cdef class MapIter:
