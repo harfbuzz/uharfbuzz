@@ -1848,9 +1848,8 @@ cdef class Set:
     def __repr__(self):
         if self.is_inverted():
             return "Set({...})"
-        else:
-            s = ', '.join(repr(v) for v in self)
-            return ("Set({%s})" % s)
+        s = ', '.join(repr(v) for v in self)
+        return ("Set({%s})" % s)
 
 cdef class SetIter:
     cdef Set s
