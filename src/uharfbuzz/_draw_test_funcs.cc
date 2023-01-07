@@ -11,51 +11,51 @@ extern "C" {
 
 EXTERN void
 _test_move_to (void *dfuncs,
-               void *draw_data,
+               char *draw_data,
                void *st,
                float to_x,
                float to_y,
-               char *user_data)
+               void *user_data)
 {
-  sprintf (user_data + strlen (user_data), "M%g,%g", to_x, to_y);
+  sprintf (draw_data + strlen (draw_data), "M%g,%g", to_x, to_y);
 }
 
 EXTERN void
 _test_line_to (void *dfuncs,
-               void *draw_data,
+               char *draw_data,
                void *st,
                float to_x,
                float to_y,
-               char *user_data)
+               void *user_data)
 {
-  sprintf (user_data + strlen (user_data), "L%g,%g", to_x, to_y);
+  sprintf (draw_data + strlen (draw_data), "L%g,%g", to_x, to_y);
 }
 
 EXTERN void
 _test_close_path (void *dfuncs,
-                  void *draw_data,
+                  char *draw_data,
                   void *st,
-                  char *user_data)
+                  void *user_data)
 {
-  sprintf (user_data + strlen (user_data), "Z");
+  sprintf (draw_data + strlen (draw_data), "Z");
 }
 
 EXTERN void
 _test_quadratic_to (void *dfuncs,
-                    void *draw_data,
+                    char *draw_data,
                     void *st,
                     float c1_x,
                     float c1_y,
                     float to_x,
                     float to_y,
-                    char *user_data)
+                    void *user_data)
 {
-  sprintf (user_data + strlen (user_data), "Q%g,%g %g,%g", c1_x, c1_y, to_x, to_y);
+  sprintf (draw_data + strlen (draw_data), "Q%g,%g %g,%g", c1_x, c1_y, to_x, to_y);
 }
 
 EXTERN void
 _test_cubic_to (void *dfuncs,
-                void *draw_data,
+                char *draw_data,
                 void *st,
                 float c1_x,
                 float c1_y,
@@ -63,9 +63,9 @@ _test_cubic_to (void *dfuncs,
                 float c2_y,
                 float to_x,
                 float to_y,
-                char *user_data)
+                void *user_data)
 {
-  sprintf (user_data + strlen (user_data), "C%g,%g %g,%g %g,%g", c1_x, c1_y, c2_x, c2_y, to_x, to_y);
+  sprintf (draw_data + strlen (draw_data), "C%g,%g %g,%g %g,%g", c1_x, c1_y, c2_x, c2_y, to_x, to_y);
 }
 
 }
