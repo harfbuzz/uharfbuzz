@@ -623,7 +623,7 @@ class TestCallbacks:
     @pytest.mark.xfail(platform.python_implementation() == "PyPy", reason="PyPy's ctypes has no 'pythonapi' attribute")
     def test_draw_funcs_pycapsule(self, opensans):
         import ctypes
-        import uharfbuzz._harfbuzz
+        import uharfbuzz._harfbuzz_test
 
         funcs = hb.DrawFuncs()
 
@@ -634,7 +634,7 @@ class TestCallbacks:
         def cap(x):
             return PyCapsule_New(x, None, None)
 
-        lib = ctypes.cdll.LoadLibrary(uharfbuzz._harfbuzz.__file__)
+        lib = ctypes.cdll.LoadLibrary(uharfbuzz._harfbuzz_test.__file__)
         container = ctypes.create_string_buffer(1000)
         container_cap = cap(container)
 

@@ -45,8 +45,21 @@ extension = Extension(
         'harfbuzz/src/hb-coretext.cc',
         'harfbuzz/src/hb-directwrite.cc',
         'harfbuzz/src/hb-uniscribe.cc',
-        'src/uharfbuzz/_draw_test_funcs.cc',
         'src/uharfbuzz/_harfbuzz.pyx',
+    ],
+    language='c++',
+    libraries=libraries,
+    extra_compile_args=extra_compile_args,
+    extra_link_args=extra_link_args,
+)
+
+extension_test = Extension(
+    'uharfbuzz._harfbuzz_test',
+    define_macros=define_macros,
+    include_dirs=['harfbuzz/src'],
+    sources=[
+        'src/uharfbuzz/_draw_test_funcs.cc',
+        'src/uharfbuzz/_harfbuzz_test.pyx',
     ],
     language='c++',
     libraries=libraries,
@@ -70,7 +83,7 @@ setup(
     setup_requires=["setuptools_scm"],
     python_requires=">=3.5",
     ext_modules = cythonize(
-        extension,
+        [extension, extension_test],
         annotate=bool(int(os.environ.get('CYTHON_ANNOTATE', '0'))),
         compiler_directives={"linetrace": linetrace},
     ),
