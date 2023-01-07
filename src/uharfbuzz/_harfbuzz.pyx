@@ -1304,7 +1304,7 @@ cdef class DrawFuncs:
                           ], None],
                           user_data: object = None) -> None:
         cdef hb_draw_cubic_to_func_t func_p
-        cdef void *user_data_p = NULL
+        cdef void *user_data_p
         if PyCapsule_IsValid(func, NULL):
             self._cubic_to_func = None
             func_p = <hb_draw_cubic_to_func_t>PyCapsule_GetPointer(func, NULL)
@@ -1330,7 +1330,7 @@ cdef class DrawFuncs:
                               ], None],
                               user_data: object = None) -> None:
         cdef hb_draw_quadratic_to_func_t func_p
-        cdef void *user_data_p = NULL
+        cdef void *user_data_p
         if PyCapsule_IsValid(func, NULL):
             self._quadratic_to_func = None
             func_p = <hb_draw_quadratic_to_func_t>PyCapsule_GetPointer(func, NULL)
@@ -1352,7 +1352,7 @@ cdef class DrawFuncs:
                             ], None],
                             user_data: object = None) -> None:
         cdef hb_draw_close_path_func_t func_p
-        cdef void *user_data_p = NULL
+        cdef void *user_data_p
         if PyCapsule_IsValid(func, NULL):
             self._close_path_func = None
             func_p = <hb_draw_close_path_func_t>PyCapsule_GetPointer(func, NULL)
