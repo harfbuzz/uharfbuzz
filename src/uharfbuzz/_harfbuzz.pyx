@@ -730,11 +730,11 @@ cdef class Font:
         packed = name
         return packed.decode()
 
-    def draw_glyph(self, gid: int, draw_funcs: DrawFuncs, draw_data: object = None):
-        cdef void *draw_data_p = <void *>draw_data
-        if PyCapsule_IsValid(draw_data, NULL):
-            draw_data_p = <void *>PyCapsule_GetPointer(draw_data, NULL)
-        hb_font_draw_glyph(self._hb_font, gid, draw_funcs._hb_drawfuncs, draw_data_p);
+    def draw_glyph(self, gid: int, draw_funcs: DrawFuncs, draw_state: object = None):
+        cdef void *draw_state_p = <void *>draw_state
+        if PyCapsule_IsValid(draw_state, NULL):
+            draw_state_p = <void *>PyCapsule_GetPointer(draw_state, NULL)
+        hb_font_draw_glyph(self._hb_font, gid, draw_funcs._hb_drawfuncs, draw_state_p);
 
     def draw_glyph_with_pen(self, gid: int, pen):
         global drawfuncs
@@ -1263,7 +1263,7 @@ cdef class DrawFuncs:
         else:
             self._move_to_func = func
             func_p = _move_to_func
-            assert user_data is None
+            assert user_data is None, "Pass draw_state to Font.draw_glyph"
             user_data_p = <void*>func
         hb_draw_funcs_set_move_to_func(
             self._hb_drawfuncs, func_p, user_data_p, NULL)
@@ -1287,7 +1287,7 @@ cdef class DrawFuncs:
         else:
             self._line_to_func = func
             func_p = _line_to_func
-            assert user_data is None
+            assert user_data is None, "Pass draw_state to Font.draw_glyph"
             user_data_p = <void*>func
         hb_draw_funcs_set_line_to_func(
             self._hb_drawfuncs, func_p, user_data_p, NULL)
@@ -1315,7 +1315,7 @@ cdef class DrawFuncs:
         else:
             self._cubic_to_func = func
             func_p = _cubic_to_func
-            assert user_data is None
+            assert user_data is None, "Pass draw_state to Font.draw_glyph"
             user_data_p = <void*>func
         hb_draw_funcs_set_cubic_to_func(
             self._hb_drawfuncs, func_p, user_data_p, NULL)
@@ -1341,7 +1341,7 @@ cdef class DrawFuncs:
         else:
             self._quadratic_to_func = func
             func_p = _quadratic_to_func
-            assert user_data is None
+            assert user_data is None, "Pass draw_state to Font.draw_glyph"
             user_data_p = <void*>func
         hb_draw_funcs_set_quadratic_to_func(
             self._hb_drawfuncs, func_p, user_data_p, NULL)
@@ -1363,7 +1363,7 @@ cdef class DrawFuncs:
         else:
             self._close_path_func = func
             func_p = _close_path_func
-            assert user_data is None
+            assert user_data is None, "Pass draw_state to Font.draw_glyph"
             user_data_p = <void*>func
         hb_draw_funcs_set_close_path_func(
             self._hb_drawfuncs, func_p, user_data_p, NULL)
