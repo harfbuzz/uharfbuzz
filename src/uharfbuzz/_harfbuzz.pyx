@@ -1223,25 +1223,31 @@ cdef class DrawFuncs:
     cdef object _cubic_to_func
     cdef object _quadratic_to_func
     cdef object _close_path_func
+    cdef int _warned
 
     def __cinit__(self):
         self._hb_drawfuncs = hb_draw_funcs_create()
+        self._warned = False
 
     def __dealloc__(self):
         hb_draw_funcs_destroy(self._hb_drawfuncs)
 
     def get_glyph_shape(self, font: Font, gid: int):
-        warnings.warn(
-            "get_glyph_shape() is deprecated, use Font.draw_glyph() instead",
-            DeprecationWarning,
-        )
+        if not self._warned:
+            warnings.warn(
+                "get_glyph_shape() is deprecated, use Font.draw_glyph() instead",
+                DeprecationWarning,
+            )
+            self._warned = True
         font.draw_glyph(gid, self)
 
     def draw_glyph(self, font: Font, gid: int, draw_data: object = None):
-        warnings.warn(
-            "draw_glyph() is deprecated, use Font.draw_glyph() instead",
-            DeprecationWarning,
-        )
+        if not self._warned:
+            warnings.warn(
+                "draw_glyph() is deprecated, use Font.draw_glyph() instead",
+                DeprecationWarning,
+            )
+            self._warned = True
         font.draw_glyph(gid, self, draw_data)
 
     def set_move_to_func(self,
