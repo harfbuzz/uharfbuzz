@@ -85,6 +85,8 @@ class TestBuffer:
         buf = hb.Buffer()
         buf.add_str(string)
         infos = [(g.codepoint, g.cluster) for g in buf.glyph_infos]
+        flags = [(g.flags) for g in buf.glyph_infos]
+        assert all(0 == f for f in flags)
         assert infos == expected
 
     def test_add_utf8(self):

@@ -47,7 +47,13 @@ class HarfBuzzError(Exception):
     pass
 
 
+class GlyphFlags(IntFlag):
+    UNSAFE_TO_BREAK = HB_GLYPH_FLAG_UNSAFE_TO_BREAK
+    UNSAFE_TO_CONCAT = HB_GLYPH_FLAG_UNSAFE_TO_CONCAT
+    SAFE_TO_INSERT_TATWEEL = HB_GLYPH_FLAG_SAFE_TO_INSERT_TATWEEL
+
 cdef class GlyphInfo:
+
     cdef hb_glyph_info_t _hb_glyph_info
     # could maybe store Buffer to prevent GC
 
@@ -55,12 +61,16 @@ cdef class GlyphInfo:
         self._hb_glyph_info = info
 
     @property
-    def codepoint(self):
+    def codepoint(self) -> int:
         return self._hb_glyph_info.codepoint
 
     @property
-    def cluster(self):
+    def cluster(self) -> int:
         return self._hb_glyph_info.cluster
+
+    @property
+    def flags(self) -> GlyphFlags:
+        return GlyphFlags(self._hb_glyph_info.mask & HB_GLYPH_FLAG_DEFINED)
 
 
 cdef class GlyphPosition:
