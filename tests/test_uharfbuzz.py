@@ -418,7 +418,7 @@ class TestCallbacks:
             return code_point
 
         funcs = hb.FontFuncs.create()
-        funcs.set_nominal_glyph_func(nominal_glyph_func, None)
+        funcs.set_nominal_glyph_func(nominal_glyph_func)
         blankfont.funcs = funcs
 
         hb.shape(blankfont, buf)
@@ -436,7 +436,7 @@ class TestCallbacks:
             return 456
 
         funcs = hb.FontFuncs.create()
-        funcs.set_glyph_h_advance_func(h_advance_func, None)
+        funcs.set_glyph_h_advance_func(h_advance_func)
         blankfont.funcs = funcs
 
         hb.shape(blankfont, buf)
@@ -458,8 +458,8 @@ class TestCallbacks:
             return (True, 345, 567)
 
         funcs = hb.FontFuncs.create()
-        funcs.set_glyph_v_advance_func(v_advance_func, None)
-        funcs.set_glyph_v_origin_func(v_origin_func, None)
+        funcs.set_glyph_v_advance_func(v_advance_func)
+        funcs.set_glyph_v_origin_func(v_origin_func)
         blankfont.funcs = funcs
 
         hb.shape(blankfont, buf)
@@ -474,8 +474,8 @@ class TestCallbacks:
             return hb.FontExtents(987, -654, 321)
 
         funcs = hb.FontFuncs.create()
-        funcs.set_font_h_extents_func(font_h_extents_func, None)
-        funcs.set_font_v_extents_func(font_v_extents_func, None)
+        funcs.set_font_h_extents_func(font_h_extents_func)
+        funcs.set_font_v_extents_func(font_v_extents_func)
         blankfont.funcs = funcs
         assert (123, -456, 789) == blankfont.get_font_extents('ltr')
         assert (987, -654, 321) == blankfont.get_font_extents('ttb')
