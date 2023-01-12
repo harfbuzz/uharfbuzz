@@ -104,6 +104,12 @@ cdef extern from "hb.h":
 
     cdef hb_codepoint_t HB_BUFFER_REPLACEMENT_CODEPOINT_DEFAULT
 
+    ctypedef enum hb_glyph_flags_t:
+        HB_GLYPH_FLAG_UNSAFE_TO_BREAK
+        HB_GLYPH_FLAG_UNSAFE_TO_CONCAT
+        HB_GLYPH_FLAG_SAFE_TO_INSERT_TATWEEL
+        HB_GLYPH_FLAG_DEFINED
+
     ctypedef struct hb_glyph_info_t:
         hb_codepoint_t codepoint
         hb_mask_t mask
