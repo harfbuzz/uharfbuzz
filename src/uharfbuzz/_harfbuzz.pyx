@@ -935,7 +935,7 @@ cdef class FontFuncs:
                                      int,  # gid
                                      object,  # user_data
                                  ], int],  # h_advance
-                                 user_data: object) -> None:
+                                 user_data: object = None) -> None:
         hb_font_funcs_set_glyph_h_advance_func(
             self._hb_ffuncs, _glyph_h_advance_func, <void*>user_data, NULL)
         self._glyph_h_advance_func = func
@@ -946,7 +946,7 @@ cdef class FontFuncs:
                                      int,  # gid
                                      object,  # user_data
                                  ], int],  # v_advance
-                                 user_data: object) -> None:
+                                 user_data: object = None) -> None:
         hb_font_funcs_set_glyph_v_advance_func(
             self._hb_ffuncs, _glyph_v_advance_func, <void*>user_data, NULL)
         self._glyph_v_advance_func = func
@@ -957,7 +957,7 @@ cdef class FontFuncs:
                                     int,  # gid
                                     object,  # user_data
                                 ], (int, int, int)],  # success, v_origin_x, v_origin_y
-                                user_data: object) -> None:
+                                user_data: object = None) -> None:
         hb_font_funcs_set_glyph_v_origin_func(
             self._hb_ffuncs, _glyph_v_origin_func, <void*>user_data, NULL)
         self._glyph_v_origin_func = func
@@ -968,7 +968,7 @@ cdef class FontFuncs:
                                 int,  # gid
                                 object,  # user_data
                             ], str],  # name
-                            user_data: object) -> None:
+                            user_data: object = None) -> None:
         hb_font_funcs_set_glyph_name_func(
             self._hb_ffuncs, _glyph_name_func, <void*>user_data, NULL)
         self._glyph_name_func = func
@@ -979,7 +979,7 @@ cdef class FontFuncs:
                                    int,  # unicode
                                    object,  # user_data
                                ], int],  # gid
-                               user_data: object) -> None:
+                               user_data: object = None) -> None:
         hb_font_funcs_set_nominal_glyph_func(
             self._hb_ffuncs, _nominal_glyph_func, <void*>user_data, NULL)
         self._nominal_glyph_func = func
@@ -989,7 +989,7 @@ cdef class FontFuncs:
                                     Font,
                                     object,  # user_data
                                 ], FontExtents],  # extents
-                                user_data: object) -> None:
+                                user_data: object = None) -> None:
         hb_font_funcs_set_font_h_extents_func(
             self._hb_ffuncs, _font_h_extents_func, <void*>user_data, NULL)
         self._font_h_extents_func = func
@@ -999,7 +999,7 @@ cdef class FontFuncs:
                                     Font,
                                     object,  # user_data
                                 ], FontExtents],  # extents
-                                user_data: object) -> None:
+                                user_data: object = None) -> None:
         hb_font_funcs_set_font_v_extents_func(
             self._hb_ffuncs, _font_v_extents_func, <void*>user_data, NULL)
         self._font_v_extents_func = func
