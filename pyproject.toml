@@ -16,8 +16,19 @@ test-command = "pytest {project}/tests"
 
 [tool.cibuildwheel.macos]
 archs = ["x86_64", "universal2", "arm64"]
+before-all = "brew install ccache"
+before-test = "ccache --show-stats"
 
-# Reduce the size of Linux wheels.
-[[tool.cibuildwheel.overrides]]
-select = "*-manylinux_*"
-environment = { CXXFLAGS="-g0" }
+[tool.cibuildwheel.macos.environment]
+CC = "/usr/local/opt/ccache/libexec/cc"
+
+[tool.cibuildwheel.linux]
+before-all = [
+    "yum install -y ccache",
+    "ln -s $(which ccache) /usr/lib64/ccache/gcc",
+]
+before-test = "ccache --show-stats"
+
+[tool.cibuildwheel.linux.environment]
+CC = "/usr/lib64/ccache/gcc"
+CFLAGS = "-g0"
