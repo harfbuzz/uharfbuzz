@@ -596,10 +596,10 @@ class TestCallbacks:
         funcs.set_cubic_to_func(cubic_to, container)
         funcs.set_quadratic_to_func(quadratic_to, container)
         funcs.set_close_path_func(close_path, container)
-        funcs.get_glyph_shape(opensans, 1)
+        opensans.draw_glyph(funcs, 1)
         assert "".join(container) == "M1120,0L938,465L352,465L172,0L0,0L578,1468L721,1468L1296,0L1120,0ZM885,618L715,1071Q682,1157 647,1282Q625,1186 584,1071L412,618L885,618Z"
 
-    def test_draw_funcs_deprecated(self, opensans):
+    def test_draw_funcs(self, opensans):
         funcs = hb.DrawFuncs()
         container = []
         def move_to(x,y,c):
@@ -618,8 +618,7 @@ class TestCallbacks:
         funcs.set_cubic_to_func(cubic_to)
         funcs.set_quadratic_to_func(quadratic_to)
         funcs.set_close_path_func(close_path)
-        with pytest.warns(DeprecationWarning):
-            funcs.draw_glyph(opensans, 1, container)
+        opensans.draw_glyph(1, funcs, container)
         assert "".join(container) == "M1120,0L938,465L352,465L172,0L0,0L578,1468L721,1468L1296,0L1120,0ZM885,618L715,1071Q682,1157 647,1282Q625,1186 584,1071L412,618L885,618Z"
 
     @pytest.mark.xfail(platform.python_implementation() == "PyPy", reason="PyPy's ctypes has no 'pythonapi' attribute")
@@ -640,12 +639,12 @@ class TestCallbacks:
         container = ctypes.create_string_buffer(1000)
         container_cap = cap(container)
 
-        funcs.set_move_to_func(cap(lib._test_move_to), container_cap)
-        funcs.set_line_to_func(cap(lib._test_line_to), container_cap)
-        funcs.set_cubic_to_func(cap(lib._test_cubic_to), container_cap)
-        funcs.set_quadratic_to_func(cap(lib._test_quadratic_to), container_cap)
-        funcs.set_close_path_func(cap(lib._test_close_path), container_cap)
-        funcs.get_glyph_shape(opensans, 1)
+        funcs.set_move_to_func(cap(lib._test_move_to))
+        funcs.set_line_to_func(cap(lib._test_line_to))
+        funcs.set_cubic_to_func(cap(lib._test_cubic_to))
+        funcs.set_quadratic_to_func(cap(lib._test_quadratic_to))
+        funcs.set_close_path_func(cap(lib._test_close_path))
+        opensans.draw_glyph(1, funcs, container_cap)
 
         assert container.value == b"M1120,0L938,465L352,465L172,0L0,0L578,1468L721,1468L1296,0L1120,0ZM885,618L715,1071Q682,1157 647,1282Q625,1186 584,1071L412,618L885,618Z"
 
