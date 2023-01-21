@@ -1,11 +1,14 @@
 [build-system]
+build-backend = "mesonpy"
 requires = [
-    "setuptools >= 36.4",
-    "wheel",
+    "meson-python",
     "setuptools_scm >= 2.1",
     "cython >= 0.28.1",
 ]
-build-backend = "setuptools.build_meta"
+
+[project]
+name = "uharfbuzz"
+version = "0.0.1"
 
 [tool.cibuildwheel]
 # only build for 64-bit
