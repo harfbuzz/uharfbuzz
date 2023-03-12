@@ -678,6 +678,13 @@ cdef class Font:
         else:
             return None
 
+    def get_glyph_from_name(self, name: str):
+        cdef hb_codepoint_t gid
+        cdef bytes packed
+        packed = name.encode()
+        success = hb_font_get_glyph_from_name(self._hb_font, <char*>packed, len(packed), &gid)
+        return gid if success else None
+
     def get_glyph_extents(self, gid: int):
         cdef hb_glyph_extents_t extents
         success = hb_font_get_glyph_extents(self._hb_font, gid, &extents)
@@ -690,6 +697,22 @@ cdef class Font:
             )
         else:
             return None
+
+    def get_glyph_h_advance(self, gid: int):
+        return hb_font_get_glyph_h_advance(self._hb_font, gid)
+
+    def get_glyph_v_advance(self, gid: int):
+        return hb_font_get_glyph_v_advance(self._hb_font, gid)
+
+    def get_glyph_h_origin(self, gid: int):
+        cdef hb_position_t x, y
+        success = hb_font_get_glyph_h_origin(self._hb_font, gid, &x, &y)
+        return (x, y) if success else None
+
+    def get_glyph_v_origin(self, gid: int):
+        cdef hb_position_t x, y
+        success = hb_font_get_glyph_v_origin(self._hb_font, gid, &x, &y)
+        return (x, y) if success else None
 
     def get_font_extents(self, direction: str):
         cdef hb_font_extents_t extents
@@ -705,6 +728,11 @@ cdef class Font:
             extents.descender,
             extents.line_gap
         )
+
+    def get_variation_glyph(self, unicode: int, variation_selector: int):
+        cdef hb_codepoint_t gid
+        success = hb_font_get_variation_glyph(self._hb_font, unicode, variation_selector, &gid)
+        return gid if success else None
 
     def get_nominal_glyph(self, unicode: int):
         cdef hb_codepoint_t gid
@@ -739,6 +767,13 @@ cdef class Font:
         hb_font_glyph_to_string(self._hb_font, gid, name, 64)
         packed = name
         return packed.decode()
+
+    def glyph_from_string(self, string: str):
+        cdef hb_codepoint_t gid
+        cdef bytes packed
+        packed = string.encode()
+        success = hb_font_glyph_from_string(self._hb_font, <char*>packed, len(packed), &gid)
+        return gid if success else None
 
     def draw_glyph(self, gid: int, draw_funcs: DrawFuncs, draw_state: object = None):
         cdef void *draw_state_p = <void *>draw_state

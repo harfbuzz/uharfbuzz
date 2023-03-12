@@ -346,6 +346,11 @@ cdef extern from "hb.h":
         hb_codepoint_t glyph,
         char* name,
         unsigned int size)
+    hb_bool_t hb_font_get_glyph_from_name(
+        hb_font_t *font,
+        const char *name,
+        int len,
+        hb_codepoint_t *glyph)
     hb_bool_t hb_font_get_glyph_extents(
         hb_font_t* font,
         hb_codepoint_t glyph,
@@ -354,9 +359,30 @@ cdef extern from "hb.h":
         hb_direction_t direction, hb_font_extents_t *extents)
     hb_bool_t hb_font_get_h_extents(hb_font_t *font, hb_font_extents_t *extents)
     hb_bool_t hb_font_get_v_extents(hb_font_t *font, hb_font_extents_t *extents)
+    hb_position_t hb_font_get_glyph_h_advance(
+        hb_font_t *font,
+        hb_codepoint_t glyph)
+    hb_position_t hb_font_get_glyph_v_advance(
+        hb_font_t *font,
+        hb_codepoint_t glyph)
+    hb_bool_t hb_font_get_glyph_h_origin(
+        hb_font_t *font,
+        hb_codepoint_t glyph,
+        hb_position_t *x,
+        hb_position_t *y)
+    hb_bool_t hb_font_get_glyph_v_origin(
+        hb_font_t *font,
+        hb_codepoint_t glyph,
+        hb_position_t *x,
+        hb_position_t *y)
     hb_bool_t hb_font_get_nominal_glyph(
         hb_font_t *font,
         hb_codepoint_t unicode,
+        hb_codepoint_t *glyph)
+    hb_bool_t hb_font_get_variation_glyph(
+        hb_font_t *font,
+        hb_codepoint_t unicode,
+        hb_codepoint_t variation_selector,
         hb_codepoint_t *glyph)
     const int * hb_font_get_var_coords_normalized(
         hb_font_t *font,
@@ -370,6 +396,11 @@ cdef extern from "hb.h":
         hb_codepoint_t glyph,
         char* name,
         unsigned int size)
+    hb_bool_t hb_font_glyph_from_string(
+        hb_font_t *font,
+        const char *s,
+        int len,
+        hb_codepoint_t *glyph)
     void hb_font_destroy(hb_font_t* font)
 
     ctypedef struct hb_draw_state_t:
