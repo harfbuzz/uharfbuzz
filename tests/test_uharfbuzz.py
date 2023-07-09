@@ -505,21 +505,21 @@ class TestCallbacks:
         pos = [g.x_advance for g in buf.glyph_positions]
         assert pos == [0, 0, 0, 100, 0]
         expected_messages = [
-            'start table GSUB',
+            "start table GSUB script tag 'DFLT'",
             "start lookup 0 feature 'calt'",
             'recursing to lookup 1 at 2',
             'replacing glyph at 2 (single substitution)',
             'replaced glyph at 2 (single substitution)',
             'recursed to lookup 1',
             "end lookup 0 feature 'calt'",
-            'end table GSUB',
-            'start table GPOS',
+            "end table GSUB script tag 'DFLT'",
+            "start table GPOS script tag 'DFLT'",
             "start lookup 0 feature 'kern'",
             'try kerning glyphs at 3,4',
             'kerned glyphs at 3,4',
             'tried kerning glyphs at 3,4',
             "end lookup 0 feature 'kern'",
-            'end table GPOS',
+            "end table GPOS script tag 'DFLT'",
         ]
         assert messages == expected_messages
         gids_trace = [[g.codepoint for g in infos] for infos in infos_trace]
@@ -559,8 +559,8 @@ class TestCallbacks:
         pos = [g.x_advance for g in buf.glyph_positions]
         assert pos == [0, 0, 0, 0, 0]
         expected_messages = [
-            'start table GSUB',
-            'start table GPOS',
+            "start table GSUB script tag 'DFLT'",
+            "start table GPOS script tag 'DFLT'",
         ]
         assert messages == expected_messages
         gids_trace = [[g.codepoint for g in infos] for infos in infos_trace]
