@@ -30,7 +30,7 @@ cdef extern from "Python.h":
     int PyUnicode_4BYTE_KIND
 
 
-cdef int msgcallback(hb_buffer_t *buffer, hb_font_t *font, const char* message, void* userdata):
+cdef int msgcallback(hb_buffer_t *buffer, hb_font_t *font, const char* message, void* userdata) noexcept:
     ret = (<object>userdata)(message.decode('utf-8'))
     if ret is None:
         return 1
@@ -424,7 +424,7 @@ cdef hb_user_data_key_t k
 
 
 cdef hb_blob_t* _reference_table_func(
-        hb_face_t* face, hb_tag_t tag, void* user_data):
+        hb_face_t* face, hb_tag_t tag, void* user_data) noexcept:
     cdef Face py_face = <object>(hb_face_get_user_data(face, &k))
     #
     cdef char cstr[5]
@@ -821,7 +821,7 @@ cdef void _pen_move_to_func(hb_draw_funcs_t *dfuncs,
                             hb_draw_state_t *st,
                             float to_x,
                             float to_y,
-                            void *user_data):
+                            void *user_data) noexcept:
     (<object>((<_pen_methods*>draw_data).moveTo))((to_x, to_y))
 
 cdef void _pen_line_to_func(hb_draw_funcs_t *dfuncs,
@@ -829,13 +829,13 @@ cdef void _pen_line_to_func(hb_draw_funcs_t *dfuncs,
                             hb_draw_state_t *st,
                             float to_x,
                             float to_y,
-                            void *user_data):
+                            void *user_data) noexcept:
     (<object>((<_pen_methods*>draw_data).lineTo))((to_x, to_y))
 
 cdef void _pen_close_path_func(hb_draw_funcs_t *dfuncs,
                                void *draw_data,
                                hb_draw_state_t *st,
-                               void *user_data):
+                               void *user_data) noexcept:
     (<object>((<_pen_methods*>draw_data).closePath))()
 
 cdef void _pen_quadratic_to_func(hb_draw_funcs_t *dfuncs,
@@ -845,7 +845,7 @@ cdef void _pen_quadratic_to_func(hb_draw_funcs_t *dfuncs,
                                  float c1_y,
                                  float to_x,
                                  float to_y,
-                                 void *user_data):
+                                 void *user_data) noexcept:
     (<object>((<_pen_methods*>draw_data).qCurveTo))((c1_x, c1_y), (to_x, to_y))
 
 cdef void _pen_cubic_to_func(hb_draw_funcs_t *dfuncs,
@@ -857,13 +857,13 @@ cdef void _pen_cubic_to_func(hb_draw_funcs_t *dfuncs,
                              float c2_y,
                              float to_x,
                              float to_y,
-                             void *user_data):
+                             void *user_data) noexcept:
     (<object>((<_pen_methods*>draw_data).curveTo))((c1_x, c1_y), (c2_x, c2_y), (to_x, to_y))
 
 
 cdef hb_position_t _glyph_h_advance_func(hb_font_t* font, void* font_data,
                                          hb_codepoint_t glyph,
-                                         void* user_data):
+                                         void* user_data) noexcept:
     cdef Font py_font = <Font>font_data
     return (<FontFuncs>py_font.funcs)._glyph_h_advance_func(
         py_font, glyph, <object>user_data)
@@ -871,7 +871,7 @@ cdef hb_position_t _glyph_h_advance_func(hb_font_t* font, void* font_data,
 
 cdef hb_position_t _glyph_v_advance_func(hb_font_t* font, void* font_data,
                                          hb_codepoint_t glyph,
-                                         void* user_data):
+                                         void* user_data) noexcept:
     cdef Font py_font = <Font>font_data
     return (<FontFuncs>py_font.funcs)._glyph_v_advance_func(
         py_font, glyph, <object>user_data)
@@ -880,7 +880,7 @@ cdef hb_position_t _glyph_v_advance_func(hb_font_t* font, void* font_data,
 cdef hb_bool_t _glyph_v_origin_func(hb_font_t* font, void* font_data,
                                     hb_codepoint_t glyph,
                                     hb_position_t* x, hb_position_t* y,
-                                    void* user_data):
+                                    void* user_data) noexcept:
     cdef Font py_font = <Font>font_data
     cdef hb_bool_t success
     cdef hb_position_t px
@@ -895,7 +895,7 @@ cdef hb_bool_t _glyph_v_origin_func(hb_font_t* font, void* font_data,
 cdef hb_bool_t _glyph_name_func(hb_font_t *font, void *font_data,
                                 hb_codepoint_t glyph,
                                 char *name, unsigned int size,
-                                void *user_data):
+                                void *user_data) noexcept:
     cdef Font py_font = <Font>font_data
     cdef bytes ret = (<FontFuncs>py_font.funcs)._glyph_name_func(
         py_font, glyph, <object>user_data).encode()
@@ -906,7 +906,7 @@ cdef hb_bool_t _glyph_name_func(hb_font_t *font, void *font_data,
 cdef hb_bool_t _nominal_glyph_func(hb_font_t* font, void* font_data,
                                    hb_codepoint_t unicode,
                                    hb_codepoint_t* glyph,
-                                   void* user_data):
+                                   void* user_data) noexcept:
     cdef Font py_font = <Font>font_data
     glyph[0] = (<FontFuncs>py_font.funcs)._nominal_glyph_func(
         py_font, unicode, <object>user_data)
@@ -916,7 +916,7 @@ cdef hb_bool_t _nominal_glyph_func(hb_font_t* font, void* font_data,
 
 cdef hb_bool_t _font_h_extents_func(hb_font_t* font, void* font_data,
                                     hb_font_extents_t *extents,
-                                    void* user_data):
+                                    void* user_data) noexcept:
     cdef Font py_font = <Font>font_data
     font_extents = (<FontFuncs>py_font.funcs)._font_h_extents_func(
         py_font, <object>user_data)
@@ -933,7 +933,7 @@ cdef hb_bool_t _font_h_extents_func(hb_font_t* font, void* font_data,
 
 cdef hb_bool_t _font_v_extents_func(hb_font_t* font, void* font_data,
                                     hb_font_extents_t *extents,
-                                    void* user_data):
+                                    void* user_data) noexcept:
     cdef Font py_font = <Font>font_data
     font_extents = (<FontFuncs>py_font.funcs)._font_v_extents_func(
         py_font, <object>user_data)
@@ -1216,7 +1216,7 @@ cdef void _move_to_func(hb_draw_funcs_t *dfuncs,
                         hb_draw_state_t *st,
                         float to_x,
                         float to_y,
-                        void *user_data):
+                        void *user_data) noexcept:
     m = <object>user_data
     m(to_x, to_y, <object>draw_data)
 
@@ -1225,14 +1225,14 @@ cdef void _line_to_func(hb_draw_funcs_t *dfuncs,
                         hb_draw_state_t *st,
                         float to_x,
                         float to_y,
-                        void *user_data):
+                        void *user_data) noexcept:
     l = <object>user_data
     l(to_x, to_y, <object>draw_data)
 
 cdef void _close_path_func(hb_draw_funcs_t *dfuncs,
                            void *draw_data,
                            hb_draw_state_t *st,
-                           void *user_data):
+                           void *user_data) noexcept:
     cl = <object>user_data
     cl(<object>draw_data)
 
@@ -1243,7 +1243,7 @@ cdef void _quadratic_to_func(hb_draw_funcs_t *dfuncs,
                              float c1_y,
                              float to_x,
                              float to_y,
-                             void *user_data):
+                             void *user_data) noexcept:
     q = <object>user_data
     q(c1_x, c1_y, to_x, to_y, <object>draw_data)
 
@@ -1256,7 +1256,7 @@ cdef void _cubic_to_func(hb_draw_funcs_t *dfuncs,
                          float c2_y,
                          float to_x,
                          float to_y,
-                         void *user_data):
+                         void *user_data) noexcept:
     c = <object>user_data
     c(c1_x, c1_y, c2_x, c2_y, to_x, to_y, <object>draw_data)
 
