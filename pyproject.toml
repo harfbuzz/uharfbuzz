@@ -9,7 +9,7 @@ build-backend = "setuptools.build_meta"
 
 [tool.cibuildwheel]
 # only build for 64-bit
-skip = ["*-manylinux_i686", "*-musllinux_i686"]
+skip = ["*-manylinux*", "*-musllinux_i686"]
 
 test-requires = "pytest"
 test-command = "pytest {project}/tests"
@@ -30,7 +30,7 @@ before-all = [
 before-test = "ccache --show-stats"
 
 [tool.cibuildwheel.linux.environment]
-CC = "/usr/lib64/ccache/gcc"
+CC = "/usr/lib/ccache/bin/gcc"
 CFLAGS = "-g0"
 
 [[tool.cibuildwheel.overrides]]
