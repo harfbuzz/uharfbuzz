@@ -24,7 +24,7 @@ CC = "/usr/local/opt/ccache/libexec/cc"
 
 [tool.cibuildwheel.linux]
 before-all = [
-    "yum install -y ccache",
+    "yum install -y ccache || apk add ccache",
     "ln -s $(which ccache) /usr/lib64/ccache/gcc",
 ]
 before-test = "ccache --show-stats"
