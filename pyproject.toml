@@ -35,5 +35,5 @@ CFLAGS = "-g0"
 
 [[tool.cibuildwheel.overrides]]
 select = "*-musllinux*"
-before-all = "apk add ccache bash"
-CC = "/usr/lib/ccache/bin/gcc"
+before-all = "apk add ccache"
+environment = {CC = "/usr/lib/ccache/bin/gcc"}
