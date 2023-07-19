@@ -9,7 +9,7 @@ build-backend = "setuptools.build_meta"
 
 [tool.cibuildwheel]
 # only build for 64-bit
-skip = ["*-manylinux_i686", "*-musllinux*"]
+skip = ["*-manylinux_i686"]
 
 test-requires = "pytest"
 test-command = "pytest {project}/tests"
