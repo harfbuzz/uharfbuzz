@@ -9,7 +9,7 @@ build-backend = "setuptools.build_meta"
 
 [tool.cibuildwheel]
 # only build for 64-bit
-skip = ["*-manylinux_i686"]
+skip = ["*-manylinux_i686", "*-musllinux_i686"]
 
 test-requires = "pytest"
 test-command = "pytest {project}/tests"
@@ -35,5 +35,5 @@ CFLAGS = "-g0"
 
 [[tool.cibuildwheel.overrides]]
 select = "*-musllinux*"
-before-all = "apk add ccache"
+before-all = "apk add ccache bash"
 CC = "/usr/lib/ccache/bin/gcc"
