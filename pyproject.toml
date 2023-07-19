@@ -24,10 +24,16 @@ CC = "/usr/local/opt/ccache/libexec/cc"
 
 [tool.cibuildwheel.linux]
 before-all = [
-    "yum install -y ccache && ln -s $(which ccache) /usr/lib64/ccache/gcc || apk add gcc"
+    "yum install -y ccache",
+    "ln -s $(which ccache) /usr/lib64/ccache/gcc"
 ]
 before-test = "ccache --show-stats"
 
 [tool.cibuildwheel.linux.environment]
 CC = "/usr/lib64/ccache/gcc"
 CFLAGS = "-g0"
+
+[[tool.cibuildwheel.overrides]]
+select = "*-musllinux*"
+before-all = "apk add ccache"
+CC = "/usr/lib/ccache/bin/gcc"
