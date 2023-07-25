@@ -11,6 +11,9 @@ build-backend = "setuptools.build_meta"
 # only build for 64-bit
 skip = ["*-manylinux_i686", "*-musllinux_i686"]
 
+# Why does the Windows wheel segfault when packing G* graphs in fonttools.
+build-verbosity = 3
+
 test-requires = "pytest"
 test-command = "pytest {project}/tests"
 
