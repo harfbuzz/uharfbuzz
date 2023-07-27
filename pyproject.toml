@@ -9,7 +9,7 @@ build-backend = "setuptools.build_meta"
 
 [tool.cibuildwheel]
 # only build for 64-bit
-skip = ["*-manylinux_i686", "*-musllinux_i686"]
+skip = ["*-manylinux_i686", "*-musllinux_i686", "cp37-*", "cp39-*", "cp310-*", "cp311-*"]
 
 # Why does the Windows wheel segfault when packing G* graphs in fonttools.
 build-verbosity = 3
