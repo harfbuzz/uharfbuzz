@@ -33,7 +33,6 @@ else:
     extra_compile_args.append('/fsanitize=address')
     extra_compile_args.append('/DEBUG')
     extra_compile_args.append('/Zi')
-    extra_compile_args.append('/MTd')
     extra_link_args.append('/DEBUG')
     libraries += ['usp10', 'gdi32', 'user32', 'rpcrt4', 'dwrite']
 
