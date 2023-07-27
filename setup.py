@@ -30,6 +30,10 @@ if platform.system() != 'Windows':
 else:
     define_macros.append(('HAVE_DIRECTWRITE', '1'))
     define_macros.append(('HAVE_UNISCRIBE', '1'))
+    extra_compile_args.append('/fsanitize=address')
+    extra_compile_args.append('/DEBUG')
+    extra_compile_args.append('/Zi')
+    extra_link_args.append('/DEBUG')
     libraries += ['usp10', 'gdi32', 'user32', 'rpcrt4', 'dwrite']
 
 if platform.system() == 'Darwin':
