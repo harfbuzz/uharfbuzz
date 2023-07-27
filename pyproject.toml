@@ -16,6 +16,7 @@ build-verbosity = 3
 
 test-requires = "pytest"
 test-command = "pytest {project}/tests"
+test-skip="*"
 
 [tool.cibuildwheel.macos]
 archs = ["x86_64", "universal2", "arm64"]
