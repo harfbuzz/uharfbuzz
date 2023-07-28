@@ -9,6 +9,7 @@ build-backend = "setuptools.build_meta"
 
 [tool.cibuildwheel]
 # only build for 64-bit
+build = ["cp311-win_amd64"]
 skip = ["*-manylinux_i686", "*-musllinux_i686"]
 
 test-requires = "pytest"
