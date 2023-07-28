@@ -28,7 +28,8 @@ if platform.system() != 'Windows':
     define_macros.append(('HAVE_UNISTD_H', '1'))
     define_macros.append(('HAVE_SYS_MMAN_H', '1'))
 else:
-    extra_compile_args.append('/DEBUG:FULL /Z7')
+    extra_compile_options.append('/DEBUG:FULL')
+    extra_compile_options.append('/Z7')
     libraries += ['user32', 'rpcrt4']
 
 if platform.system() == 'Darwin':
