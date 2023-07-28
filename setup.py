@@ -30,6 +30,7 @@ if platform.system() != 'Windows':
 else:
     extra_compile_options.append('/DEBUG:FULL')
     extra_compile_options.append('/Z7')
+    extra_compile_options.append('/bigobj')
     libraries += ['user32', 'rpcrt4']
 
 if platform.system() == 'Darwin':
