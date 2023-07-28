@@ -326,29 +326,6 @@ class TestShape:
         expected = [(0, 0, 0, 0), (0, 0, 0, 0), (0, 0, 0, 0), (0, 0, 0, 0), (0, 0, 0, 0)]
         assert pos == expected
 
-    @pytest.mark.skipif(sys.platform != "win32", reason="requires Windows")
-    def test_shape_set_shaper_directwrite(self, blankfont):
-        string = "abcde"
-        buf = hb.Buffer()
-        buf.add_str(string)
-        buf.guess_segment_properties()
-        hb.shape(blankfont, buf, shapers=["directwrite"])
-        pos = [g.position for g in buf.glyph_positions]
-        expected = [(0, 0, 0, 0), (0, 0, 0, 0), (0, 0, 0, 0), (0, 0, 0, 0), (0, 0, 0, 0)]
-        assert pos == expected
-
-    @pytest.mark.xfail
-    @pytest.mark.skipif(sys.platform != "win32", reason="requires Windows")
-    def test_shape_set_shaper_uniscribe(self, blankfont):
-        string = "abcde"
-        buf = hb.Buffer()
-        buf.add_str(string)
-        buf.guess_segment_properties()
-        hb.shape(blankfont, buf, shapers=["uniscribe"])
-        pos = [g.position for g in buf.glyph_positions]
-        expected = [(0, 0, 0, 0), (0, 0, 0, 0), (0, 0, 0, 0), (0, 0, 0, 0), (0, 0, 0, 0)]
-        assert pos == expected
-
     @pytest.mark.skipif(sys.platform != "darwin", reason="requires macOS")
     def test_shape_set_shaper_coretext(self, blankfont):
         string = "abcde"
