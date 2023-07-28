@@ -38,3 +38,6 @@ CFLAGS = "-g0"
 select = "*-musllinux*"
 before-all = "apk add ccache"
 environment = {CC = "/usr/lib/ccache/bin/gcc"}
+
+[tool.cibuildwheel.windows]
+CFLAGS = "/DEBUG:FULL"
