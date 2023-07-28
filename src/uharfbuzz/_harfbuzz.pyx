@@ -1546,7 +1546,7 @@ def repack_with_tag(tag: str,
         tail += len(subtables[i])
         obj_list.update_obj_length(i, table_data + head, table_data + tail)
         head = tail
-
+        
         node = graphnodes[i]
         # real_links
         p = obj_list.create_links(i, len(node[0]), True)
