@@ -30,6 +30,7 @@ if platform.system() != 'Windows':
 else:
     extra_compile_args.append('/DEBUG:FULL')
     extra_compile_args.append('/Z7')
+    extra_compile_args.append('/Zc:ternary')
     extra_compile_args.append('/bigobj')
     extra_link_args.append('/DEBUG:FULL')
     libraries += ['user32', 'rpcrt4']
