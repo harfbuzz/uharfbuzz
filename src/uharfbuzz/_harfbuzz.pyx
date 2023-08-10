@@ -1,4 +1,5 @@
 #cython: language_level=3
+cimport cython
 import os
 import warnings
 from enum import IntEnum, IntFlag
@@ -648,6 +649,38 @@ cdef class Font:
     def synthetic_slant(self, value: float):
         hb_font_set_synthetic_slant(self._hb_font, value)
 
+    @property
+    def synthetic_bold(self) -> tuple[float, float, bool]:
+        cdef float x_embolden
+        cdef float y_embolden
+        cdef hb_bool_t in_place
+        hb_font_get_synthetic_bold(self._hb_font, &x_embolden, &y_embolden, &in_place)
+        return (x_embolden, y_embolden, bool(in_place))
+
+    @synthetic_bold.setter
+    def synthetic_bold(self, value: float|tuple[float]|tuple[float,float]|tuple[float,float,bool]):
+        cdef float x_embolden
+        cdef float y_embolden
+        cdef hb_bool_t in_place = False
+        if isinstance(value, tuple):
+            if len(value) == 1:
+                x_embolden = y_embolden = value[0]
+            elif len(value) == 2:
+                x_embolden, y_embolden = value
+            else:
+                x_embolden, y_embolden, in_place = value
+        else:
+            x_embolden = y_embolden = value
+        hb_font_set_synthetic_bold(self._hb_font, x_embolden, y_embolden, in_place)
+       
+    @property
+    def var_named_instance(self) -> int:
+        return hb_font_get_var_named_instance(self._hb_font)
+
+    @var_named_instance.setter
+    def var_named_instance(self, value: int):
+        hb_font_set_var_named_instance(self._hb_font, value)
+    
     def set_variations(self, variations: Dict[str, float]) -> None:
         cdef unsigned int size
         cdef hb_variation_t* hb_variations
@@ -667,6 +700,11 @@ cdef class Font:
             hb_font_set_variations(self._hb_font, hb_variations, size)
         finally:
             free(hb_variations)
+
+    def set_variation(self, name: str, value: float) -> None:
+        packed = name.encode()
+        cdef hb_tag_t tag = hb_tag_from_string(packed, -1)
+        hb_font_set_variation(self._hb_font, tag, value)
 
     def get_glyph_name(self, gid: int):
         cdef char name[64]
@@ -760,6 +798,26 @@ cdef class Font:
             hb_font_set_var_coords_normalized(self._hb_font, coords_2dot14, length)
         finally:
             free(coords_2dot14)
+
+    def get_var_coords_design(self):
+        cdef unsigned int length
+        cdef const float *coords
+        coords = hb_font_get_var_coords_design(self._hb_font, &length)
+        return [coords[i] for i in range(length)]
+            
+    def set_var_coords_design(self, coords):
+        cdef unsigned int length
+        cdef cython.float *c_coords
+        length = len(coords)
+        c_coords = <cython.float*>malloc(length * sizeof(cython.float))
+        if c_coords is NULL:
+            raise MemoryError()
+        try:
+            for i in range(length):
+                c_coords[i] = coords[i]
+            hb_font_set_var_coords_design(self._hb_font, c_coords, length)
+        finally:
+            free(c_coords)
 
     def glyph_to_string(self, gid: int):
         cdef char name[64]
