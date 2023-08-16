@@ -335,12 +335,32 @@ cdef extern from "hb.h":
     void hb_font_set_ppem(hb_font_t* font, unsigned int x_ppem, unsigned int y_ppem)
     float hb_font_get_ptem(hb_font_t* font)
     void hb_font_set_ptem(hb_font_t* font, float ptem)
+    void hb_font_get_synthetic_bold (hb_font_t *font,
+                            float *x_embolden,
+                            float *y_embolden,
+                            hb_bool_t *in_place)
+    void hb_font_set_synthetic_bold (hb_font_t *font,
+                            float x_embolden,
+                            float y_embolden,
+                            hb_bool_t in_place)
     float hb_font_get_synthetic_slant (hb_font_t *font)
     void hb_font_set_synthetic_slant (hb_font_t *font, float slant)
     void hb_font_set_variations(
         hb_font_t* font,
         const hb_variation_t* variations,
         unsigned int variations_length)
+    void hb_font_set_variation(
+        hb_font_t *font,
+        hb_tag_t tag,
+        float value);
+    void hb_font_set_var_named_instance (hb_font_t *font, unsigned int instance_index)
+    unsigned int hb_font_get_var_named_instance (hb_font_t *font)
+    void hb_font_set_var_coords_design(
+        hb_font_t *font,
+        const float *coords,
+        unsigned int coords_length)
+    const float * hb_font_get_var_coords_design(
+        hb_font_t *font, unsigned int *length)
     hb_bool_t hb_font_get_glyph_name(
         hb_font_t* font,
         hb_codepoint_t glyph,
