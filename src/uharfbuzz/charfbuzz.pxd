@@ -185,6 +185,7 @@ cdef extern from "hb.h":
         hb_buffer_cluster_level_t cluster_level)
     hb_buffer_cluster_level_t hb_buffer_get_cluster_level(hb_buffer_t *buffer)
     void hb_buffer_destroy(hb_buffer_t* buffer)
+    hb_buffer_t* hb_buffer_reference(hb_buffer_t* buffer)
     ctypedef hb_bool_t (*hb_buffer_message_func_t) (
         hb_buffer_t *buffer,
         hb_font_t *font,
@@ -681,8 +682,7 @@ cdef extern from "hb-subset.h":
         HB_SUBSET_FLAGS_NOTDEF_OUTLINE
         HB_SUBSET_FLAGS_GLYPH_NAMES
         HB_SUBSET_FLAGS_NO_PRUNE_UNICODE_RANGES
-        # Not supported yet: HB_SUBSET_FLAGS_PATCH_MODE
-        # Not supported yet: HB_SUBSET_FLAGS_OMIT_GLYF
+        HB_SUBSET_FLAGS_NO_LAYOUT_CLOSURE
     ctypedef enum hb_subset_sets_t:
         HB_SUBSET_SETS_GLYPH_INDEX
         HB_SUBSET_SETS_UNICODE

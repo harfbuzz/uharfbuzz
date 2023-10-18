@@ -32,7 +32,7 @@ cdef extern from "Python.h":
 
 
 cdef int msgcallback(hb_buffer_t *buffer, hb_font_t *font, const char* message, void* userdata) noexcept:
-    ret = (<object>userdata)(message.decode('utf-8'))
+    ret = (<object>userdata)(message.decode('utf-8'), Buffer.from_ptr(buffer))
     if ret is None:
         return 1
     return ret
@@ -149,6 +149,15 @@ cdef class Buffer:
     def create(cls):
         cdef Buffer inst = cls()
         return inst
+
+    @staticmethod
+    cdef Buffer from_ptr(hb_buffer_t* hb_buffer):
+        """Create Buffer from a pointer."""
+
+        cdef Buffer wrapper = Buffer.__new__(Buffer)
+        wrapper._hb_buffer = hb_buffer_reference(hb_buffer)
+        wrapper._message_callback = None
+        return wrapper
 
     def __len__(self) -> int:
         return hb_buffer_get_length(self._hb_buffer)
@@ -1663,6 +1672,7 @@ class SubsetFlags(IntFlag):
     NOTDEF_OUTLINE = HB_SUBSET_FLAGS_NOTDEF_OUTLINE
     GLYPH_NAMES = HB_SUBSET_FLAGS_GLYPH_NAMES
     NO_PRUNE_UNICODE_RANGES = HB_SUBSET_FLAGS_NO_PRUNE_UNICODE_RANGES
+    NO_LAYOUT_CLOSURE = HB_SUBSET_FLAGS_NO_LAYOUT_CLOSURE
 
 
 cdef class SubsetInput:
