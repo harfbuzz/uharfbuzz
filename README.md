@@ -33,7 +33,7 @@ positions = buf.glyph_positions
 
 for info, pos in zip(infos, positions):
     gid = info.codepoint
-    glyph_name = font.get_glyph_name(gid)
+    glyph_name = font.glyph_to_string(gid)
     cluster = info.cluster
     x_advance = pos.x_advance
     x_offset = pos.x_offset
