@@ -647,6 +647,143 @@ cdef extern from "hb-ot.h":
     # hb-ot-font.h
     void hb_ot_font_set_funcs(hb_font_t* font)
 
+    # hb-ot-math.h
+    ctypedef enum hb_ot_math_constant_t:
+        HB_OT_MATH_CONSTANT_SCRIPT_PERCENT_SCALE_DOWN
+        HB_OT_MATH_CONSTANT_SCRIPT_SCRIPT_PERCENT_SCALE_DOWN
+        HB_OT_MATH_CONSTANT_DELIMITED_SUB_FORMULA_MIN_HEIGHT
+        HB_OT_MATH_CONSTANT_DISPLAY_OPERATOR_MIN_HEIGHT
+        HB_OT_MATH_CONSTANT_MATH_LEADING
+        HB_OT_MATH_CONSTANT_AXIS_HEIGHT
+        HB_OT_MATH_CONSTANT_ACCENT_BASE_HEIGHT
+        HB_OT_MATH_CONSTANT_FLATTENED_ACCENT_BASE_HEIGHT
+        HB_OT_MATH_CONSTANT_SUBSCRIPT_SHIFT_DOWN
+        HB_OT_MATH_CONSTANT_SUBSCRIPT_TOP_MAX
+        HB_OT_MATH_CONSTANT_SUBSCRIPT_BASELINE_DROP_MIN
+        HB_OT_MATH_CONSTANT_SUPERSCRIPT_SHIFT_UP
+        HB_OT_MATH_CONSTANT_SUPERSCRIPT_SHIFT_UP_CRAMPED
+        HB_OT_MATH_CONSTANT_SUPERSCRIPT_BOTTOM_MIN
+        HB_OT_MATH_CONSTANT_SUPERSCRIPT_BASELINE_DROP_MAX
+        HB_OT_MATH_CONSTANT_SUB_SUPERSCRIPT_GAP_MIN
+        HB_OT_MATH_CONSTANT_SUPERSCRIPT_BOTTOM_MAX_WITH_SUBSCRIPT
+        HB_OT_MATH_CONSTANT_SPACE_AFTER_SCRIPT
+        HB_OT_MATH_CONSTANT_UPPER_LIMIT_GAP_MIN
+        HB_OT_MATH_CONSTANT_UPPER_LIMIT_BASELINE_RISE_MIN
+        HB_OT_MATH_CONSTANT_LOWER_LIMIT_GAP_MIN
+        HB_OT_MATH_CONSTANT_LOWER_LIMIT_BASELINE_DROP_MIN
+        HB_OT_MATH_CONSTANT_STACK_TOP_SHIFT_UP
+        HB_OT_MATH_CONSTANT_STACK_TOP_DISPLAY_STYLE_SHIFT_UP
+        HB_OT_MATH_CONSTANT_STACK_BOTTOM_SHIFT_DOWN
+        HB_OT_MATH_CONSTANT_STACK_BOTTOM_DISPLAY_STYLE_SHIFT_DOWN
+        HB_OT_MATH_CONSTANT_STACK_GAP_MIN
+        HB_OT_MATH_CONSTANT_STACK_DISPLAY_STYLE_GAP_MIN
+        HB_OT_MATH_CONSTANT_STRETCH_STACK_TOP_SHIFT_UP
+        HB_OT_MATH_CONSTANT_STRETCH_STACK_BOTTOM_SHIFT_DOWN
+        HB_OT_MATH_CONSTANT_STRETCH_STACK_GAP_ABOVE_MIN
+        HB_OT_MATH_CONSTANT_STRETCH_STACK_GAP_BELOW_MIN
+        HB_OT_MATH_CONSTANT_FRACTION_NUMERATOR_SHIFT_UP
+        HB_OT_MATH_CONSTANT_FRACTION_NUMERATOR_DISPLAY_STYLE_SHIFT_UP
+        HB_OT_MATH_CONSTANT_FRACTION_DENOMINATOR_SHIFT_DOWN
+        HB_OT_MATH_CONSTANT_FRACTION_DENOMINATOR_DISPLAY_STYLE_SHIFT_DOWN
+        HB_OT_MATH_CONSTANT_FRACTION_NUMERATOR_GAP_MIN
+        HB_OT_MATH_CONSTANT_FRACTION_NUM_DISPLAY_STYLE_GAP_MIN
+        HB_OT_MATH_CONSTANT_FRACTION_RULE_THICKNESS
+        HB_OT_MATH_CONSTANT_FRACTION_DENOMINATOR_GAP_MIN
+        HB_OT_MATH_CONSTANT_FRACTION_DENOM_DISPLAY_STYLE_GAP_MIN
+        HB_OT_MATH_CONSTANT_SKEWED_FRACTION_HORIZONTAL_GAP
+        HB_OT_MATH_CONSTANT_SKEWED_FRACTION_VERTICAL_GAP
+        HB_OT_MATH_CONSTANT_OVERBAR_VERTICAL_GAP
+        HB_OT_MATH_CONSTANT_OVERBAR_RULE_THICKNESS
+        HB_OT_MATH_CONSTANT_OVERBAR_EXTRA_ASCENDER
+        HB_OT_MATH_CONSTANT_UNDERBAR_VERTICAL_GAP
+        HB_OT_MATH_CONSTANT_UNDERBAR_RULE_THICKNESS
+        HB_OT_MATH_CONSTANT_UNDERBAR_EXTRA_DESCENDER
+        HB_OT_MATH_CONSTANT_RADICAL_VERTICAL_GAP
+        HB_OT_MATH_CONSTANT_RADICAL_DISPLAY_STYLE_VERTICAL_GAP
+        HB_OT_MATH_CONSTANT_RADICAL_RULE_THICKNESS
+        HB_OT_MATH_CONSTANT_RADICAL_EXTRA_ASCENDER
+        HB_OT_MATH_CONSTANT_RADICAL_KERN_BEFORE_DEGREE
+        HB_OT_MATH_CONSTANT_RADICAL_KERN_AFTER_DEGREE
+        HB_OT_MATH_CONSTANT_RADICAL_DEGREE_BOTTOM_RAISE_PERCENT
+
+    ctypedef enum hb_ot_math_kern_t:
+        HB_OT_MATH_KERN_TOP_RIGHT
+        HB_OT_MATH_KERN_TOP_LEFT
+        HB_OT_MATH_KERN_BOTTOM_RIGHT
+        HB_OT_MATH_KERN_BOTTOM_LEFT
+
+    ctypedef enum hb_ot_math_glyph_part_flags_t:
+        HB_OT_MATH_GLYPH_PART_FLAG_EXTENDER
+
+
+    ctypedef struct hb_ot_math_kern_entry_t:
+        hb_position_t max_correction_height
+        hb_position_t kern_value
+
+    ctypedef struct hb_ot_math_glyph_variant_t:
+        hb_codepoint_t glyph
+        hb_position_t advance
+
+    ctypedef struct hb_ot_math_glyph_part_t:
+        hb_codepoint_t glyph
+        hb_position_t start_connector_length
+        hb_position_t end_connector_length
+        hb_position_t full_advance
+        hb_ot_math_glyph_part_flags_t flags
+
+    hb_bool_t hb_ot_math_has_data(hb_face_t *face)
+
+    hb_position_t hb_ot_math_get_constant(
+        hb_font_t *font,
+        hb_ot_math_constant_t constant)
+
+    hb_position_t hb_ot_math_get_glyph_italics_correction(
+        hb_font_t *font,
+        hb_codepoint_t glyph)
+
+    hb_position_t hb_ot_math_get_glyph_top_accent_attachment(
+        hb_font_t *font,
+        hb_codepoint_t glyph)
+
+    hb_bool_t hb_ot_math_is_glyph_extended_shape(
+        hb_face_t *face,
+        hb_codepoint_t glyph)
+
+    hb_position_t hb_ot_math_get_glyph_kerning(
+        hb_font_t *font,
+        hb_codepoint_t glyph,
+        hb_ot_math_kern_t kern,
+        hb_position_t correction_height)
+
+    unsigned int hb_ot_math_get_glyph_kernings(
+        hb_font_t *font,
+        hb_codepoint_t glyph,
+        hb_ot_math_kern_t kern,
+        unsigned int start_offset,
+        unsigned int *entries_count, # in/out
+        hb_ot_math_kern_entry_t *kern_entries) # out
+
+    unsigned int hb_ot_math_get_glyph_variants(
+        hb_font_t *font,
+        hb_codepoint_t glyph,
+        hb_direction_t direction,
+        unsigned int start_offset,
+        unsigned int *variants_count, # in/out
+        hb_ot_math_glyph_variant_t *variants) # out
+
+    hb_position_t hb_ot_math_get_min_connector_overlap(
+        hb_font_t *font,
+        hb_direction_t direction)
+
+    unsigned int hb_ot_math_get_glyph_assembly(
+        hb_font_t *font,
+        hb_codepoint_t glyph,
+        hb_direction_t direction,
+        unsigned int start_offset,
+        unsigned int *parts_count, # in/out
+        hb_ot_math_glyph_part_t *parts, # out
+        hb_position_t *italics_correction) # out
+
 cdef extern from "hb-subset-repacker.h":
     ctypedef struct hb_link_t:
         unsigned int width
