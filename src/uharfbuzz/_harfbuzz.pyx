@@ -1266,6 +1266,166 @@ def ot_layout_get_baseline(font: Font,
     else:
         return None
 
+def ot_math_has_data(face: Face) -> bool:
+    return hb_ot_math_has_data(face._hb_face)
+
+class OTMathConstant(IntEnum):
+    SCRIPT_PERCENT_SCALE_DOWN = HB_OT_MATH_CONSTANT_SCRIPT_PERCENT_SCALE_DOWN
+    SCRIPT_SCRIPT_PERCENT_SCALE_DOWN = HB_OT_MATH_CONSTANT_SCRIPT_SCRIPT_PERCENT_SCALE_DOWN
+    DELIMITED_SUB_FORMULA_MIN_HEIGHT = HB_OT_MATH_CONSTANT_DELIMITED_SUB_FORMULA_MIN_HEIGHT
+    DISPLAY_OPERATOR_MIN_HEIGHT = HB_OT_MATH_CONSTANT_DISPLAY_OPERATOR_MIN_HEIGHT
+    MATH_LEADING = HB_OT_MATH_CONSTANT_MATH_LEADING
+    AXIS_HEIGHT = HB_OT_MATH_CONSTANT_AXIS_HEIGHT
+    ACCENT_BASE_HEIGHT = HB_OT_MATH_CONSTANT_ACCENT_BASE_HEIGHT
+    FLATTENED_ACCENT_BASE_HEIGHT = HB_OT_MATH_CONSTANT_FLATTENED_ACCENT_BASE_HEIGHT
+    SUBSCRIPT_SHIFT_DOWN = HB_OT_MATH_CONSTANT_SUBSCRIPT_SHIFT_DOWN
+    SUBSCRIPT_TOP_MAX = HB_OT_MATH_CONSTANT_SUBSCRIPT_TOP_MAX
+    SUBSCRIPT_BASELINE_DROP_MIN = HB_OT_MATH_CONSTANT_SUBSCRIPT_BASELINE_DROP_MIN
+    SUPERSCRIPT_SHIFT_UP = HB_OT_MATH_CONSTANT_SUPERSCRIPT_SHIFT_UP
+    SUPERSCRIPT_SHIFT_UP_CRAMPED = HB_OT_MATH_CONSTANT_SUPERSCRIPT_SHIFT_UP_CRAMPED
+    SUPERSCRIPT_BOTTOM_MIN = HB_OT_MATH_CONSTANT_SUPERSCRIPT_BOTTOM_MIN
+    SUPERSCRIPT_BASELINE_DROP_MAX = HB_OT_MATH_CONSTANT_SUPERSCRIPT_BASELINE_DROP_MAX
+    SUB_SUPERSCRIPT_GAP_MIN = HB_OT_MATH_CONSTANT_SUB_SUPERSCRIPT_GAP_MIN
+    SUPERSCRIPT_BOTTOM_MAX_WITH_SUBSCRIPT = HB_OT_MATH_CONSTANT_SUPERSCRIPT_BOTTOM_MAX_WITH_SUBSCRIPT
+    SPACE_AFTER_SCRIPT = HB_OT_MATH_CONSTANT_SPACE_AFTER_SCRIPT
+    UPPER_LIMIT_GAP_MIN = HB_OT_MATH_CONSTANT_UPPER_LIMIT_GAP_MIN
+    UPPER_LIMIT_BASELINE_RISE_MIN = HB_OT_MATH_CONSTANT_UPPER_LIMIT_BASELINE_RISE_MIN
+    LOWER_LIMIT_GAP_MIN = HB_OT_MATH_CONSTANT_LOWER_LIMIT_GAP_MIN
+    LOWER_LIMIT_BASELINE_DROP_MIN = HB_OT_MATH_CONSTANT_LOWER_LIMIT_BASELINE_DROP_MIN
+    STACK_TOP_SHIFT_UP = HB_OT_MATH_CONSTANT_STACK_TOP_SHIFT_UP
+    STACK_TOP_DISPLAY_STYLE_SHIFT_UP = HB_OT_MATH_CONSTANT_STACK_TOP_DISPLAY_STYLE_SHIFT_UP
+    STACK_BOTTOM_SHIFT_DOWN = HB_OT_MATH_CONSTANT_STACK_BOTTOM_SHIFT_DOWN
+    STACK_BOTTOM_DISPLAY_STYLE_SHIFT_DOWN = HB_OT_MATH_CONSTANT_STACK_BOTTOM_DISPLAY_STYLE_SHIFT_DOWN
+    STACK_GAP_MIN = HB_OT_MATH_CONSTANT_STACK_GAP_MIN
+    STACK_DISPLAY_STYLE_GAP_MIN = HB_OT_MATH_CONSTANT_STACK_DISPLAY_STYLE_GAP_MIN
+    STRETCH_STACK_TOP_SHIFT_UP = HB_OT_MATH_CONSTANT_STRETCH_STACK_TOP_SHIFT_UP
+    STRETCH_STACK_BOTTOM_SHIFT_DOWN = HB_OT_MATH_CONSTANT_STRETCH_STACK_BOTTOM_SHIFT_DOWN
+    STRETCH_STACK_GAP_ABOVE_MIN = HB_OT_MATH_CONSTANT_STRETCH_STACK_GAP_ABOVE_MIN
+    STRETCH_STACK_GAP_BELOW_MIN = HB_OT_MATH_CONSTANT_STRETCH_STACK_GAP_BELOW_MIN
+    FRACTION_NUMERATOR_SHIFT_UP = HB_OT_MATH_CONSTANT_FRACTION_NUMERATOR_SHIFT_UP
+    FRACTION_NUMERATOR_DISPLAY_STYLE_SHIFT_UP = HB_OT_MATH_CONSTANT_FRACTION_NUMERATOR_DISPLAY_STYLE_SHIFT_UP
+    FRACTION_DENOMINATOR_SHIFT_DOWN = HB_OT_MATH_CONSTANT_FRACTION_DENOMINATOR_SHIFT_DOWN
+    FRACTION_DENOMINATOR_DISPLAY_STYLE_SHIFT_DOWN = HB_OT_MATH_CONSTANT_FRACTION_DENOMINATOR_DISPLAY_STYLE_SHIFT_DOWN
+    FRACTION_NUMERATOR_GAP_MIN = HB_OT_MATH_CONSTANT_FRACTION_NUMERATOR_GAP_MIN
+    FRACTION_NUM_DISPLAY_STYLE_GAP_MIN = HB_OT_MATH_CONSTANT_FRACTION_NUM_DISPLAY_STYLE_GAP_MIN
+    FRACTION_RULE_THICKNESS = HB_OT_MATH_CONSTANT_FRACTION_RULE_THICKNESS
+    FRACTION_DENOMINATOR_GAP_MIN = HB_OT_MATH_CONSTANT_FRACTION_DENOMINATOR_GAP_MIN
+    FRACTION_DENOM_DISPLAY_STYLE_GAP_MIN = HB_OT_MATH_CONSTANT_FRACTION_DENOM_DISPLAY_STYLE_GAP_MIN
+    SKEWED_FRACTION_HORIZONTAL_GAP = HB_OT_MATH_CONSTANT_SKEWED_FRACTION_HORIZONTAL_GAP
+    SKEWED_FRACTION_VERTICAL_GAP = HB_OT_MATH_CONSTANT_SKEWED_FRACTION_VERTICAL_GAP
+    OVERBAR_VERTICAL_GAP = HB_OT_MATH_CONSTANT_OVERBAR_VERTICAL_GAP
+    OVERBAR_RULE_THICKNESS = HB_OT_MATH_CONSTANT_OVERBAR_RULE_THICKNESS
+    OVERBAR_EXTRA_ASCENDER = HB_OT_MATH_CONSTANT_OVERBAR_EXTRA_ASCENDER
+    UNDERBAR_VERTICAL_GAP = HB_OT_MATH_CONSTANT_UNDERBAR_VERTICAL_GAP
+    UNDERBAR_RULE_THICKNESS = HB_OT_MATH_CONSTANT_UNDERBAR_RULE_THICKNESS
+    UNDERBAR_EXTRA_DESCENDER = HB_OT_MATH_CONSTANT_UNDERBAR_EXTRA_DESCENDER
+    RADICAL_VERTICAL_GAP = HB_OT_MATH_CONSTANT_RADICAL_VERTICAL_GAP
+    RADICAL_DISPLAY_STYLE_VERTICAL_GAP = HB_OT_MATH_CONSTANT_RADICAL_DISPLAY_STYLE_VERTICAL_GAP
+    RADICAL_RULE_THICKNESS = HB_OT_MATH_CONSTANT_RADICAL_RULE_THICKNESS
+    RADICAL_EXTRA_ASCENDER = HB_OT_MATH_CONSTANT_RADICAL_EXTRA_ASCENDER
+    RADICAL_KERN_BEFORE_DEGREE = HB_OT_MATH_CONSTANT_RADICAL_KERN_BEFORE_DEGREE
+    RADICAL_KERN_AFTER_DEGREE = HB_OT_MATH_CONSTANT_RADICAL_KERN_AFTER_DEGREE
+    RADICAL_DEGREE_BOTTOM_RAISE_PERCENT = HB_OT_MATH_CONSTANT_RADICAL_DEGREE_BOTTOM_RAISE_PERCENT
+
+def ot_math_get_constant(font: Font, constant: OTMathConstant) -> int:
+    return hb_ot_math_get_constant(font._hb_font, constant)
+
+def ot_math_get_glyph_italics_correction(font: Font, glyph: int) -> int:
+    return hb_ot_math_get_glyph_italics_correction(font._hb_font, glyph)
+
+def ot_math_get_glyph_top_accent_attachment(font: Font, glyph: int) -> int:
+    return hb_ot_math_get_glyph_top_accent_attachment(font._hb_font, glyph)
+
+def ot_math_is_glyph_extended_shape(face: Face, glyph: int) -> bool:
+    return hb_ot_math_is_glyph_extended_shape(face._hb_face, glyph)
+
+def ot_math_get_min_connector_overlap(font: Font, direction: str) -> int:
+    cdef bytes packed = direction.encode()
+    cdef char* cstr = packed
+    cdef hb_direction_t hb_direction = hb_direction_from_string(cstr, -1)
+    return hb_ot_math_get_min_connector_overlap(font._hb_font, hb_direction)
+
+class OTMathKern(IntEnum):
+    TOP_RIGHT = HB_OT_MATH_KERN_TOP_RIGHT
+    TOP_LEFT = HB_OT_MATH_KERN_TOP_LEFT
+    BOTTOM_RIGHT = HB_OT_MATH_KERN_BOTTOM_RIGHT
+    BOTTOM_LEFT = HB_OT_MATH_KERN_BOTTOM_LEFT
+
+def ot_math_get_glyph_kerning(font: Font,
+                              glyph: int,
+                              kern: OTMathKern,
+                              int correction_height) -> int:
+    return hb_ot_math_get_glyph_kerning(font._hb_font, glyph, kern, correction_height)
+
+OTMathKernEntry = namedtuple("OTMathKernEntry", ["max_correction_height", "kern_value"])
+
+def ot_math_get_glyph_kernings(font: Font,
+                               glyph: int,
+                               kern: OTMathKern) -> List[OTMathKernEntry]:
+    cdef unsigned int count = STATIC_TAGS_ARRAY_SIZE
+    cdef hb_ot_math_kern_entry_t kerns_array[STATIC_TAGS_ARRAY_SIZE]
+    cdef list kerns = []
+    cdef unsigned int i
+    cdef unsigned int start_offset = 0
+    while count == STATIC_TAGS_ARRAY_SIZE:
+        hb_ot_math_get_glyph_kernings(font._hb_font, glyph, kern, start_offset,
+            &count, kerns_array)
+        for i in range(count):
+            kerns.append(OTMathKernEntry(kerns_array[i].max_correction_height, kerns_array[i].kern_value))
+        start_offset += count
+    return kerns
+
+OTMathGlyphVariant = namedtuple("OTMathGlyphVariant", ["glyph", "advance"])
+
+def ot_math_get_glyph_variants(font: Font, glyph: int, direction: str) -> List[OTMathGlyphVariants]:
+    cdef bytes packed = direction.encode()
+    cdef char* cstr = packed
+    cdef hb_direction_t hb_direction = hb_direction_from_string(cstr, -1)
+    cdef unsigned int count = STATIC_TAGS_ARRAY_SIZE
+    cdef hb_ot_math_glyph_variant_t variants_array[STATIC_TAGS_ARRAY_SIZE]
+    cdef list variants = []
+    cdef unsigned int i
+    cdef unsigned int start_offset = 0
+    while count == STATIC_TAGS_ARRAY_SIZE:
+        hb_ot_math_get_glyph_variants(font._hb_font, glyph, hb_direction, start_offset,
+            &count, variants_array)
+        for i in range(count):
+            variants.append(OTMathGlyphVariant(variants_array[i].glyph, variants_array[i].advance))
+        start_offset += count
+    return variants
+
+class OTMathGlyphPartFlags(IntFlag):
+    EXTENDER = HB_OT_MATH_GLYPH_PART_FLAG_EXTENDER
+
+OTMathGlyphPart = namedtuple(
+    "OTMathGlyphPart",
+    ["glyph", "start_connector_length", "end_connector_length", "full_advance", "flags"]
+)
+
+def ot_math_get_glyph_assembly(font: Font,
+                               glyph: int,
+                               direction: str) -> Tuple[List[OTMathGlyphPart], int]:
+    cdef bytes packed = direction.encode()
+    cdef char* cstr = packed
+    cdef hb_direction_t hb_direction = hb_direction_from_string(cstr, -1)
+    cdef unsigned int count = STATIC_TAGS_ARRAY_SIZE
+    cdef hb_ot_math_glyph_part_t assembly_array[STATIC_TAGS_ARRAY_SIZE]
+    cdef list assembly = []
+    cdef unsigned int i
+    cdef unsigned int start_offset = 0
+    cdef hb_position_t italics_correction = 0
+    while count == STATIC_TAGS_ARRAY_SIZE:
+        hb_ot_math_get_glyph_assembly(font._hb_font,
+            glyph, hb_direction, start_offset,
+            &count, assembly_array, &italics_correction)
+        for i in range(count):
+            assembly.append(
+                OTMathGlyphPart(assembly_array[i].glyph, assembly_array[i].start_connector_length,
+                    assembly_array[i].end_connector_length, assembly_array[i].full_advance,
+                    OTMathGlyphPartFlags(assembly_array[i].flags)))
+        start_offset += count
+    return assembly, italics_correction
+
 def ot_font_set_funcs(Font font):
     hb_ot_font_set_funcs(font._hb_font)
 
