@@ -46,7 +46,7 @@ cdef extern from "hb.h":
     void hb_tag_to_string(hb_tag_t tag, char* buf)
     hb_language_t hb_ot_tag_to_language(hb_tag_t tag)
     hb_script_t hb_ot_tag_to_script(hb_tag_t tag)
-    const char* hb_version_string();
+    const char* hb_version_string()
 
     ctypedef struct hb_user_data_key_t:
         pass
@@ -147,8 +147,8 @@ cdef extern from "hb.h":
 
     hb_buffer_t* hb_buffer_create()
     hb_bool_t hb_buffer_allocation_successful(hb_buffer_t* buffer)
-    void hb_buffer_reset (hb_buffer_t *buffer)
-    void hb_buffer_clear_contents (hb_buffer_t *buffer)
+    void hb_buffer_reset(hb_buffer_t *buffer)
+    void hb_buffer_clear_contents(hb_buffer_t *buffer)
     void hb_buffer_add_codepoints(
         hb_buffer_t* buffer,
         const hb_codepoint_t* text, int text_length,
@@ -172,7 +172,7 @@ cdef extern from "hb.h":
     void hb_buffer_guess_segment_properties(hb_buffer_t* buffer)
     hb_direction_t hb_buffer_get_direction(hb_buffer_t* buffer)
     void hb_buffer_set_direction(hb_buffer_t* buffer, hb_direction_t direction)
-    unsigned int hb_buffer_get_length (const hb_buffer_t *buffer)
+    unsigned int hb_buffer_get_length(const hb_buffer_t *buffer)
     hb_glyph_info_t* hb_buffer_get_glyph_infos(
         hb_buffer_t* buffer, unsigned int* length)
     hb_glyph_position_t* hb_buffer_get_glyph_positions(
@@ -190,21 +190,21 @@ cdef extern from "hb.h":
         hb_font_t *font,
         const char *message,
         void *user_data)
-    void hb_buffer_set_message_func (
+    void hb_buffer_set_message_func(
         hb_buffer_t *buffer,
         hb_buffer_message_func_t func,
         void *user_data,
         void* destroy)
-    void hb_buffer_set_flags (hb_buffer_t *buffer, hb_buffer_flags_t  flags)
-    hb_buffer_flags_t hb_buffer_get_flags (const hb_buffer_t *buffer)
-    void hb_buffer_set_content_type (hb_buffer_t *buffer, hb_buffer_content_type_t  content_type)
-    hb_buffer_content_type_t hb_buffer_get_content_type (const hb_buffer_t *buffer)
-    void hb_buffer_set_replacement_codepoint (hb_buffer_t *buffer, hb_codepoint_t  replacement)
-    hb_codepoint_t hb_buffer_get_replacement_codepoint (const hb_buffer_t *buffer)
-    void hb_buffer_set_invisible_glyph (hb_buffer_t *buffer, hb_codepoint_t  invisible)
-    hb_codepoint_t hb_buffer_get_invisible_glyph (const hb_buffer_t *buffer)
-    void hb_buffer_set_not_found_glyph (hb_buffer_t *buffer, hb_codepoint_t  not_found)
-    hb_codepoint_t hb_buffer_get_not_found_glyph (const hb_buffer_t *buffer)
+    void hb_buffer_set_flags(hb_buffer_t *buffer, hb_buffer_flags_t  flags)
+    hb_buffer_flags_t hb_buffer_get_flags(const hb_buffer_t *buffer)
+    void hb_buffer_set_content_type(hb_buffer_t *buffer, hb_buffer_content_type_t  content_type)
+    hb_buffer_content_type_t hb_buffer_get_content_type(const hb_buffer_t *buffer)
+    void hb_buffer_set_replacement_codepoint(hb_buffer_t *buffer, hb_codepoint_t  replacement)
+    hb_codepoint_t hb_buffer_get_replacement_codepoint(const hb_buffer_t *buffer)
+    void hb_buffer_set_invisible_glyph(hb_buffer_t *buffer, hb_codepoint_t  invisible)
+    hb_codepoint_t hb_buffer_get_invisible_glyph(const hb_buffer_t *buffer)
+    void hb_buffer_set_not_found_glyph(hb_buffer_t *buffer, hb_codepoint_t  not_found)
+    hb_codepoint_t hb_buffer_get_not_found_glyph(const hb_buffer_t *buffer)
 
 
     # hb-face.h
@@ -217,12 +217,12 @@ cdef extern from "hb.h":
     hb_face_t* hb_face_create_for_tables(
         hb_reference_table_func_t reference_table_func,
         void* user_data, hb_destroy_func_t destroy)
-    unsigned int hb_face_get_index (const hb_face_t* face)
-    void hb_face_set_index (hb_face_t* face, unsigned int index)
+    unsigned int hb_face_get_index(const hb_face_t* face)
+    void hb_face_set_index(hb_face_t* face, unsigned int index)
     unsigned int hb_face_get_upem(hb_face_t* face)
     void hb_face_set_upem(hb_face_t* face, unsigned int upem)
-    unsigned int hb_face_get_glyph_count (hb_face_t* face);
-    void hb_face_set_glyph_count (hb_face_t* face, unsigned int glyph_count)
+    unsigned int hb_face_get_glyph_count(hb_face_t* face)
+    void hb_face_set_glyph_count(hb_face_t* face, unsigned int glyph_count)
     void* hb_face_get_user_data(hb_face_t* face, hb_user_data_key_t* key)
     hb_bool_t hb_face_set_user_data(
         hb_face_t* face,
@@ -230,16 +230,16 @@ cdef extern from "hb.h":
         void* data, hb_destroy_func_t destroy,
         hb_bool_t replace)
     void hb_face_destroy(hb_face_t* face)
-    hb_blob_t* hb_face_reference_blob (hb_face_t *face)
+    hb_blob_t* hb_face_reference_blob(hb_face_t *face)
     hb_face_t* hb_face_get_empty()
-    unsigned int hb_face_get_table_tags (
+    unsigned int hb_face_get_table_tags(
         const hb_face_t *face,
         unsigned int  start_offset,
         unsigned int *table_count,
         hb_tag_t     *table_tags)
-    void hb_face_collect_unicodes (hb_face_t *face, hb_set_t *out)
-    void hb_face_collect_variation_selectors (hb_face_t *face, hb_set_t *out)
-    void hb_face_collect_variation_unicodes (hb_face_t *face, hb_codepoint_t variation_selector, hb_set_t *out)
+    void hb_face_collect_unicodes(hb_face_t *face, hb_set_t *out)
+    void hb_face_collect_variation_selectors(hb_face_t *face, hb_set_t *out)
+    void hb_face_collect_variation_unicodes(hb_face_t *face, hb_codepoint_t variation_selector, hb_set_t *out)
 
 
     # hb-font.h
@@ -251,19 +251,19 @@ cdef extern from "hb.h":
         hb_font_t* font, void* font_data,
         hb_codepoint_t unicode,
         hb_codepoint_t* glyph,
-        void* user_data);
+        void* user_data)
     ctypedef hb_position_t (*hb_font_get_glyph_advance_func_t) (
         hb_font_t* font, void* font_data,
         hb_codepoint_t glyph,
         void* user_data)
-    ctypedef hb_font_get_glyph_advance_func_t hb_font_get_glyph_h_advance_func_t;
-    ctypedef hb_font_get_glyph_advance_func_t hb_font_get_glyph_v_advance_func_t;
+    ctypedef hb_font_get_glyph_advance_func_t hb_font_get_glyph_h_advance_func_t
+    ctypedef hb_font_get_glyph_advance_func_t hb_font_get_glyph_v_advance_func_t
     ctypedef hb_bool_t (*hb_font_get_glyph_origin_func_t) (
         hb_font_t* font, void* font_data,
         hb_codepoint_t glyph,
         hb_position_t* x, hb_position_t* y,
         void* user_data)
-    ctypedef hb_font_get_glyph_origin_func_t hb_font_get_glyph_v_origin_func_t;
+    ctypedef hb_font_get_glyph_origin_func_t hb_font_get_glyph_v_origin_func_t
     ctypedef hb_bool_t (*hb_font_get_glyph_name_func_t) (
         hb_font_t *font, void *font_data,
         hb_codepoint_t glyph,
@@ -273,8 +273,8 @@ cdef extern from "hb.h":
         hb_font_t *font, void *font_data,
         hb_font_extents_t *extents,
         void *user_data)
-    ctypedef hb_font_get_font_extents_func_t hb_font_get_font_h_extents_func_t;
-    ctypedef hb_font_get_font_extents_func_t hb_font_get_font_v_extents_func_t;
+    ctypedef hb_font_get_font_extents_func_t hb_font_get_font_h_extents_func_t
+    ctypedef hb_font_get_font_extents_func_t hb_font_get_font_v_extents_func_t
     ctypedef struct hb_variation_t:
         hb_tag_t tag
         float value
@@ -305,7 +305,7 @@ cdef extern from "hb.h":
         hb_font_funcs_t* ffuncs,
         hb_font_get_glyph_v_origin_func_t func,
         void* user_data, hb_destroy_func_t destroy)
-    void hb_font_funcs_set_glyph_name_func (
+    void hb_font_funcs_set_glyph_name_func(
         hb_font_funcs_t* ffuncs,
         hb_font_get_glyph_name_func_t func,
         void* user_data, hb_destroy_func_t destroy)
@@ -335,16 +335,16 @@ cdef extern from "hb.h":
     void hb_font_set_ppem(hb_font_t* font, unsigned int x_ppem, unsigned int y_ppem)
     float hb_font_get_ptem(hb_font_t* font)
     void hb_font_set_ptem(hb_font_t* font, float ptem)
-    void hb_font_get_synthetic_bold (hb_font_t *font,
+    void hb_font_get_synthetic_bold(hb_font_t *font,
                             float *x_embolden,
                             float *y_embolden,
                             hb_bool_t *in_place)
-    void hb_font_set_synthetic_bold (hb_font_t *font,
+    void hb_font_set_synthetic_bold(hb_font_t *font,
                             float x_embolden,
                             float y_embolden,
                             hb_bool_t in_place)
-    float hb_font_get_synthetic_slant (hb_font_t *font)
-    void hb_font_set_synthetic_slant (hb_font_t *font, float slant)
+    float hb_font_get_synthetic_slant(hb_font_t *font)
+    void hb_font_set_synthetic_slant(hb_font_t *font, float slant)
     void hb_font_set_variations(
         hb_font_t* font,
         const hb_variation_t* variations,
@@ -352,9 +352,9 @@ cdef extern from "hb.h":
     void hb_font_set_variation(
         hb_font_t *font,
         hb_tag_t tag,
-        float value);
-    void hb_font_set_var_named_instance (hb_font_t *font, unsigned int instance_index)
-    unsigned int hb_font_get_var_named_instance (hb_font_t *font)
+        float value)
+    void hb_font_set_var_named_instance(hb_font_t *font, unsigned int instance_index)
+    unsigned int hb_font_get_var_named_instance(hb_font_t *font)
     void hb_font_set_var_coords_design(
         hb_font_t *font,
         const float *coords,
@@ -446,7 +446,7 @@ cdef extern from "hb.h":
         hb_draw_state_t *st,
         float to_x,
         float to_y,
-        void *user_data);
+        void *user_data)
 
     ctypedef void (*hb_draw_line_to_func_t) (
         hb_draw_funcs_t *dfuncs,
@@ -454,7 +454,7 @@ cdef extern from "hb.h":
         hb_draw_state_t *st,
         float to_x,
         float to_y,
-        void *user_data);
+        void *user_data)
 
     ctypedef void (*hb_draw_quadratic_to_func_t) (
         hb_draw_funcs_t *dfuncs,
@@ -464,7 +464,7 @@ cdef extern from "hb.h":
         float control_y,
         float to_x,
         float to_y,
-        void *user_data);
+        void *user_data)
 
     ctypedef void (*hb_draw_cubic_to_func_t) (
         hb_draw_funcs_t *dfuncs,
@@ -476,33 +476,33 @@ cdef extern from "hb.h":
         float control2_y,
         float to_x,
         float to_y,
-        void *user_data);
+        void *user_data)
 
     ctypedef void (*hb_draw_close_path_func_t) (
         hb_draw_funcs_t *dfuncs,
         void *draw_data,
         hb_draw_state_t *st,
-        void *user_data);
+        void *user_data)
 
-    void hb_draw_funcs_set_move_to_func (
+    void hb_draw_funcs_set_move_to_func(
         hb_draw_funcs_t* dfuncs,
         hb_draw_move_to_func_t func,
         void *user_data,
         hb_destroy_func_t destroy)
 
-    void hb_draw_funcs_set_line_to_func (
+    void hb_draw_funcs_set_line_to_func(
         hb_draw_funcs_t* dfuncs,
         hb_draw_line_to_func_t func,
         void *user_data,
         hb_destroy_func_t destroy)
 
-    void hb_draw_funcs_set_quadratic_to_func (
+    void hb_draw_funcs_set_quadratic_to_func(
         hb_draw_funcs_t* dfuncs,
         hb_draw_quadratic_to_func_t func,
         void *user_data,
         hb_destroy_func_t destroy)
 
-    void hb_draw_funcs_set_cubic_to_func (
+    void hb_draw_funcs_set_cubic_to_func(
         hb_draw_funcs_t* dfuncs,
         hb_draw_cubic_to_func_t func,
         void *user_data,
@@ -530,7 +530,7 @@ cdef extern from "hb.h":
         hb_buffer_t* buffer,
         const hb_feature_t* features, unsigned int num_features)
 
-    hb_bool_t hb_shape_full (
+    hb_bool_t hb_shape_full(
         hb_font_t *font,
         hb_buffer_t *buffer,
         const hb_feature_t *features,
@@ -566,40 +566,40 @@ cdef extern from "hb.h":
     ctypedef struct hb_set_t:
         pass
     cdef hb_codepoint_t HB_SET_VALUE_INVALID
-    hb_set_t* hb_set_create();
-    hb_set_t* hb_set_get_empty();
-    hb_set_t* hb_set_reference(hb_set_t* set);
-    void hb_set_destroy(hb_set_t* set);
-    hb_bool_t hb_set_set_user_data(hb_set_t* set, hb_user_data_key_t* key, void* data, hb_destroy_func_t destroy, hb_bool_t replace);
-    void* hb_set_get_user_data(const hb_set_t* set, hb_user_data_key_t* key);
-    hb_bool_t hb_set_allocation_successful(const hb_set_t* set);
-    hb_set_t* hb_set_copy(const hb_set_t* set);
-    void hb_set_clear(hb_set_t* set);
-    hb_bool_t hb_set_is_empty(const hb_set_t* set);
-    void hb_set_invert(hb_set_t* set);
-    hb_bool_t hb_set_is_inverted(const hb_set_t* set);
-    hb_bool_t hb_set_has(const hb_set_t* set, hb_codepoint_t codepoint);
-    void hb_set_add(hb_set_t* set, hb_codepoint_t codepoint);
-    void hb_set_add_range(hb_set_t* set, hb_codepoint_t first, hb_codepoint_t last);
-    void hb_set_add_sorted_array(hb_set_t* set, const hb_codepoint_t* sorted_codepoints, unsigned int num_codepoints);
-    void hb_set_del(hb_set_t* set, hb_codepoint_t codepoint);
-    void hb_set_del_range(hb_set_t* set, hb_codepoint_t first, hb_codepoint_t last);
-    hb_bool_t hb_set_is_equal(const hb_set_t* set, const hb_set_t* other);
-    unsigned int hb_set_hash(const hb_set_t* set);
-    hb_bool_t hb_set_is_subset(const hb_set_t* set, const hb_set_t* larger_set);
-    void hb_set_set(hb_set_t* set, const hb_set_t* other);
-    void hb_set_union(hb_set_t* set, const hb_set_t* other);
-    void hb_set_intersect(hb_set_t* set, const hb_set_t* other);
-    void hb_set_subtract(hb_set_t* set, const hb_set_t* other);
-    void hb_set_symmetric_difference(hb_set_t* set, const hb_set_t* other);
-    unsigned int hb_set_get_population(const hb_set_t* set);
-    hb_codepoint_t hb_set_get_min(const hb_set_t* set);
-    hb_codepoint_t hb_set_get_max(const hb_set_t* set);
-    hb_bool_t hb_set_next(const hb_set_t* set, hb_codepoint_t* codepoint);
-    hb_bool_t hb_set_previous(const hb_set_t* set, hb_codepoint_t* codepoint);
-    hb_bool_t hb_set_next_range(const hb_set_t* set, hb_codepoint_t* first, hb_codepoint_t* last);
-    hb_bool_t hb_set_previous_range(const hb_set_t* set, hb_codepoint_t* first, hb_codepoint_t* last);
-    unsigned int hb_set_next_many(const hb_set_t* set, hb_codepoint_t codepoint, hb_codepoint_t* out, unsigned int size);
+    hb_set_t* hb_set_create()
+    hb_set_t* hb_set_get_empty()
+    hb_set_t* hb_set_reference(hb_set_t* set)
+    void hb_set_destroy(hb_set_t* set)
+    hb_bool_t hb_set_set_user_data(hb_set_t* set, hb_user_data_key_t* key, void* data, hb_destroy_func_t destroy, hb_bool_t replace)
+    void* hb_set_get_user_data(const hb_set_t* set, hb_user_data_key_t* key)
+    hb_bool_t hb_set_allocation_successful(const hb_set_t* set)
+    hb_set_t* hb_set_copy(const hb_set_t* set)
+    void hb_set_clear(hb_set_t* set)
+    hb_bool_t hb_set_is_empty(const hb_set_t* set)
+    void hb_set_invert(hb_set_t* set)
+    hb_bool_t hb_set_is_inverted(const hb_set_t* set)
+    hb_bool_t hb_set_has(const hb_set_t* set, hb_codepoint_t codepoint)
+    void hb_set_add(hb_set_t* set, hb_codepoint_t codepoint)
+    void hb_set_add_range(hb_set_t* set, hb_codepoint_t first, hb_codepoint_t last)
+    void hb_set_add_sorted_array(hb_set_t* set, const hb_codepoint_t* sorted_codepoints, unsigned int num_codepoints)
+    void hb_set_del(hb_set_t* set, hb_codepoint_t codepoint)
+    void hb_set_del_range(hb_set_t* set, hb_codepoint_t first, hb_codepoint_t last)
+    hb_bool_t hb_set_is_equal(const hb_set_t* set, const hb_set_t* other)
+    unsigned int hb_set_hash(const hb_set_t* set)
+    hb_bool_t hb_set_is_subset(const hb_set_t* set, const hb_set_t* larger_set)
+    void hb_set_set(hb_set_t* set, const hb_set_t* other)
+    void hb_set_union(hb_set_t* set, const hb_set_t* other)
+    void hb_set_intersect(hb_set_t* set, const hb_set_t* other)
+    void hb_set_subtract(hb_set_t* set, const hb_set_t* other)
+    void hb_set_symmetric_difference(hb_set_t* set, const hb_set_t* other)
+    unsigned int hb_set_get_population(const hb_set_t* set)
+    hb_codepoint_t hb_set_get_min(const hb_set_t* set)
+    hb_codepoint_t hb_set_get_max(const hb_set_t* set)
+    hb_bool_t hb_set_next(const hb_set_t* set, hb_codepoint_t* codepoint)
+    hb_bool_t hb_set_previous(const hb_set_t* set, hb_codepoint_t* codepoint)
+    hb_bool_t hb_set_next_range(const hb_set_t* set, hb_codepoint_t* first, hb_codepoint_t* last)
+    hb_bool_t hb_set_previous_range(const hb_set_t* set, hb_codepoint_t* first, hb_codepoint_t* last)
+    unsigned int hb_set_next_many(const hb_set_t* set, hb_codepoint_t codepoint, hb_codepoint_t* out, unsigned int size)
 
 
 cdef extern from "hb-ot.h":
@@ -660,7 +660,7 @@ cdef extern from "hb-subset-repacker.h":
         unsigned int num_virtual_links
         hb_link_t *virtual_links
 
-    hb_blob_t* hb_subset_repack_or_fail (
+    hb_blob_t* hb_subset_repack_or_fail(
         hb_tag_t table_tag,
         hb_object_t* hb_objects,
         unsigned int num_hb_objs)
