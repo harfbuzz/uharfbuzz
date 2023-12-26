@@ -201,17 +201,35 @@ class TestBlob:
 
 
 class TestFace:
-
     def test_properties(self, blankfont):
-
         face = blankfont.face
 
         assert face.index == 0
         assert face.upem == 1000
         assert face.glyph_count == 9
-        assert face.table_tags == ['BASE', 'GPOS', 'GSUB', 'OS/2', 'cmap', 'cvt ', 'fpgm', 'gasp', 'glyf', 'head', 'hhea', 'hmtx', 'loca', 'maxp', 'name', 'post', 'prep']
+        assert face.table_tags == [
+            "BASE",
+            "GPOS",
+            "GSUB",
+            "OS/2",
+            "cmap",
+            "cvt ",
+            "fpgm",
+            "gasp",
+            "glyf",
+            "head",
+            "hhea",
+            "hmtx",
+            "loca",
+            "maxp",
+            "name",
+            "post",
+            "prep",
+        ]
 
-        assert face.unicodes == hb.Set({0x61, 0x62, 0x63, 0x64, 0x65, 0xe7, 0x431, 0x1f4a9})
+        assert face.unicodes == hb.Set(
+            {0x61, 0x62, 0x63, 0x64, 0x65, 0xE7, 0x431, 0x1F4A9}
+        )
         assert face.variation_selectors == hb.Set()
         assert face.variation_unicodes(1) == hb.Set()
 
@@ -228,12 +246,12 @@ class TestFont:
         assert opensans.get_glyph_extents(1000) is None
 
     def test_get_font_extents(self, blankfont):
-        extents = blankfont.get_font_extents('ltr')
+        extents = blankfont.get_font_extents("ltr")
         assert (880, -120, 0) == extents
         assert 880 == extents.ascender
         assert -120 == extents.descender
         assert 0 == extents.line_gap
-        extents = blankfont.get_font_extents('ttb')
+        extents = blankfont.get_font_extents("ttb")
         assert (500, -500, 0) == extents
         assert 500 == extents.ascender
         assert -500 == extents.descender
@@ -279,7 +297,6 @@ class TestFont:
             mutatorsans.set_var_coords_normalized(["a"])
 
     def test_properties(self, blankfont):
-
         assert blankfont.scale == (1000, 1000)
         blankfont.scale = (1024, 1024)
         assert blankfont.scale == (1024, 1024)
@@ -289,12 +306,12 @@ class TestFont:
         assert blankfont.ppem == (16, 24)
 
         assert blankfont.ptem == 0
-        blankfont.ptem = 12.
-        assert blankfont.ptem == 12.
+        blankfont.ptem = 12.0
+        assert blankfont.ptem == 12.0
 
         assert blankfont.synthetic_slant == 0
-        blankfont.synthetic_slant = .2
-        assert blankfont.synthetic_slant == pytest.approx(.2)
+        blankfont.synthetic_slant = 0.2
+        assert blankfont.synthetic_slant == pytest.approx(0.2)
 
 
 class TestShape:
@@ -323,7 +340,13 @@ class TestShape:
         buf.guess_segment_properties()
         hb.shape(blankfont, buf, shapers=["fallback"])
         pos = [g.position for g in buf.glyph_positions]
-        expected = [(0, 0, 0, 0), (0, 0, 0, 0), (0, 0, 0, 0), (0, 0, 0, 0), (0, 0, 0, 0)]
+        expected = [
+            (0, 0, 0, 0),
+            (0, 0, 0, 0),
+            (0, 0, 0, 0),
+            (0, 0, 0, 0),
+            (0, 0, 0, 0),
+        ]
         assert pos == expected
 
     @pytest.mark.skipif(sys.platform != "win32", reason="requires Windows")
@@ -334,7 +357,13 @@ class TestShape:
         buf.guess_segment_properties()
         hb.shape(blankfont, buf, shapers=["directwrite"])
         pos = [g.position for g in buf.glyph_positions]
-        expected = [(0, 0, 0, 0), (0, 0, 0, 0), (0, 0, 0, 0), (0, 0, 0, 0), (0, 0, 0, 0)]
+        expected = [
+            (0, 0, 0, 0),
+            (0, 0, 0, 0),
+            (0, 0, 0, 0),
+            (0, 0, 0, 0),
+            (0, 0, 0, 0),
+        ]
         assert pos == expected
 
     @pytest.mark.xfail
@@ -346,7 +375,13 @@ class TestShape:
         buf.guess_segment_properties()
         hb.shape(blankfont, buf, shapers=["uniscribe"])
         pos = [g.position for g in buf.glyph_positions]
-        expected = [(0, 0, 0, 0), (0, 0, 0, 0), (0, 0, 0, 0), (0, 0, 0, 0), (0, 0, 0, 0)]
+        expected = [
+            (0, 0, 0, 0),
+            (0, 0, 0, 0),
+            (0, 0, 0, 0),
+            (0, 0, 0, 0),
+            (0, 0, 0, 0),
+        ]
         assert pos == expected
 
     @pytest.mark.skipif(sys.platform != "darwin", reason="requires macOS")
@@ -357,7 +392,13 @@ class TestShape:
         buf.guess_segment_properties()
         hb.shape(blankfont, buf, shapers=["coretext"])
         pos = [g.position for g in buf.glyph_positions]
-        expected = [(0, 0, 0, 0), (0, 0, 0, 0), (0, 0, 0, 0), (0, 0, 0, 0), (0, 0, 0, 0)]
+        expected = [
+            (0, 0, 0, 0),
+            (0, 0, 0, 0),
+            (0, 0, 0, 0),
+            (0, 0, 0, 0),
+            (0, 0, 0, 0),
+        ]
         assert pos == expected
 
     @pytest.mark.parametrize(
@@ -384,16 +425,28 @@ class TestShape:
         # or if the glyph ID does not exist.
         glyph_names = [blankfont.glyph_to_string(g.codepoint) for g in buf.glyph_infos]
         assert glyph_names == expected
-        assert blankfont.glyph_to_string(1000) == 'gid1000'
+        assert blankfont.glyph_to_string(1000) == "gid1000"
 
     @pytest.mark.parametrize(
         "string, features, expected",
         [
             # The calt feature replaces c by a in the context e, d, c', b, a.
             ("edcbaedcba", {}, ["e", "d", "a", "b", "a", "e", "d", "a", "b", "a"]),
-            ("edcbaedcba", {"calt[2]": False}, ["e", "d", "c", "b", "a", "e", "d", "a", "b", "a"]),
-            ("edcbaedcba", {"calt": [(7, 8, False)]}, ["e", "d", "a", "b", "a", "e", "d", "c", "b", "a"]),
-            ("edcbaedcba", {"calt": [(0, 10, False), (7, 8, True)]}, ["e", "d", "c", "b", "a", "e", "d", "a", "b", "a"]),
+            (
+                "edcbaedcba",
+                {"calt[2]": False},
+                ["e", "d", "c", "b", "a", "e", "d", "a", "b", "a"],
+            ),
+            (
+                "edcbaedcba",
+                {"calt": [(7, 8, False)]},
+                ["e", "d", "a", "b", "a", "e", "d", "c", "b", "a"],
+            ),
+            (
+                "edcbaedcba",
+                {"calt": [(0, 10, False), (7, 8, True)]},
+                ["e", "d", "c", "b", "a", "e", "d", "a", "b", "a"],
+            ),
         ],
     )
     def test_features_slice(self, blankfont, string, features, expected):
@@ -463,7 +516,9 @@ class TestCallbacks:
         blankfont.funcs = funcs
 
         hb.shape(blankfont, buf)
-        infos = [(pos.y_advance, pos.x_offset, pos.y_offset) for pos in buf.glyph_positions]
+        infos = [
+            (pos.y_advance, pos.x_offset, pos.y_offset) for pos in buf.glyph_positions
+        ]
         assert infos == expected
 
     def test_font_extents_funcs(self, blankfont):
@@ -477,8 +532,8 @@ class TestCallbacks:
         funcs.set_font_h_extents_func(font_h_extents_func)
         funcs.set_font_v_extents_func(font_v_extents_func)
         blankfont.funcs = funcs
-        assert (123, -456, 789) == blankfont.get_font_extents('ltr')
-        assert (987, -654, 321) == blankfont.get_font_extents('ttb')
+        assert (123, -456, 789) == blankfont.get_font_extents("ltr")
+        assert (987, -654, 321) == blankfont.get_font_extents("ttb")
 
     def test_message_func(self, blankfont):
         # Glyph IDs 1, 2, 3, 4, 5 map to glyphs a, b, c, d, e.
@@ -507,31 +562,49 @@ class TestCallbacks:
         expected_messages = [
             "start table GSUB script tag 'DFLT'",
             "start lookup 0 feature 'calt'",
-            'recursing to lookup 1 at 2',
-            'replacing glyph at 2 (single substitution)',
-            'replaced glyph at 2 (single substitution)',
-            'recursed to lookup 1',
+            "recursing to lookup 1 at 2",
+            "replacing glyph at 2 (single substitution)",
+            "replaced glyph at 2 (single substitution)",
+            "recursed to lookup 1",
             "end lookup 0 feature 'calt'",
             "end table GSUB script tag 'DFLT'",
             "start table GPOS script tag 'DFLT'",
             "start lookup 0 feature 'kern'",
-            'try kerning glyphs at 3,4',
-            'kerned glyphs at 3,4',
-            'tried kerning glyphs at 3,4',
+            "try kerning glyphs at 3,4",
+            "kerned glyphs at 3,4",
+            "tried kerning glyphs at 3,4",
             "end lookup 0 feature 'kern'",
             "end table GPOS script tag 'DFLT'",
         ]
         assert messages == expected_messages
         gids_trace = [[g.codepoint for g in infos] for infos in infos_trace]
-        assert gids_trace == [[5, 4, 3, 2, 1], [5, 4, 3, 2, 1], [5, 4, 3, 2, 1],
-                              [5, 4, 3, 2, 1], [5, 4, 1, 2, 1], [5, 4, 1, 2, 1],
-                              [5, 4, 1, 2, 1], [5, 4, 1, 2, 1], [5, 4, 1, 2, 1],
-                              [5, 4, 1, 2, 1], [5, 4, 1, 2, 1], [5, 4, 1, 2, 1],
-                              [5, 4, 1, 2, 1], [5, 4, 1, 2, 1], [5, 4, 1, 2, 1]]
+        assert gids_trace == [
+            [5, 4, 3, 2, 1],
+            [5, 4, 3, 2, 1],
+            [5, 4, 3, 2, 1],
+            [5, 4, 3, 2, 1],
+            [5, 4, 1, 2, 1],
+            [5, 4, 1, 2, 1],
+            [5, 4, 1, 2, 1],
+            [5, 4, 1, 2, 1],
+            [5, 4, 1, 2, 1],
+            [5, 4, 1, 2, 1],
+            [5, 4, 1, 2, 1],
+            [5, 4, 1, 2, 1],
+            [5, 4, 1, 2, 1],
+            [5, 4, 1, 2, 1],
+            [5, 4, 1, 2, 1],
+        ]
         advances_trace = [[g.x_advance for g in pos] for pos in positions_trace if pos]
-        assert advances_trace == [[0, 0, 0, 0, 0], [0, 0, 0, 0, 0], [0, 0, 0, 0, 0],
-                                  [0, 0, 0, 100, 0], [0, 0, 0, 100, 0], [0, 0, 0, 100, 0],
-                                  [0, 0, 0, 100, 0]]
+        assert advances_trace == [
+            [0, 0, 0, 0, 0],
+            [0, 0, 0, 0, 0],
+            [0, 0, 0, 0, 0],
+            [0, 0, 0, 100, 0],
+            [0, 0, 0, 100, 0],
+            [0, 0, 0, 100, 0],
+            [0, 0, 0, 100, 0],
+        ]
 
     def test_message_func_return_false(self, blankfont):
         # Glyph IDs 1, 2, 3, 4, 5 map to glyphs a, b, c, d, e.
@@ -580,14 +653,19 @@ class TestCallbacks:
     def test_draw_funcs(self, opensans):
         funcs = hb.DrawFuncs()
         container = []
-        def move_to(x,y,c):
+
+        def move_to(x, y, c):
             c.append(f"M{x:g},{y:g}")
-        def line_to(x,y,c):
+
+        def line_to(x, y, c):
             c.append(f"L{x:g},{y:g}")
-        def cubic_to(c1x,c1y,c2x,c2y,x,y,c):
+
+        def cubic_to(c1x, c1y, c2x, c2y, x, y, c):
             c.append(f"C{c1x:g},{c1y:g} {c2x:g},{c2y:g} {x:g},{y:g}")
-        def quadratic_to(c1x,c1y,x,y,c):
+
+        def quadratic_to(c1x, c1y, x, y, c):
             c.append(f"Q{c1x:g},{c1y:g} {x:g},{y:g}")
+
         def close_path(c):
             c.append("Z")
 
@@ -597,19 +675,27 @@ class TestCallbacks:
         funcs.set_quadratic_to_func(quadratic_to, container)
         funcs.set_close_path_func(close_path, container)
         opensans.draw_glyph(funcs, 1)
-        assert "".join(container) == "M1120,0L938,465L352,465L172,0L0,0L578,1468L721,1468L1296,0L1120,0ZM885,618L715,1071Q682,1157 647,1282Q625,1186 584,1071L412,618L885,618Z"
+        assert (
+            "".join(container)
+            == "M1120,0L938,465L352,465L172,0L0,0L578,1468L721,1468L1296,0L1120,0ZM885,618L715,1071Q682,1157 647,1282Q625,1186 584,1071L412,618L885,618Z"
+        )
 
     def test_draw_funcs(self, opensans):
         funcs = hb.DrawFuncs()
         container = []
-        def move_to(x,y,c):
+
+        def move_to(x, y, c):
             c.append(f"M{x:g},{y:g}")
-        def line_to(x,y,c):
+
+        def line_to(x, y, c):
             c.append(f"L{x:g},{y:g}")
-        def cubic_to(c1x,c1y,c2x,c2y,x,y,c):
+
+        def cubic_to(c1x, c1y, c2x, c2y, x, y, c):
             c.append(f"C{c1x:g},{c1y:g} {c2x:g},{c2y:g} {x:g},{y:g}")
-        def quadratic_to(c1x,c1y,x,y,c):
+
+        def quadratic_to(c1x, c1y, x, y, c):
             c.append(f"Q{c1x:g},{c1y:g} {x:g},{y:g}")
+
         def close_path(c):
             c.append("Z")
 
@@ -619,9 +705,15 @@ class TestCallbacks:
         funcs.set_quadratic_to_func(quadratic_to)
         funcs.set_close_path_func(close_path)
         opensans.draw_glyph(1, funcs, container)
-        assert "".join(container) == "M1120,0L938,465L352,465L172,0L0,0L578,1468L721,1468L1296,0L1120,0ZM885,618L715,1071Q682,1157 647,1282Q625,1186 584,1071L412,618L885,618Z"
+        assert (
+            "".join(container)
+            == "M1120,0L938,465L352,465L172,0L0,0L578,1468L721,1468L1296,0L1120,0ZM885,618L715,1071Q682,1157 647,1282Q625,1186 584,1071L412,618L885,618Z"
+        )
 
-    @pytest.mark.xfail(platform.python_implementation() == "PyPy", reason="PyPy's ctypes has no 'pythonapi' attribute")
+    @pytest.mark.xfail(
+        platform.python_implementation() == "PyPy",
+        reason="PyPy's ctypes has no 'pythonapi' attribute",
+    )
     def test_draw_funcs_pycapsule(self, opensans):
         import ctypes
         import uharfbuzz._harfbuzz_test
@@ -646,25 +738,52 @@ class TestCallbacks:
         funcs.set_close_path_func(cap(lib._test_close_path))
         opensans.draw_glyph(1, funcs, container_cap)
 
-        assert container.value == b"M1120,0L938,465L352,465L172,0L0,0L578,1468L721,1468L1296,0L1120,0ZM885,618L715,1071Q682,1157 647,1282Q625,1186 584,1071L412,618L885,618Z"
+        assert (
+            container.value
+            == b"M1120,0L938,465L352,465L172,0L0,0L578,1468L721,1468L1296,0L1120,0ZM885,618L715,1071Q682,1157 647,1282Q625,1186 584,1071L412,618L885,618Z"
+        )
 
     def test_draw_pen(self, opensans):
         class TestPen:
             def __init__(self):
                 self.value = []
+
             def moveTo(self, p0):
-                self.value.append(('moveTo', (p0,)))
+                self.value.append(("moveTo", (p0,)))
+
             def lineTo(self, p1):
-                self.value.append(('lineTo', (p1,)))
+                self.value.append(("lineTo", (p1,)))
+
             def qCurveTo(self, *points):
-                self.value.append(('qCurveTo', points))
+                self.value.append(("qCurveTo", points))
+
             def curveTo(self, *points):
-                self.value.append(('curveTo', points))
+                self.value.append(("curveTo", points))
+
             def closePath(self):
-                self.value.append(('closePath', ()))
+                self.value.append(("closePath", ()))
+
         pen = TestPen()
         opensans.draw_glyph_with_pen(1, pen)
-        assert pen.value == [('moveTo', ((1120, 0),)), ('lineTo', ((938, 465),)), ('lineTo', ((352, 465),)), ('lineTo', ((172, 0),)), ('lineTo', ((0, 0),)), ('lineTo', ((578, 1468),)), ('lineTo', ((721, 1468),)), ('lineTo', ((1296, 0),)), ('lineTo', ((1120, 0),)), ('closePath', ()), ('moveTo', ((885, 618),)), ('lineTo', ((715, 1071),)), ('qCurveTo', ((682, 1157), (647, 1282))), ('qCurveTo', ((625, 1186), (584, 1071))), ('lineTo', ((412, 618),)), ('lineTo', ((885, 618),)), ('closePath', ())]
+        assert pen.value == [
+            ("moveTo", ((1120, 0),)),
+            ("lineTo", ((938, 465),)),
+            ("lineTo", ((352, 465),)),
+            ("lineTo", ((172, 0),)),
+            ("lineTo", ((0, 0),)),
+            ("lineTo", ((578, 1468),)),
+            ("lineTo", ((721, 1468),)),
+            ("lineTo", ((1296, 0),)),
+            ("lineTo", ((1120, 0),)),
+            ("closePath", ()),
+            ("moveTo", ((885, 618),)),
+            ("lineTo", ((715, 1071),)),
+            ("qCurveTo", ((682, 1157), (647, 1282))),
+            ("qCurveTo", ((625, 1186), (584, 1071))),
+            ("lineTo", ((412, 618),)),
+            ("lineTo", ((885, 618),)),
+            ("closePath", ()),
+        ]
 
 
 class MessageCollector:
@@ -683,42 +802,43 @@ class TestGetBaseline:
         "baseline_tag, script_tag, direction, expected_value",
         [
             ("icfb", "grek", "LTR", None),  # BASE table doesn't contain grek script
-
             ("icfb", "latn", "LTR", -70),
             ("icft", "latn", "LTR", 830),
             ("romn", "latn", "LTR", 0),
             ("ideo", "latn", "LTR", -120),
-
             ("icfb", "kana", "LTR", -71),
             ("icft", "kana", "LTR", 831),
             ("romn", "kana", "LTR", 1),
             ("ideo", "kana", "LTR", -121),
-
             ("icfb", "latn", "TTB", 50),
             ("icft", "latn", "TTB", 950),
             ("romn", "latn", "TTB", 120),
             ("ideo", "latn", "TTB", 0),
-
             ("icfb", "kana", "TTB", 51),
             ("icft", "kana", "TTB", 951),
             ("romn", "kana", "TTB", 121),
             ("ideo", "kana", "TTB", 1),
-        ]
+        ],
     )
-    def test_ot_layout_get_baseline(self, blankfont, baseline_tag, script_tag, direction, expected_value):
-        value = hb.ot_layout_get_baseline(blankfont, baseline_tag, direction, script_tag, "")
+    def test_ot_layout_get_baseline(
+        self, blankfont, baseline_tag, script_tag, direction, expected_value
+    ):
+        value = hb.ot_layout_get_baseline(
+            blankfont, baseline_tag, direction, script_tag, ""
+        )
         assert value == expected_value
+
 
 class TestGetTags:
     def test_ot_layout_language_get_feature_tags(self, blankfont):
         tags = hb.ot_layout_language_get_feature_tags(blankfont.face, "GPOS")
-        assert tags == ['kern']
+        assert tags == ["kern"]
         tags = hb.ot_layout_language_get_feature_tags(blankfont.face, "GSUB")
-        assert tags == ['calt']
+        assert tags == ["calt"]
 
     def test_ot_layout_table_get_script_tags(self, blankfont):
         tags = hb.ot_layout_table_get_script_tags(blankfont.face, "GPOS")
-        assert tags == ['DFLT']
+        assert tags == ["DFLT"]
 
     def test_ot_layout_script_get_language_tags(self, blankfont):
         tags = hb.ot_layout_script_get_language_tags(blankfont.face, "GPOS", 0)
@@ -741,48 +861,51 @@ def test_create_sub_font():
     face = hb.Face(blob)
     font = hb.Font(face)
     font2 = hb.Font(font)
-    assert(font is not font2)
-    assert(font.face is font2.face)
+    assert font is not font2
+    assert font.face is font2.face
 
 
 def test_harfbuzz_repacker():
     table_data = [
-                   bytes(b'\x00\x00\xff\xff\x00\x01\x00\x00'),
-                   bytes(b'\x00\x00\x00\x00'),
-                   bytes(b'\x00\x01latn\x00\x00'),
-                   bytes(b'\x00\x00\x00\x01\x00\x01'),
-                   bytes(b'\x00\x01test\x00\x00'),
-                   bytes(b'\x00\x01\x00\x01\x00\x02'),
-                   bytes(b'\x00\x01\x00\x00\x00\x01'),
-                   bytes(b'\x00\x01\x00\x00\x00\x01\x00\x00'),
-                   bytes(b'\x00\x01\x00\x01\x00\x01'),
-                   bytes(b'\x00\x02\x00\x01\x00\x02\x00\x01\x00\x00'),
-                   bytes(b'\x00\x01\x00\x00'),
-                   bytes(b'\x00\x01\x00\x00\x00\x01\x00\x00'),
-                   bytes(b'\x00\x05\x00\x00\x00\x01\x00\x00'),
-                   bytes(b'\x00\x02\x00\x00\x00\x00'),
-                   bytes(b'\x00\x01\x00\x00\x00\x00\x00\x00\x00\x00'),
-                 ]
+        bytes(b"\x00\x00\xff\xff\x00\x01\x00\x00"),
+        bytes(b"\x00\x00\x00\x00"),
+        bytes(b"\x00\x01latn\x00\x00"),
+        bytes(b"\x00\x00\x00\x01\x00\x01"),
+        bytes(b"\x00\x01test\x00\x00"),
+        bytes(b"\x00\x01\x00\x01\x00\x02"),
+        bytes(b"\x00\x01\x00\x00\x00\x01"),
+        bytes(b"\x00\x01\x00\x00\x00\x01\x00\x00"),
+        bytes(b"\x00\x01\x00\x01\x00\x01"),
+        bytes(b"\x00\x02\x00\x01\x00\x02\x00\x01\x00\x00"),
+        bytes(b"\x00\x01\x00\x00"),
+        bytes(b"\x00\x01\x00\x00\x00\x01\x00\x00"),
+        bytes(b"\x00\x05\x00\x00\x00\x01\x00\x00"),
+        bytes(b"\x00\x02\x00\x00\x00\x00"),
+        bytes(b"\x00\x01\x00\x00\x00\x00\x00\x00\x00\x00"),
+    ]
     obj_list = [
-                 ([], []),
-                 ([(0,2,1)], []),
-                 ([(6,2,2)], []),
-                 ([], []),
-                 ([(6,2,4)], []),
-                 ([], []),
-                 ([(2,2,6)], []),
-                 ([(6,2,7)], []),
-                 ([], []),
-                 ([], []),
-                 ([(2,2,10)], []),
-                 ([(2,2,9), (6,2,11)], []),
-                 ([(6,2,12)], []),
-                 ([(2,2,8), (4,2,13)], []),
-                 ([(4,2,3), (6,2,5), (8,2,14)], []),
-               ]
-    expected_data = bytes(b'\x00\x01\x00\x00\x00\x10\x00\x18\x00\n\x00\x02\x00\x1a\x00"\x00\x01latn\x00\x10\x00\x01test\x00\x1c\x00\x1a\x00\x00\x00\x01\x00\x00\x00\x01\x00\x1e\x00\x05\x00\x00\x00\x01\x00\x1c\x00\x00\x00\x01\x00\x01\x00\x00\xff\xff\x00\x01\x00\x00\x00\x01\x00\x0e\x00\x01\x00\x01\x00\x12\x00\x01\x00\x0e\x00\x01\x00\x01\x00\x02\x00\x01\x00\n\x00\x01\x00\x01\x00\x01\x00\x02\x00\x01\x00\x02\x00\x01\x00\x00')
+        ([], []),
+        ([(0, 2, 1)], []),
+        ([(6, 2, 2)], []),
+        ([], []),
+        ([(6, 2, 4)], []),
+        ([], []),
+        ([(2, 2, 6)], []),
+        ([(6, 2, 7)], []),
+        ([], []),
+        ([], []),
+        ([(2, 2, 10)], []),
+        ([(2, 2, 9), (6, 2, 11)], []),
+        ([(6, 2, 12)], []),
+        ([(2, 2, 8), (4, 2, 13)], []),
+        ([(4, 2, 3), (6, 2, 5), (8, 2, 14)], []),
+    ]
+    expected_data = bytes(
+        b'\x00\x01\x00\x00\x00\x10\x00\x18\x00\n\x00\x02\x00\x1a\x00"\x00\x01latn\x00\x10\x00\x01test\x00\x1c\x00\x1a\x00\x00\x00\x01\x00\x00\x00\x01\x00\x1e\x00\x05\x00\x00\x00\x01\x00\x1c\x00\x00\x00\x01\x00\x01\x00\x00\xff\xff\x00\x01\x00\x00\x00\x01\x00\x0e\x00\x01\x00\x01\x00\x12\x00\x01\x00\x0e\x00\x01\x00\x01\x00\x02\x00\x01\x00\n\x00\x01\x00\x01\x00\x01\x00\x02\x00\x01\x00\x02\x00\x01\x00\x00'
+    )
     packed_data = hb.repack(table_data, obj_list)
     assert expected_data == packed_data
+
 
 @pytest.mark.skipif(sys.platform != "darwin", reason="requires macOS")
 def test_sparsefont_coretext(sparsefont):
@@ -824,7 +947,7 @@ def test_set():
     assert list(s1) == [4]
     s1 ^= hb.Set({5})
     assert list(s1) == [4, 5]
-    s1 |= {8} # Update accepts set() as well
+    s1 |= {8}  # Update accepts set() as well
 
     assert list(s1) == [4, 5, 8]
     assert len(s1) == 3
@@ -838,10 +961,11 @@ def test_set():
 
     iter(iter(hb.Set({})))
 
+
 def test_map():
     m1 = hb.Map()
-    m2 = hb.Map({1:2, 3:4})
-    m3 = hb.Map({1:2, 3:4})
+    m2 = hb.Map({1: 2, 3: 4})
+    m3 = hb.Map({1: 2, 3: 4})
 
     assert m1 != None
     assert m1 != False
@@ -863,7 +987,7 @@ def test_map():
     assert 1 not in m1
     assert len(m1) == 1
 
-    assert set(m2.items()) == {(1,2), (3,4)}
+    assert set(m2.items()) == {(1, 2), (3, 4)}
     assert set(m2.keys()) == {1, 3}
     assert set(m2) == {1, 3}
     assert set(m2.values()) == {2, 4}
@@ -880,17 +1004,17 @@ def test_map():
 
     iter(iter(hb.Map({})))
 
-def test_subset(blankfont):
 
+def test_subset(blankfont):
     for planned in (False, True):
-        assert blankfont.get_nominal_glyph(ord('a')) == 1
-        assert blankfont.get_nominal_glyph(ord('b')) == 2
-        assert blankfont.get_nominal_glyph(ord('c')) == 3
-        assert blankfont.get_nominal_glyph(ord('d')) == 4
-        assert blankfont.get_nominal_glyph(ord('e')) == 5
+        assert blankfont.get_nominal_glyph(ord("a")) == 1
+        assert blankfont.get_nominal_glyph(ord("b")) == 2
+        assert blankfont.get_nominal_glyph(ord("c")) == 3
+        assert blankfont.get_nominal_glyph(ord("d")) == 4
+        assert blankfont.get_nominal_glyph(ord("e")) == 5
 
         inp = hb.SubsetInput()
-        inp.sets(hb.SubsetInputSets.UNICODE).set({ord('b')})
+        inp.sets(hb.SubsetInputSets.UNICODE).set({ord("b")})
         s = inp.sets(hb.SubsetInputSets.LAYOUT_FEATURE_TAG)
         s.clear()
         s.invert()
@@ -907,11 +1031,11 @@ def test_subset(blankfont):
         assert face is not None
         font = hb.Font(face)
 
-        assert font.get_nominal_glyph(ord('a')) is None
-        assert font.get_nominal_glyph(ord('b')) == 1
-        assert font.get_nominal_glyph(ord('c')) == 2
-        assert font.get_nominal_glyph(ord('d')) == 3
-        assert font.get_nominal_glyph(ord('e')) == 4
+        assert font.get_nominal_glyph(ord("a")) is None
+        assert font.get_nominal_glyph(ord("b")) == 1
+        assert font.get_nominal_glyph(ord("c")) == 2
+        assert font.get_nominal_glyph(ord("d")) == 3
+        assert font.get_nominal_glyph(ord("e")) == 4
 
         blob = face.blob
         assert blob
@@ -919,11 +1043,11 @@ def test_subset(blankfont):
         face = hb.Face(blob)
         font = hb.Font(face)
 
-        assert font.get_nominal_glyph(ord('a')) is None
-        assert font.get_nominal_glyph(ord('b')) == 1
-        assert font.get_nominal_glyph(ord('c')) == 2
-        assert font.get_nominal_glyph(ord('d')) == 3
-        assert font.get_nominal_glyph(ord('e')) == 4
+        assert font.get_nominal_glyph(ord("a")) is None
+        assert font.get_nominal_glyph(ord("b")) == 1
+        assert font.get_nominal_glyph(ord("c")) == 2
+        assert font.get_nominal_glyph(ord("d")) == 3
+        assert font.get_nominal_glyph(ord("e")) == 4
 
         if planned:
             mapping = plan.old_to_new_glyph_mapping
@@ -935,4 +1059,4 @@ def test_subset(blankfont):
             assert reverse[mapping[3]] == 3
             assert len(reverse) == 5
             cmap = plan.unicode_to_old_glyph_mapping
-            assert cmap[ord('b')] == 2
+            assert cmap[ord("b")] == 2
