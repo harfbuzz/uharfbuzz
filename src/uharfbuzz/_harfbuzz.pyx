@@ -1328,6 +1328,8 @@ class OTMathConstant(IntEnum):
     RADICAL_DEGREE_BOTTOM_RAISE_PERCENT = HB_OT_MATH_CONSTANT_RADICAL_DEGREE_BOTTOM_RAISE_PERCENT
 
 def ot_math_get_constant(font: Font, constant: OTMathConstant) -> int:
+    if constant >= len(OTMathConstant):
+        raise ValueError("invalid constant")
     return hb_ot_math_get_constant(font._hb_font, constant)
 
 def ot_math_get_glyph_italics_correction(font: Font, glyph: int) -> int:
@@ -1355,6 +1357,8 @@ def ot_math_get_glyph_kerning(font: Font,
                               glyph: int,
                               kern: OTMathKern,
                               int correction_height) -> int:
+    if kern >= len(OTMathKern):
+        raise ValueError("invalid kern")
     return hb_ot_math_get_glyph_kerning(font._hb_font, glyph, kern, correction_height)
 
 OTMathKernEntry = namedtuple("OTMathKernEntry", ["max_correction_height", "kern_value"])
@@ -1362,6 +1366,8 @@ OTMathKernEntry = namedtuple("OTMathKernEntry", ["max_correction_height", "kern_
 def ot_math_get_glyph_kernings(font: Font,
                                glyph: int,
                                kern: OTMathKern) -> List[OTMathKernEntry]:
+    if kern >= len(OTMathKern):
+        raise ValueError("invalid kern")
     cdef unsigned int count = STATIC_TAGS_ARRAY_SIZE
     cdef hb_ot_math_kern_entry_t kerns_array[STATIC_TAGS_ARRAY_SIZE]
     cdef list kerns = []
