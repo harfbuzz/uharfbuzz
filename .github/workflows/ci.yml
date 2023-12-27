@@ -20,18 +20,18 @@ jobs:
         os: [ubuntu-latest, macos-latest, windows-2019]
 
     steps:
-    - uses: actions/checkout@v2
+    - uses: actions/checkout@v4
       with:
         submodules: recursive
     - name: Set up Python
-      uses: actions/setup-python@v2
+      uses: actions/setup-python@v5
       with:
         python-version: "3.x"
     - name: Install dependencies
       run: pip install cibuildwheel
     - name: Build Wheels
       run: python -m cibuildwheel --output-dir wheelhouse
-    - uses: actions/upload-artifact@v2
+    - uses: actions/upload-artifact@v4
       with:
         name: uharfbuzz-${{ matrix.os }}
         path: wheelhouse/*.whl
@@ -43,11 +43,11 @@ jobs:
     needs: [build]
     runs-on: ubuntu-latest
     steps:
-    - uses: actions/checkout@v2
+    - uses: actions/checkout@v4
       with:
         submodules: recursive
     - name: Set up Python
-      uses: actions/setup-python@v2
+      uses: actions/setup-python@v5
       with:
         python-version: "3.x"
     - name: Install dependencies
@@ -55,7 +55,7 @@ jobs:
         python -m pip install --upgrade pip
         pip install --upgrade setuptools cython wheel twine
     - name: Download artifacts from build jobs
-      uses: actions/download-artifact@v2
+      uses: actions/download-artifact@v4
       with:
         path: wheelhouse/
     - name: Move wheels to dist/ directory
