@@ -971,6 +971,17 @@ cdef hb_bool_t _nominal_glyph_func(hb_font_t* font, void* font_data,
     # If the glyph is .notdef, return false, else return true
     return int(glyph[0] != 0)
 
+cdef hb_bool_t _variation_glyph_func(hb_font_t* font, void* font_data,
+                                   hb_codepoint_t unicode,
+                                   hb_codepoint_t variation_selector,
+                                   hb_codepoint_t* glyph,
+                                   void* user_data) noexcept:
+    cdef Font py_font = <Font>font_data
+    glyph[0] = (<FontFuncs>py_font.funcs)._variation_glyph_func(
+        py_font, unicode, variation_selector, <object>user_data)
+    # If the glyph is .notdef, return false, else return true
+    return int(glyph[0] != 0)
+
 
 cdef hb_bool_t _font_h_extents_func(hb_font_t* font, void* font_data,
                                     hb_font_extents_t *extents,
@@ -1013,6 +1024,7 @@ cdef class FontFuncs:
     cdef object _glyph_v_origin_func
     cdef object _glyph_name_func
     cdef object _nominal_glyph_func
+    cdef object _variation_glyph_func
     cdef object _font_h_extents_func
     cdef object _font_v_extents_func
 
@@ -1082,6 +1094,18 @@ cdef class FontFuncs:
         hb_font_funcs_set_nominal_glyph_func(
             self._hb_ffuncs, _nominal_glyph_func, <void*>user_data, NULL)
         self._nominal_glyph_func = func
+
+    def set_variation_glyph_func(self,
+                               func: Callable[[
+                                   Font,
+                                   int,  # unicode
+                                   int,  # variation_selector
+                                   object,  # user_data
+                               ], int],  # gid
+                               user_data: object = None) -> None:
+        hb_font_funcs_set_variation_glyph_func(
+            self._hb_ffuncs, _variation_glyph_func, <void*>user_data, NULL)
+        self._variation_glyph_func = func
 
     def set_font_h_extents_func(self,
                                 func: Callable[[

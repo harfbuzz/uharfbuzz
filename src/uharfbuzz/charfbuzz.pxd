@@ -252,6 +252,12 @@ cdef extern from "hb.h":
         hb_codepoint_t unicode,
         hb_codepoint_t* glyph,
         void* user_data)
+    ctypedef hb_bool_t (*hb_font_get_variation_glyph_func_t) (
+        hb_font_t *font, void *font_data,
+        hb_codepoint_t unicode,
+        hb_codepoint_t variation_selector,
+        hb_codepoint_t *glyph,
+        void *user_data)
     ctypedef hb_position_t (*hb_font_get_glyph_advance_func_t) (
         hb_font_t* font, void* font_data,
         hb_codepoint_t glyph,
@@ -313,6 +319,10 @@ cdef extern from "hb.h":
         hb_font_funcs_t* ffuncs,
         hb_font_get_nominal_glyph_func_t func,
         void* user_data, hb_destroy_func_t destroy)
+    void hb_font_funcs_set_variation_glyph_func(
+        hb_font_funcs_t *ffuncs,
+        hb_font_get_variation_glyph_func_t func,
+        void *user_data, hb_destroy_func_t destroy)
     void hb_font_funcs_set_font_h_extents_func(
         hb_font_funcs_t *ffuncs,
         hb_font_get_font_h_extents_func_t func,
