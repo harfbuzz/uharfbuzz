@@ -487,6 +487,24 @@ class TestCallbacks:
         infos = [g.codepoint for g in buf.glyph_infos]
         assert infos == expected
 
+    def test_variation_glyph_func(self, blankfont):
+        string = "a\uFE00"
+        expected = [ord("a") + 0xFE00]
+        buf = hb.Buffer()
+        buf.add_str(string)
+        buf.guess_segment_properties()
+
+        def variation_glyph_func(font, unicode, variation_selector, data):
+            return unicode + variation_selector
+
+        funcs = hb.FontFuncs.create()
+        funcs.set_variation_glyph_func(variation_glyph_func)
+        blankfont.funcs = funcs
+
+        hb.shape(blankfont, buf)
+        infos = [g.codepoint for g in buf.glyph_infos]
+        assert infos == expected
+
     def test_glyph_h_advance_func(self, blankfont):
         string = "abcde"
         expected = [456, 456, 456, 456, 456]
