@@ -8,6 +8,7 @@ import pytest
 TESTDATA = Path(__file__).parent / "data"
 ADOBE_BLANK_TTF_PATH = TESTDATA / "AdobeBlank.subset.ttf"
 OPEN_SANS_TTF_PATH = TESTDATA / "OpenSans.subset.ttf"
+SOURCE_SANS_PRO_OTF_PATH = TESTDATA / "SourceSansPro-Regular.otf"
 MUTATOR_SANS_TTF_PATH = TESTDATA / "MutatorSans-VF.subset.ttf"
 SPARSE_FONT_TTF_PATH = TESTDATA / "SparseFont.ttf"
 MATH_FONT_TTF_PATH = TESTDATA / "STIXTwoMath-Regular.ttf"
@@ -29,6 +30,15 @@ def blankfont():
     ]
     """
     blob = hb.Blob.from_file_path(ADOBE_BLANK_TTF_PATH)
+    face = hb.Face(blob)
+    font = hb.Font(face)
+    return font
+
+
+@pytest.fixture
+def sourcesance():
+    """Returns the full Source sans Pro Regular font."""
+    blob = hb.Blob.from_file_path(SOURCE_SANS_PRO_OTF_PATH)
     face = hb.Face(blob)
     font = hb.Font(face)
     return font
@@ -870,6 +880,14 @@ class TestGetTags:
     def test_ot_layout_script_get_language_tags(self, blankfont):
         tags = hb.ot_layout_script_get_language_tags(blankfont.face, "GPOS", 0)
         assert tags == []
+
+
+class TestGetAlternates:
+    def test_ot_layout_lookup_get_glyph_alternates(self, sourcesance):
+        alternate_glyphs = hb.ot_layout_lookup_get_glyph_alternates(
+            sourcesance.face, 1, 1091
+        )
+        assert alternate_glyphs == [1549, 1620, 1606, 1578, 1592, 1103, 1115]
 
 
 class TestOTMath:
