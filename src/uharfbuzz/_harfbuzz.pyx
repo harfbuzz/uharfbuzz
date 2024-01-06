@@ -1181,17 +1181,18 @@ def shape(font: Font, buffer: Buffer,
 
 def ot_layout_lookup_get_glyph_alternates(
         face: Face, lookup_index : int, glyph : hb_codepoint_t) -> List[int]:
-    cdef list alt_glyphs = []
+    cdef list alternates = []
     cdef unsigned int i
     cdef unsigned int start_offset = 0
     cdef unsigned int alternate_count = STATIC_ARRAY_SIZE
     cdef hb_codepoint_t alternate_glyphs[STATIC_ARRAY_SIZE]
     while alternate_count == STATIC_ARRAY_SIZE:
-        hb_ot_layout_lookup_get_glyph_alternates(face._hb_face, lookup_index, glyph, start_offset, &alternate_count, alternate_glyphs)
+        hb_ot_layout_lookup_get_glyph_alternates(face._hb_face, lookup_index, glyph, start_offset,
+            &alternate_count, alternate_glyphs)
         for i in range(alternate_count):
-            alt_glyphs.append(alternate_glyphs[i])
+            alternates.append(alternate_glyphs[i])
         start_offset += alternate_count
-    return alt_glyphs
+    return alternates
 
 
 def ot_layout_language_get_feature_tags(
