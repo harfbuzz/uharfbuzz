@@ -1423,7 +1423,7 @@ def ot_math_get_glyph_kernings(font: Font,
 
 OTMathGlyphVariant = namedtuple("OTMathGlyphVariant", ["glyph", "advance"])
 
-def ot_math_get_glyph_variants(font: Font, glyph: int, direction: str) -> List[OTMathGlyphVariants]:
+def ot_math_get_glyph_variants(font: Font, glyph: int, direction: str) -> List[OTMathGlyphVariant]:
     cdef bytes packed = direction.encode()
     cdef char* cstr = packed
     cdef hb_direction_t hb_direction = hb_direction_from_string(cstr, -1)
