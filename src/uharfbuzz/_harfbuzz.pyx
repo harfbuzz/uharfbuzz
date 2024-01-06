@@ -12,7 +12,7 @@ from typing import Callable, Dict, List, Sequence, Tuple, Union
 from pathlib import Path
 
 
-DEF STATIC_TAGS_ARRAY_SIZE = 128
+DEF STATIC_ARRAY_SIZE = 128
 
 
 cdef extern from "Python.h":
@@ -523,13 +523,13 @@ cdef class Face:
 
     @property
     def table_tags(self) -> List[str]:
-        cdef unsigned int tag_count = STATIC_TAGS_ARRAY_SIZE
-        cdef hb_tag_t tags_array[STATIC_TAGS_ARRAY_SIZE]
+        cdef unsigned int tag_count = STATIC_ARRAY_SIZE
+        cdef hb_tag_t tags_array[STATIC_ARRAY_SIZE]
         cdef list tags = []
         cdef char cstr[5]
         cdef unsigned int i
         cdef unsigned int start_offset = 0
-        while tag_count == STATIC_TAGS_ARRAY_SIZE:
+        while tag_count == STATIC_ARRAY_SIZE:
             hb_face_get_table_tags(
                 self._hb_face, start_offset, &tag_count, tags_array)
             for i in range(tag_count):
@@ -1179,18 +1179,31 @@ def shape(font: Font, buffer: Buffer,
             free(hb_features)
 
 
+def ot_layout_lookup_get_glyph_alternates(
+        face: Face, lookup_index : int, glyph : hb_codepoint_t) -> List[int]:
+    cdef list alt_glyphs = [] 
+    cdef unsigned int start_offset = 0
+    cdef unsigned int alternate_count = STATIC_ARRAY_SIZE
+    cdef hb_codepoint_t alternate_glyphs[STATIC_ARRAY_SIZE]
+    while alternate_count == STATIC_ARRAY_SIZE:
+        hb_ot_layout_lookup_get_glyph_alternates(face._hb_face, lookup_index, glyph, start_offset, &alternate_count, alternate_glyphs)
+        for i in range(alternate_count):
+            alt_glyphs.append(alternate_glyphs[i])
+    return alt_glyphs
+
+
 def ot_layout_language_get_feature_tags(
         face: Face, tag: str, script_index: int = 0,
         language_index: int = 0xFFFF) -> List[str]:
     cdef bytes packed = tag.encode()
     cdef hb_tag_t hb_tag = hb_tag_from_string(<char*>packed, -1)
-    cdef unsigned int feature_count = STATIC_TAGS_ARRAY_SIZE
-    cdef hb_tag_t feature_tags[STATIC_TAGS_ARRAY_SIZE]
+    cdef unsigned int feature_count = STATIC_ARRAY_SIZE
+    cdef hb_tag_t feature_tags[STATIC_ARRAY_SIZE]
     cdef list tags = []
     cdef char cstr[5]
     cdef unsigned int i
     cdef unsigned int start_offset = 0
-    while feature_count == STATIC_TAGS_ARRAY_SIZE:
+    while feature_count == STATIC_ARRAY_SIZE:
         hb_ot_layout_language_get_feature_tags(
             face._hb_face, hb_tag, script_index, language_index, start_offset, &feature_count,
             feature_tags)
@@ -1207,13 +1220,13 @@ def ot_layout_script_get_language_tags(
         face: Face, tag: str, script_index: int = 0) -> List[str]:
     cdef bytes packed = tag.encode()
     cdef hb_tag_t hb_tag = hb_tag_from_string(<char*>packed, -1)
-    cdef unsigned int language_count = STATIC_TAGS_ARRAY_SIZE
-    cdef hb_tag_t language_tags[STATIC_TAGS_ARRAY_SIZE]
+    cdef unsigned int language_count = STATIC_ARRAY_SIZE
+    cdef hb_tag_t language_tags[STATIC_ARRAY_SIZE]
     cdef list tags = []
     cdef char cstr[5]
     cdef unsigned int i
     cdef unsigned int start_offset = 0
-    while language_count == STATIC_TAGS_ARRAY_SIZE:
+    while language_count == STATIC_ARRAY_SIZE:
         hb_ot_layout_script_get_language_tags(
             face._hb_face, hb_tag, script_index, start_offset, &language_count, language_tags)
         for i in range(language_count):
@@ -1227,13 +1240,13 @@ def ot_layout_script_get_language_tags(
 def ot_layout_table_get_script_tags(face: Face, tag: str) -> List[str]:
     cdef bytes packed = tag.encode()
     cdef hb_tag_t hb_tag = hb_tag_from_string(<char*>packed, -1)
-    cdef unsigned int script_count = STATIC_TAGS_ARRAY_SIZE
-    cdef hb_tag_t script_tags[STATIC_TAGS_ARRAY_SIZE]
+    cdef unsigned int script_count = STATIC_ARRAY_SIZE
+    cdef hb_tag_t script_tags[STATIC_ARRAY_SIZE]
     cdef list tags = []
     cdef char cstr[5]
     cdef unsigned int i
     cdef unsigned int start_offset = 0
-    while script_count == STATIC_TAGS_ARRAY_SIZE:
+    while script_count == STATIC_ARRAY_SIZE:
         hb_ot_layout_table_get_script_tags(
             face._hb_face, hb_tag, start_offset, &script_count, script_tags)
         for i in range(script_count):
@@ -1392,12 +1405,12 @@ def ot_math_get_glyph_kernings(font: Font,
                                kern: OTMathKern) -> List[OTMathKernEntry]:
     if kern >= len(OTMathKern):
         raise ValueError("invalid kern")
-    cdef unsigned int count = STATIC_TAGS_ARRAY_SIZE
-    cdef hb_ot_math_kern_entry_t kerns_array[STATIC_TAGS_ARRAY_SIZE]
+    cdef unsigned int count = STATIC_ARRAY_SIZE
+    cdef hb_ot_math_kern_entry_t kerns_array[STATIC_ARRAY_SIZE]
     cdef list kerns = []
     cdef unsigned int i
     cdef unsigned int start_offset = 0
-    while count == STATIC_TAGS_ARRAY_SIZE:
+    while count == STATIC_ARRAY_SIZE:
         hb_ot_math_get_glyph_kernings(font._hb_font, glyph, kern, start_offset,
             &count, kerns_array)
         for i in range(count):
@@ -1411,12 +1424,12 @@ def ot_math_get_glyph_variants(font: Font, glyph: int, direction: str) -> List[O
     cdef bytes packed = direction.encode()
     cdef char* cstr = packed
     cdef hb_direction_t hb_direction = hb_direction_from_string(cstr, -1)
-    cdef unsigned int count = STATIC_TAGS_ARRAY_SIZE
-    cdef hb_ot_math_glyph_variant_t variants_array[STATIC_TAGS_ARRAY_SIZE]
+    cdef unsigned int count = STATIC_ARRAY_SIZE
+    cdef hb_ot_math_glyph_variant_t variants_array[STATIC_ARRAY_SIZE]
     cdef list variants = []
     cdef unsigned int i
     cdef unsigned int start_offset = 0
-    while count == STATIC_TAGS_ARRAY_SIZE:
+    while count == STATIC_ARRAY_SIZE:
         hb_ot_math_get_glyph_variants(font._hb_font, glyph, hb_direction, start_offset,
             &count, variants_array)
         for i in range(count):
@@ -1438,13 +1451,13 @@ def ot_math_get_glyph_assembly(font: Font,
     cdef bytes packed = direction.encode()
     cdef char* cstr = packed
     cdef hb_direction_t hb_direction = hb_direction_from_string(cstr, -1)
-    cdef unsigned int count = STATIC_TAGS_ARRAY_SIZE
-    cdef hb_ot_math_glyph_part_t assembly_array[STATIC_TAGS_ARRAY_SIZE]
+    cdef unsigned int count = STATIC_ARRAY_SIZE
+    cdef hb_ot_math_glyph_part_t assembly_array[STATIC_ARRAY_SIZE]
     cdef list assembly = []
     cdef unsigned int i
     cdef unsigned int start_offset = 0
     cdef hb_position_t italics_correction = 0
-    while count == STATIC_TAGS_ARRAY_SIZE:
+    while count == STATIC_ARRAY_SIZE:
         hb_ot_math_get_glyph_assembly(font._hb_font,
             glyph, hb_direction, start_offset,
             &count, assembly_array, &italics_correction)

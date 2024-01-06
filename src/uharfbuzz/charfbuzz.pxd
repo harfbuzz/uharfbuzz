@@ -613,8 +613,14 @@ cdef extern from "hb.h":
 
 
 cdef extern from "hb-ot.h":
-
     # hb-ot-layout.h
+    unsigned int hb_ot_layout_lookup_get_glyph_alternates(
+        hb_face_t* face,
+        unsigned lookup_index,
+        hb_codepoint_t glyph,
+        unsigned start_offset,
+        unsigned * alternate_count,
+        hb_codepoint_t *alternate_glyphs)
     unsigned int hb_ot_layout_language_get_feature_tags(
         hb_face_t* face,
         hb_tag_t table_tag,

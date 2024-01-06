@@ -872,6 +872,13 @@ class TestGetTags:
         assert tags == []
 
 
+class TestGetAlternates:
+    def test_ot_layout_lookup_get_glyph_alternates(self, blankfont):
+        gid = blankfont.get_nominal_glyph(ord("c"))
+        alternates = hb.ot_layout_lookup_get_glyph_alternates(blankfont.face, 1, gid)
+        assert alternates == [1]
+
+
 class TestOTMath:
     def test_ot_math_has_data(self, mathfont):
         assert hb.ot_math_has_data(mathfont.face)
