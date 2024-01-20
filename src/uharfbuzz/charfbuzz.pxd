@@ -237,6 +237,7 @@ cdef extern from "hb.h":
         hb_bool_t replace)
     void hb_face_destroy(hb_face_t* face)
     hb_blob_t* hb_face_reference_blob(hb_face_t *face)
+    hb_face_t* hb_face_reference(hb_face_t *face)
     hb_face_t* hb_face_get_empty()
     unsigned int hb_face_get_table_tags(
         const hb_face_t *face,
@@ -304,6 +305,13 @@ cdef extern from "hb.h":
         hb_position_t reserved2
         hb_position_t reserved1
 
+    hb_font_t* hb_font_create(hb_face_t* face)
+    hb_font_t* hb_font_create_sub_font(hb_font_t* parent)
+    hb_font_t* hb_font_get_empty()
+    hb_font_t* hb_font_reference(hb_font_t *font)
+    void hb_font_destroy(hb_font_t* font)
+
+    hb_face_t *hb_font_get_face(hb_font_t *font)
     hb_font_funcs_t* hb_font_funcs_create()
     void hb_font_funcs_set_glyph_h_advance_func(
         hb_font_funcs_t* ffuncs,
@@ -339,8 +347,6 @@ cdef extern from "hb.h":
         void *user_data, hb_destroy_func_t destroy)
     void hb_font_funcs_destroy(hb_font_funcs_t* ffuncs)
 
-    hb_font_t* hb_font_create(hb_face_t* face)
-    hb_font_t* hb_font_create_sub_font(hb_font_t* parent)
     void hb_font_set_funcs(
         hb_font_t* font,
         hb_font_funcs_t* klass,
@@ -437,7 +443,6 @@ cdef extern from "hb.h":
         const char *s,
         int len,
         hb_codepoint_t *glyph)
-    void hb_font_destroy(hb_font_t* font)
 
     void hb_font_draw_glyph(
         hb_font_t *font,

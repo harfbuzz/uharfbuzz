@@ -573,23 +573,36 @@ cdef class Font:
     cdef Face _face
     cdef FontFuncs _ffuncs
 
-    def __cinit__(self, face_or_font):
-        if isinstance(face_or_font, Font):
-            self.__create_sub_font(face_or_font)
-            return
-        self.__create(face_or_font)
+    def __cinit__(self, face_or_font: Union[Face, Font] = None):
+        if face_or_font is not None:
+            if isinstance(face_or_font, Font):
+                self.__create_sub_font(face_or_font)
+                return
+            self.__create(face_or_font)
+        else:
+            self._hb_font = hb_font_get_empty()
+            self._face = Face()
 
     cdef __create(self, Face face):
         self._hb_font = hb_font_create(face._hb_face)
         self._face = face
 
     cdef __create_sub_font(self, Font font):
-        self._hb_font = hb_font_create_sub_font (font._hb_font)
+        self._hb_font = hb_font_create_sub_font(font._hb_font)
         self._face = font._face
 
     def __dealloc__(self):
         hb_font_destroy(self._hb_font)
         self._face = self._ffuncs = None
+
+    @staticmethod
+    cdef Font from_ptr(hb_font_t* hb_font):
+        """Create Font from a pointer taking ownership of a it."""
+
+        cdef Font wrapper = Font.__new__(Font)
+        wrapper._hb_font = hb_font
+        wrapper._face = Face.from_ptr(hb_face_reference(hb_font_get_face(hb_font)))
+        return wrapper
 
     # DEPRECATED: use the normal constructor
     @classmethod
