@@ -1527,11 +1527,6 @@ cdef void _cubic_to_func(hb_draw_funcs_t *dfuncs,
 
 cdef class DrawFuncs:
     cdef hb_draw_funcs_t* _hb_drawfuncs
-    cdef object _move_to_func
-    cdef object _line_to_func
-    cdef object _cubic_to_func
-    cdef object _quadratic_to_func
-    cdef object _close_path_func
     cdef int _warned
 
     def __cinit__(self):
@@ -1569,14 +1564,12 @@ cdef class DrawFuncs:
         cdef hb_draw_move_to_func_t func_p
         cdef void *user_data_p
         if PyCapsule_IsValid(func, NULL):
-            self._move_to_func = None
             func_p = <hb_draw_move_to_func_t>PyCapsule_GetPointer(func, NULL)
             if PyCapsule_IsValid(user_data, NULL):
                 user_data_p = <void*>PyCapsule_GetPointer(user_data, NULL)
             else:
                 user_data_p = <void*>user_data
         else:
-            self._move_to_func = func
             func_p = _move_to_func
             assert user_data is None, "Pass draw_state to Font.draw_glyph"
             user_data_p = <void*>func
@@ -1593,14 +1586,12 @@ cdef class DrawFuncs:
         cdef hb_draw_line_to_func_t func_p
         cdef void *user_data_p
         if PyCapsule_IsValid(func, NULL):
-            self._line_to_func = None
             func_p = <hb_draw_line_to_func_t>PyCapsule_GetPointer(func, NULL)
             if PyCapsule_IsValid(user_data, NULL):
                 user_data_p = <void*>PyCapsule_GetPointer(user_data, NULL)
             else:
                 user_data_p = <void*>user_data
         else:
-            self._line_to_func = func
             func_p = _line_to_func
             assert user_data is None, "Pass draw_state to Font.draw_glyph"
             user_data_p = <void*>func
@@ -1621,14 +1612,12 @@ cdef class DrawFuncs:
         cdef hb_draw_cubic_to_func_t func_p
         cdef void *user_data_p
         if PyCapsule_IsValid(func, NULL):
-            self._cubic_to_func = None
             func_p = <hb_draw_cubic_to_func_t>PyCapsule_GetPointer(func, NULL)
             if PyCapsule_IsValid(user_data, NULL):
                 user_data_p = <void*>PyCapsule_GetPointer(user_data, NULL)
             else:
                 user_data_p = <void*>user_data
         else:
-            self._cubic_to_func = func
             func_p = _cubic_to_func
             assert user_data is None, "Pass draw_state to Font.draw_glyph"
             user_data_p = <void*>func
@@ -1647,14 +1636,12 @@ cdef class DrawFuncs:
         cdef hb_draw_quadratic_to_func_t func_p
         cdef void *user_data_p
         if PyCapsule_IsValid(func, NULL):
-            self._quadratic_to_func = None
             func_p = <hb_draw_quadratic_to_func_t>PyCapsule_GetPointer(func, NULL)
             if PyCapsule_IsValid(user_data, NULL):
                 user_data_p = <void*>PyCapsule_GetPointer(user_data, NULL)
             else:
                 user_data_p = <void*>user_data
         else:
-            self._quadratic_to_func = func
             func_p = _quadratic_to_func
             assert user_data is None, "Pass draw_state to Font.draw_glyph"
             user_data_p = <void*>func
@@ -1669,14 +1656,12 @@ cdef class DrawFuncs:
         cdef hb_draw_close_path_func_t func_p
         cdef void *user_data_p
         if PyCapsule_IsValid(func, NULL):
-            self._close_path_func = None
             func_p = <hb_draw_close_path_func_t>PyCapsule_GetPointer(func, NULL)
             if PyCapsule_IsValid(user_data, NULL):
                 user_data_p = <void*>PyCapsule_GetPointer(user_data, NULL)
             else:
                 user_data_p = <void*>user_data
         else:
-            self._close_path_func = func
             func_p = _close_path_func
             assert user_data is None, "Pass draw_state to Font.draw_glyph"
             user_data_p = <void*>func
