@@ -907,102 +907,33 @@ class TestPaintFuncs:
 
         return funcs, Container()
 
-    @staticmethod
-    def setup_funcs_capsule(container_size):
-        import ctypes
-        import uharfbuzz._harfbuzz_test
-
-        PyCapsule_New = ctypes.pythonapi.PyCapsule_New
-        PyCapsule_New.restype = ctypes.py_object
-        PyCapsule_New.argtypes = (ctypes.c_void_p, ctypes.c_char_p, ctypes.c_void_p)
-
-        lib = ctypes.cdll.LoadLibrary(uharfbuzz._harfbuzz_test.__file__)
-
-        def cap(x):
-            return PyCapsule_New(x, None, None)
-
-        funcs = hb.PaintFuncs()
-        funcs.set_push_transform_func(cap(lib._test_push_transform))
-        funcs.set_pop_transform_func(cap(lib._test_pop_transform))
-        funcs.set_color_glyph_func(cap(lib._test_paint_color_glyph))
-        funcs.set_push_clip_glyph_func(cap(lib._test_push_clip_glyph))
-        funcs.set_push_clip_rectangle_func(cap(lib._test_push_clip_rectangle))
-        funcs.set_pop_clip_func(cap(lib._test_pop_clip))
-        funcs.set_color_func(cap(lib._test_paint_color))
-        funcs.set_image_func(cap(lib._test_paint_image))
-        funcs.set_linear_gradient_func(cap(lib._test_paint_linear_gradient))
-        funcs.set_radial_gradient_func(cap(lib._test_paint_radial_gradient))
-        funcs.set_sweep_gradient_func(cap(lib._test_paint_sweep_gradient))
-        funcs.set_push_group_func(cap(lib._test_push_group))
-        funcs.set_pop_group_func(cap(lib._test_pop_group))
-        funcs.set_custom_palette_color_func(cap(lib._test_custom_palette_color))
-
-        class Container:
-            def __init__(self, size):
-                create = lib._test_paint_data_create
-                create.restype = ctypes.c_void_p
-                create.argtypes = (ctypes.c_size_t,)
-
-                self.c_paint_data = create(size)
-                self.cap = cap(self.c_paint_data)
-
-            def __del__(self):
-                destroy = lib._test_paint_data_destroy
-                destroy.restype = None
-                destroy.argtypes = (ctypes.c_void_p,)
-
-                destroy(self.c_paint_data)
-
-            def value(self):
-                get_string = lib._test_paint_data_get_string
-                get_string.restype = ctypes.c_char_p
-                get_string.argtypes = (ctypes.c_void_p,)
-
-                return get_string(self.c_paint_data).decode("ascii")
-
-        return funcs, Container(container_size)
-
     @pytest.mark.parametrize(
-        "fontpath, glyph, expectedpath, use_capsule",
+        "fontpath, glyph, expectedpath",
         [
-            ("noto_handwriting-cff2_colr_1.otf", 10, "hand-10", False),
-            ("test_glyphs-glyf_colr_1.ttf", 6, "test-6", False),
-            ("test_glyphs-glyf_colr_1.ttf", 10, "test-10", False),
-            ("test_glyphs-glyf_colr_1.ttf", 92, "test-92", False),
-            ("test_glyphs-glyf_colr_1.ttf", 106, "test-106", False),
-            ("test_glyphs-glyf_colr_1.ttf", 116, "test-116", False),
-            ("test_glyphs-glyf_colr_1.ttf", 123, "test-123", False),
-            ("test_glyphs-glyf_colr_1.ttf", 154, "test-154", False),
-            ("test_glyphs-glyf_colr_1.ttf", 165, "test-165", False),
-            ("test_glyphs-glyf_colr_1.ttf", 175, "test-175", False),
-            ("noto_handwriting-cff2_colr_1.otf", 10, "hand-10", True),
-            ("test_glyphs-glyf_colr_1.ttf", 6, "test-6", True),
-            ("test_glyphs-glyf_colr_1.ttf", 10, "test-10", True),
-            ("test_glyphs-glyf_colr_1.ttf", 92, "test-92", True),
-            ("test_glyphs-glyf_colr_1.ttf", 106, "test-106", True),
-            ("test_glyphs-glyf_colr_1.ttf", 116, "test-116", True),
-            ("test_glyphs-glyf_colr_1.ttf", 123, "test-123", True),
-            ("test_glyphs-glyf_colr_1.ttf", 154, "test-154", True),
-            ("test_glyphs-glyf_colr_1.ttf", 165, "test-165", True),
-            ("test_glyphs-glyf_colr_1.ttf", 175, "test-175", True),
+            ("noto_handwriting-cff2_colr_1.otf", 10, "hand-10"),
+            ("test_glyphs-glyf_colr_1.ttf", 6, "test-6"),
+            ("test_glyphs-glyf_colr_1.ttf", 10, "test-10"),
+            ("test_glyphs-glyf_colr_1.ttf", 92, "test-92"),
+            ("test_glyphs-glyf_colr_1.ttf", 106, "test-106"),
+            ("test_glyphs-glyf_colr_1.ttf", 116, "test-116"),
+            ("test_glyphs-glyf_colr_1.ttf", 123, "test-123"),
+            ("test_glyphs-glyf_colr_1.ttf", 154, "test-154"),
+            ("test_glyphs-glyf_colr_1.ttf", 165, "test-165"),
+            ("test_glyphs-glyf_colr_1.ttf", 175, "test-175"),
         ],
     )
-    def test_paint(self, fontpath, glyph, expectedpath, use_capsule):
+    def test_paint(self, fontpath, glyph, expectedpath):
         blob = hb.Blob.from_file_path(TESTDATA / fontpath)
         face = hb.Face(blob)
         font = hb.Font(face)
 
+        funcs, container = self.setup_funcs()
+        font.paint_glyph(glyph, funcs, container)
+        result = container.value()
+
         with open(TESTDATA / "expected" / expectedpath) as f:
             expected = "".join(line for line in f.readlines() if line[0] != "#")
 
-        if use_capsule:
-            funcs, container = self.setup_funcs_capsule(len(expected) * 2)
-            font.paint_glyph(glyph, funcs, container.cap)
-        else:
-            funcs, container = self.setup_funcs()
-            font.paint_glyph(glyph, funcs, container)
-
-        result = container.value()
         assert result.strip() == expected.strip()
 
 

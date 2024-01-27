@@ -858,8 +858,6 @@ cdef class Font:
                     palette_index: int = 0,
                     foreground: int = 0x000000FF) -> None:
         cdef void *paint_state_p = <void *>paint_state
-        if PyCapsule_IsValid(paint_state, NULL):
-            paint_state_p = <void *>PyCapsule_GetPointer(paint_state, NULL)
         hb_font_paint_glyph(self._hb_font,
                             gid,
                             paint_funcs._hb_paintfuncs,
@@ -1788,94 +1786,38 @@ cdef class PaintFuncs:
                                     float,  # dx
                                     float,  # dy
                                     object,  # user_data
-                                ], None],
-                                user_data: object = None) -> None:
-        cdef hb_paint_push_transform_func_t func_p
-        cdef void *user_data_p
-        if PyCapsule_IsValid(func, NULL):
-            self._push_transform_func = None
-            func_p = <hb_paint_push_transform_func_t>PyCapsule_GetPointer(func, NULL)
-            if PyCapsule_IsValid(user_data, NULL):
-                user_data_p = <void*>PyCapsule_GetPointer(user_data, NULL)
-            else:
-                user_data_p = <void*>user_data
-        else:
-            self._push_transform_func = func
-            func_p = _paint_push_transform_func
-            assert user_data is None, "Pass paint_state to Font.paint_glyph"
-            user_data_p = <void*>func
+                                ], None]) -> None:
+        self._push_transform_func = func
         hb_paint_funcs_set_push_transform_func(
-            self._hb_paintfuncs, func_p, user_data_p, NULL)
+            self._hb_paintfuncs, _paint_push_transform_func, <void*>func, NULL)
 
     def set_pop_transform_func(self,
                                func: Callable[[
                                    object,  # user_data
-                               ], None],
-                               user_data: object = None) -> None:
-        cdef hb_paint_pop_transform_func_t func_p
-        cdef void *user_data_p
-        if PyCapsule_IsValid(func, NULL):
-            self._pop_transform_func = None
-            func_p = <hb_paint_pop_transform_func_t>PyCapsule_GetPointer(func, NULL)
-            if PyCapsule_IsValid(user_data, NULL):
-                user_data_p = <void*>PyCapsule_GetPointer(user_data, NULL)
-            else:
-                user_data_p = <void*>user_data
-        else:
-            self._pop_transform_func = func
-            func_p = _paint_pop_transform_func
-            assert user_data is None, "Pass paint_state to Font.paint_glyph"
-            user_data_p = <void*>func
+                               ], None]) -> None:
+        self._pop_transform_func = func
         hb_paint_funcs_set_pop_transform_func(
-            self._hb_paintfuncs, func_p, user_data_p, NULL)
+            self._hb_paintfuncs, _paint_pop_transform_func, <void*>func, NULL)
 
     def set_color_glyph_func(self,
                              func: Callable[[
                                  Font,
                                  int,  # gid
                                  object,  # user_data
-                             ], bool],
-                             user_data: object = None) -> None:
-        cdef hb_paint_color_glyph_func_t func_p
-        cdef void *user_data_p
-        if PyCapsule_IsValid(func, NULL):
-            self._color_glyph_func = None
-            func_p = <hb_paint_color_glyph_func_t>PyCapsule_GetPointer(func, NULL)
-            if PyCapsule_IsValid(user_data, NULL):
-                user_data_p = <void*>PyCapsule_GetPointer(user_data, NULL)
-            else:
-                user_data_p = <void*>user_data
-        else:
-            self._color_glyph_func = func
-            func_p = _paint_color_glyph_func
-            assert user_data is None, "Pass paint_state to Font.paint_glyph"
-            user_data_p = <void*>func
+                             ], bool]) -> None:
+        self._color_glyph_func = func
         hb_paint_funcs_set_color_glyph_func(
-            self._hb_paintfuncs, func_p, user_data_p, NULL)
+            self._hb_paintfuncs, _paint_color_glyph_func, <void*>func, NULL)
 
     def set_push_clip_glyph_func(self,
                                  func: Callable[[
                                      Font,
                                      int,  # gid
                                      object,  # user_data
-                                 ], None],
-                                 user_data: object = None) -> None:
-        cdef hb_paint_push_clip_glyph_func_t func_p
-        cdef void *user_data_p
-        if PyCapsule_IsValid(func, NULL):
-            self._push_clip_glyph_func = None
-            func_p = <hb_paint_push_clip_glyph_func_t>PyCapsule_GetPointer(func, NULL)
-            if PyCapsule_IsValid(user_data, NULL):
-                user_data_p = <void*>PyCapsule_GetPointer(user_data, NULL)
-            else:
-                user_data_p = <void*>user_data
-        else:
-            self._push_clip_glyph_func = func
-            func_p = _paint_push_clip_glyph_func
-            assert user_data is None, "Pass paint_state to Font.paint_glyph"
-            user_data_p = <void*>func
+                                 ], None]) -> None:
+        self._push_clip_glyph_func = func
         hb_paint_funcs_set_push_clip_glyph_func(
-            self._hb_paintfuncs, func_p, user_data_p, NULL)
+            self._hb_paintfuncs, _paint_push_clip_glyph_func, <void*>func, NULL)
 
     def set_push_clip_rectangle_func(self,
                                      func: Callable[[
@@ -1884,70 +1826,28 @@ cdef class PaintFuncs:
                                          float,  # xmax
                                          float,  # ymax
                                          object,  # user_data
-                                     ], None],
-                                     user_data: object = None) -> None:
-        cdef hb_paint_push_clip_rectangle_func_t func_p
-        cdef void *user_data_p
-        if PyCapsule_IsValid(func, NULL):
-            self._push_clip_rectangle_func = None
-            func_p = <hb_paint_push_clip_rectangle_func_t>PyCapsule_GetPointer(func, NULL)
-            if PyCapsule_IsValid(user_data, NULL):
-                user_data_p = <void*>PyCapsule_GetPointer(user_data, NULL)
-            else:
-                user_data_p = <void*>user_data
-        else:
-            self._push_clip_rectangle_func = func
-            func_p = _paint_push_clip_rectangle_func
-            assert user_data is None, "Pass paint_state to Font.paint_glyph"
-            user_data_p = <void*>func
+                                     ], None]) -> None:
+        self._push_clip_rectangle_func = func
         hb_paint_funcs_set_push_clip_rectangle_func(
-            self._hb_paintfuncs, func_p, user_data_p, NULL)
+            self._hb_paintfuncs, _paint_push_clip_rectangle_func, <void*>func, NULL)
 
     def set_pop_clip_func(self,
                           func: Callable[[
                               object,  # user_data
-                          ], None],
-                          user_data: object = None) -> None:
-        cdef hb_paint_pop_clip_func_t func_p
-        cdef void *user_data_p
-        if PyCapsule_IsValid(func, NULL):
-            self._pop_clip_func = None
-            func_p = <hb_paint_pop_clip_func_t>PyCapsule_GetPointer(func, NULL)
-            if PyCapsule_IsValid(user_data, NULL):
-                user_data_p = <void*>PyCapsule_GetPointer(user_data, NULL)
-            else:
-                user_data_p = <void*>user_data
-        else:
-            self._pop_clip_func = func
-            func_p = _paint_pop_clip_func
-            assert user_data is None, "Pass paint_state to Font.paint_glyph"
-            user_data_p = <void*>func
+                          ], None]) -> None:
+        self._pop_clip_func = func
         hb_paint_funcs_set_pop_clip_func(
-            self._hb_paintfuncs, func_p, user_data_p, NULL)
+            self._hb_paintfuncs, _paint_pop_clip_func, <void*>func, NULL)
 
     def set_color_func(self,
                        func: Callable[[
                            int,  # color
                            bool,  # is_foreground
                            object,  # user_data
-                       ], None],
-                       user_data: object = None) -> None:
-        cdef hb_paint_color_func_t func_p
-        cdef void *user_data_p
-        if PyCapsule_IsValid(func, NULL):
-            self._color_func = None
-            func_p = <hb_paint_color_func_t>PyCapsule_GetPointer(func, NULL)
-            if PyCapsule_IsValid(user_data, NULL):
-                user_data_p = <void*>PyCapsule_GetPointer(user_data, NULL)
-            else:
-                user_data_p = <void*>user_data
-        else:
-            self._color_func = func
-            func_p = _paint_color_func
-            assert user_data is None, "Pass paint_state to Font.paint_glyph"
-            user_data_p = <void*>func
+                       ], None]) -> None:
+        self._color_func = func
         hb_paint_funcs_set_color_func(
-            self._hb_paintfuncs, func_p, user_data_p, NULL)
+            self._hb_paintfuncs, _paint_color_func, <void*>func, NULL)
 
     def set_image_func(self,
                        func: Callable[[
@@ -1958,24 +1858,10 @@ cdef class PaintFuncs:
                            float,  # slant
                            GlyphExtents,  # extents
                            object,  # user_data
-                       ], bool],
-                       user_data: object = None) -> None:
-        cdef hb_paint_image_func_t func_p
-        cdef void *user_data_p
-        if PyCapsule_IsValid(func, NULL):
-            self._image_func = None
-            func_p = <hb_paint_image_func_t>PyCapsule_GetPointer(func, NULL)
-            if PyCapsule_IsValid(user_data, NULL):
-                user_data_p = <void*>PyCapsule_GetPointer(user_data, NULL)
-            else:
-                user_data_p = <void*>user_data
-        else:
-            self._image_func = func
-            func_p = _paint_image_func
-            assert user_data is None, "Pass draw_state to Font.paint_glyph"
-            user_data_p = <void*>func
+                       ], bool]) -> None:
+        self._image_func = func
         hb_paint_funcs_set_image_func(
-            self._hb_paintfuncs, func_p, user_data_p, NULL)
+            self._hb_paintfuncs, _paint_image_func, <void*>func, NULL)
 
     def set_linear_gradient_func(self,
                                  func: Callable[[
@@ -1987,24 +1873,10 @@ cdef class PaintFuncs:
                                     float,  # x2
                                     float,  # y2
                                     object,  # user_data
-                                 ], None],
-                                 user_data: object = None) -> None:
-        cdef hb_paint_linear_gradient_func_t func_p
-        cdef void *user_data_p
-        if PyCapsule_IsValid(func, NULL):
-            self._linear_gradient_func = None
-            func_p = <hb_paint_linear_gradient_func_t>PyCapsule_GetPointer(func, NULL)
-            if PyCapsule_IsValid(user_data, NULL):
-                user_data_p = <void*>PyCapsule_GetPointer(user_data, NULL)
-            else:
-                user_data_p = <void*>user_data
-        else:
-            self._linear_gradient_func = func
-            func_p = _paint_linear_gradient_func
-            assert user_data is None, "Pass draw_state to Font.paint_glyph"
-            user_data_p = <void*>func
+                                 ], None]) -> None:
+        self._linear_gradient_func = func
         hb_paint_funcs_set_linear_gradient_func(
-            self._hb_paintfuncs, func_p, user_data_p, NULL)
+            self._hb_paintfuncs, _paint_linear_gradient_func, <void*>func, NULL)
 
     def set_radial_gradient_func(self,
                                  func: Callable[[
@@ -2016,24 +1888,10 @@ cdef class PaintFuncs:
                                     float,  # y1
                                     float,  # r1
                                     object,  # user_data
-                                 ], None],
-                                 user_data: object = None) -> None:
-        cdef hb_paint_radial_gradient_func_t func_p
-        cdef void *user_data_p
-        if PyCapsule_IsValid(func, NULL):
-            self._radial_gradient_func = None
-            func_p = <hb_paint_radial_gradient_func_t>PyCapsule_GetPointer(func, NULL)
-            if PyCapsule_IsValid(user_data, NULL):
-                user_data_p = <void*>PyCapsule_GetPointer(user_data, NULL)
-            else:
-                user_data_p = <void*>user_data
-        else:
-            self._radial_gradient_func = func
-            func_p = _paint_radial_gradient_func
-            assert user_data is None, "Pass draw_state to Font.paint_glyph"
-            user_data_p = <void*>func
+                                 ], None]) -> None:
+        self._radial_gradient_func = func
         hb_paint_funcs_set_radial_gradient_func(
-            self._hb_paintfuncs, func_p, user_data_p, NULL)
+            self._hb_paintfuncs, _paint_radial_gradient_func, <void*>func, NULL)
 
     def set_sweep_gradient_func(self,
                                 func: Callable[[
@@ -2043,92 +1901,36 @@ cdef class PaintFuncs:
                                     float,  # start_angle
                                     float,  # end_angle
                                     object,  # user_data
-                                ], None],
-                                user_data: object = None) -> None:
-        cdef hb_paint_sweep_gradient_func_t func_p
-        cdef void *user_data_p
-        if PyCapsule_IsValid(func, NULL):
-            self._sweep_gradient_func = None
-            func_p = <hb_paint_sweep_gradient_func_t>PyCapsule_GetPointer(func, NULL)
-            if PyCapsule_IsValid(user_data, NULL):
-                user_data_p = <void*>PyCapsule_GetPointer(user_data, NULL)
-            else:
-                user_data_p = <void*>user_data
-        else:
-            self._sweep_gradient_func = func
-            func_p = _paint_sweep_gradient_func
-            assert user_data is None, "Pass draw_state to Font.paint_glyph"
-            user_data_p = <void*>func
+                                ], None]) -> None:
+        self._sweep_gradient_func = func
         hb_paint_funcs_set_sweep_gradient_func(
-            self._hb_paintfuncs, func_p, user_data_p, NULL)
+            self._hb_paintfuncs, _paint_sweep_gradient_func, <void*>func, NULL)
 
     def set_push_group_func(self,
                             func: Callable[[
                                 object,  # user_data
-                            ], None],
-                            user_data: object = None) -> None:
-        cdef hb_paint_push_group_func_t func_p
-        cdef void *user_data_p
-        if PyCapsule_IsValid(func, NULL):
-            self._push_group_func = None
-            func_p = <hb_paint_push_group_func_t>PyCapsule_GetPointer(func, NULL)
-            if PyCapsule_IsValid(user_data, NULL):
-                user_data_p = <void*>PyCapsule_GetPointer(user_data, NULL)
-            else:
-                user_data_p = <void*>user_data
-        else:
-            self._push_group_func = func
-            func_p = _paint_push_group_func
-            assert user_data is None, "Pass draw_state to Font.paint_glyph"
-            user_data_p = <void*>func
+                            ], None]) -> None:
+        self._push_group_func = func
         hb_paint_funcs_set_push_group_func(
-            self._hb_paintfuncs, func_p, user_data_p, NULL)
+            self._hb_paintfuncs, _paint_push_group_func, <void*>func, NULL)
 
     def set_pop_group_func(self,
                            func: Callable[[
                                PaintCompositeMode,  # mode
                                object,  # user_data
-                           ], None],
-                           user_data: object = None) -> None:
-        cdef hb_paint_pop_group_func_t func_p
-        cdef void *user_data_p
-        if PyCapsule_IsValid(func, NULL):
-            self._pop_group_func = None
-            func_p = <hb_paint_pop_group_func_t>PyCapsule_GetPointer(func, NULL)
-            if PyCapsule_IsValid(user_data, NULL):
-                user_data_p = <void*>PyCapsule_GetPointer(user_data, NULL)
-            else:
-                user_data_p = <void*>user_data
-        else:
-            self._pop_group_func = func
-            func_p = _paint_pop_group_func
-            assert user_data is None, "Pass draw_state to Font.paint_glyph"
-            user_data_p = <void*>func
+                           ], None]) -> None:
+        self._pop_group_func = func
         hb_paint_funcs_set_pop_group_func(
-            self._hb_paintfuncs, func_p, user_data_p, NULL)
+            self._hb_paintfuncs, _paint_pop_group_func, <void*>func, NULL)
 
     def set_custom_palette_color_func(self,
                                       func: Callable[[
                                           int,  # color_index
                                           object,  # user_data
-                                      ], bool],
-                                      user_data: object = None) -> None:
-        cdef hb_paint_custom_palette_color_func_t func_p
-        cdef void *user_data_p
-        if PyCapsule_IsValid(func, NULL):
-            self._custom_palette_color_func = None
-            func_p = <hb_paint_custom_palette_color_func_t>PyCapsule_GetPointer(func, NULL)
-            if PyCapsule_IsValid(user_data, NULL):
-                user_data_p = <void*>PyCapsule_GetPointer(user_data, NULL)
-            else:
-                user_data_p = <void*>user_data
-        else:
-            self._custom_palette_color_func = func
-            func_p = _paint_custom_palette_color_func
-            assert user_data is None, "Pass draw_state to Font.paint_glyph"
-            user_data_p = <void*>func
+                                      ], bool]) -> None:
+        self._custom_palette_color_func = func
         hb_paint_funcs_set_custom_palette_color_func(
-            self._hb_paintfuncs, func_p, user_data_p, NULL)
+            self._hb_paintfuncs, _paint_custom_palette_color_func, <void*>func, NULL)
 
 
 cdef void _move_to_func(hb_draw_funcs_t *dfuncs,
