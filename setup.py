@@ -58,6 +58,7 @@ extension_test = Extension(
     define_macros=define_macros,
     include_dirs=["harfbuzz/src"],
     sources=[
+        "harfbuzz/src/harfbuzz.cc",
         "src/uharfbuzz/_draw_test_funcs.cc",
         "src/uharfbuzz/_harfbuzz_test.pyx",
     ],

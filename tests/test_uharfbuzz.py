@@ -783,6 +783,229 @@ class TestCallbacks:
         ]
 
 
+class TestPaintFuncs:
+    @staticmethod
+    def setup_funcs():
+        def split_color(color: int):
+            return color.to_bytes(4, "little")
+
+        def push_transform_func(xx, xy, yx, yy, dx, dy, conainer):
+            conainer.append(
+                f"start transform "
+                f"{xx:.3g} {xy:.3g} {yx:.3g} {yy:.3g} {dx:.3g} {dy:.3g}"
+            )
+            conainer.level += 1
+
+        def pop_transform_func(conainer):
+            conainer.level -= 1
+            conainer.append(f"end transform")
+
+        def color_glyph_func(font, gid, conainer):
+            conainer.append(f"paint color glyph {gid}; acting as failed")
+            return False
+
+        def push_clip_glyph_func(font, gid, conainer):
+            conainer.append(f"start clip glyph {gid}")
+            conainer.level += 1
+            return True
+
+        def push_clip_rectangle_func(xmin, ymin, xmax, ymax, conainer):
+            conainer.append(
+                f"start clip rectangle {xmin:.3g} {ymin:.3g} {xmax:.3g} {ymax:.3g}"
+            )
+            conainer.level += 1
+
+        def pop_clip_func(conainer):
+            conainer.level -= 1
+            conainer.append(f"end clip")
+
+        def color_func(color, is_foreground, conainer):
+            a, r, g, b = split_color(color)
+            conainer.append(f"solid {r} {g} {b} {a}")
+
+        def image_func(image, width, height, format, slant, extents, conainer):
+            conainer.append(
+                f"image type {format} "
+                f"size {width} {height} "
+                f"slant {slant:.3g} "
+                f"extents {extents.x_bearing} {extents.y_bearing} {extents.width} {extents.height}"
+            )
+            return True
+
+        def linear_gradient_func(color_line, x0, y0, x1, y1, x2, y2, conainer):
+            conainer.append(f"linear gradient")
+            conainer.level += 1
+            conainer.append(f"p0 {x0:.3g} {y0:.3g}")
+            conainer.append(f"p1 {x1:.3g} {y1:.3g}")
+            conainer.append(f"p2 {x2:.3g} {y2:.3g}")
+            conainer.append_color_line(color_line)
+            conainer.level -= 1
+
+        def radial_gradient_func(color_line, x0, y0, r0, x1, y1, r1, conainer):
+            conainer.append(f"radial gradient")
+            conainer.level += 1
+            conainer.append(f"p0 {x0:.3g} {y0:.3g} radius {r0:.3g}")
+            conainer.append(f"p1 {x1:.3g} {y1:.3g} radius {r1:.3g}")
+            conainer.append_color_line(color_line)
+            conainer.level -= 1
+
+        def sweep_gradient_func(color_line, cx, cy, start_angle, end_angle, conainer):
+            conainer.append(f"sweep gradient")
+            conainer.level += 1
+            conainer.append(f"center {cx:.3g} {cy:.3g}")
+            conainer.append(f"angles {start_angle:.3g} {end_angle:.3g}")
+            conainer.append_color_line(color_line)
+            conainer.level -= 1
+
+        def push_group_func(conainer):
+            conainer.append(f"push group")
+            conainer.level += 1
+
+        def pop_group_func(mode, conainer):
+            conainer.level -= 1
+            conainer.append(f"pop group mode {int(mode)}")
+
+        def custom_palette_color_func(color_index, conainer):
+            return None
+
+        funcs = hb.PaintFuncs()
+        funcs.set_push_transform_func(push_transform_func)
+        funcs.set_pop_transform_func(pop_transform_func)
+        funcs.set_color_glyph_func(color_glyph_func)
+        funcs.set_push_clip_glyph_func(push_clip_glyph_func)
+        funcs.set_push_clip_rectangle_func(push_clip_rectangle_func)
+        funcs.set_pop_clip_func(pop_clip_func)
+        funcs.set_color_func(color_func)
+        funcs.set_image_func(image_func)
+        funcs.set_linear_gradient_func(linear_gradient_func)
+        funcs.set_radial_gradient_func(radial_gradient_func)
+        funcs.set_sweep_gradient_func(sweep_gradient_func)
+        funcs.set_push_group_func(push_group_func)
+        funcs.set_pop_group_func(pop_group_func)
+        funcs.set_custom_palette_color_func(custom_palette_color_func)
+
+        class Container:
+            def __init__(self):
+                self.level = 0
+                self.lines = []
+
+            def append(self, line):
+                indent = " " * self.level * 2
+                self.lines.append(indent + line)
+
+            def append_color_line(self, color_line):
+                self.append(f"colors {int(color_line.extend)}")
+
+                self.level += 1
+                for stop in color_line.color_stops:
+                    a, r, g, b = split_color(stop.color)
+                    self.append(f"{stop.offset:.3g} {r} {g} {b} {a}")
+                self.level -= 1
+
+            def value(self):
+                return "\n".join(self.lines)
+
+        return funcs, Container()
+
+    @staticmethod
+    def setup_funcs_capsule(container_size):
+        import ctypes
+        import uharfbuzz._harfbuzz_test
+
+        PyCapsule_New = ctypes.pythonapi.PyCapsule_New
+        PyCapsule_New.restype = ctypes.py_object
+        PyCapsule_New.argtypes = (ctypes.c_void_p, ctypes.c_char_p, ctypes.c_void_p)
+
+        lib = ctypes.cdll.LoadLibrary(uharfbuzz._harfbuzz_test.__file__)
+
+        def cap(x):
+            return PyCapsule_New(x, None, None)
+
+        funcs = hb.PaintFuncs()
+        funcs.set_push_transform_func(cap(lib._test_push_transform))
+        funcs.set_pop_transform_func(cap(lib._test_pop_transform))
+        funcs.set_color_glyph_func(cap(lib._test_paint_color_glyph))
+        funcs.set_push_clip_glyph_func(cap(lib._test_push_clip_glyph))
+        funcs.set_push_clip_rectangle_func(cap(lib._test_push_clip_rectangle))
+        funcs.set_pop_clip_func(cap(lib._test_pop_clip))
+        funcs.set_color_func(cap(lib._test_paint_color))
+        funcs.set_image_func(cap(lib._test_paint_image))
+        funcs.set_linear_gradient_func(cap(lib._test_paint_linear_gradient))
+        funcs.set_radial_gradient_func(cap(lib._test_paint_radial_gradient))
+        funcs.set_sweep_gradient_func(cap(lib._test_paint_sweep_gradient))
+        funcs.set_push_group_func(cap(lib._test_push_group))
+        funcs.set_pop_group_func(cap(lib._test_pop_group))
+        funcs.set_custom_palette_color_func(cap(lib._test_custom_palette_color))
+
+        class Container:
+            def __init__(self, size):
+                create = lib._test_paint_data_create
+                create.restype = ctypes.c_void_p
+                create.argtypes = (ctypes.c_size_t,)
+
+                self.c_paint_data = create(size)
+                self.cap = cap(self.c_paint_data)
+
+            def __del__(self):
+                destroy = lib._test_paint_data_destroy
+                destroy.restype = None
+                destroy.argtypes = (ctypes.c_void_p,)
+
+                destroy(self.c_paint_data)
+
+            def value(self):
+                get_string = lib._test_paint_data_get_string
+                get_string.restype = ctypes.c_char_p
+                get_string.argtypes = (ctypes.c_void_p,)
+
+                return get_string(self.c_paint_data).decode("ascii")
+
+        return funcs, Container(container_size)
+
+    @pytest.mark.parametrize(
+        "fontpath, glyph, expectedpath, use_capsule",
+        [
+            ("noto_handwriting-cff2_colr_1.otf", 10, "hand-10", False),
+            ("test_glyphs-glyf_colr_1.ttf", 6, "test-6", False),
+            ("test_glyphs-glyf_colr_1.ttf", 10, "test-10", False),
+            ("test_glyphs-glyf_colr_1.ttf", 92, "test-92", False),
+            ("test_glyphs-glyf_colr_1.ttf", 106, "test-106", False),
+            ("test_glyphs-glyf_colr_1.ttf", 116, "test-116", False),
+            ("test_glyphs-glyf_colr_1.ttf", 123, "test-123", False),
+            ("test_glyphs-glyf_colr_1.ttf", 154, "test-154", False),
+            ("test_glyphs-glyf_colr_1.ttf", 165, "test-165", False),
+            ("test_glyphs-glyf_colr_1.ttf", 175, "test-175", False),
+            ("noto_handwriting-cff2_colr_1.otf", 10, "hand-10", True),
+            ("test_glyphs-glyf_colr_1.ttf", 6, "test-6", True),
+            ("test_glyphs-glyf_colr_1.ttf", 10, "test-10", True),
+            ("test_glyphs-glyf_colr_1.ttf", 92, "test-92", True),
+            ("test_glyphs-glyf_colr_1.ttf", 106, "test-106", True),
+            ("test_glyphs-glyf_colr_1.ttf", 116, "test-116", True),
+            ("test_glyphs-glyf_colr_1.ttf", 123, "test-123", True),
+            ("test_glyphs-glyf_colr_1.ttf", 154, "test-154", True),
+            ("test_glyphs-glyf_colr_1.ttf", 165, "test-165", True),
+            ("test_glyphs-glyf_colr_1.ttf", 175, "test-175", True),
+        ],
+    )
+    def test_paint(self, fontpath, glyph, expectedpath, use_capsule):
+        blob = hb.Blob.from_file_path(TESTDATA / fontpath)
+        face = hb.Face(blob)
+        font = hb.Font(face)
+
+        with open(TESTDATA / "expected" / expectedpath) as f:
+            expected = "".join(line for line in f.readlines() if line[0] != "#")
+
+        if use_capsule:
+            funcs, container = self.setup_funcs_capsule(len(expected) * 2)
+            font.paint_glyph(glyph, funcs, container.cap)
+        else:
+            funcs, container = self.setup_funcs()
+            font.paint_glyph(glyph, funcs, container)
+
+        result = container.value()
+        assert result.strip() == expected.strip()
+
+
 class MessageCollector:
     def message(self, message):
         pass
