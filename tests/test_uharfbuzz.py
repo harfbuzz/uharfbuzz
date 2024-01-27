@@ -696,36 +696,6 @@ class TestCallbacks:
         def close_path(c):
             c.append("Z")
 
-        funcs.set_move_to_func(move_to, container)
-        funcs.set_line_to_func(line_to, container)
-        funcs.set_cubic_to_func(cubic_to, container)
-        funcs.set_quadratic_to_func(quadratic_to, container)
-        funcs.set_close_path_func(close_path, container)
-        opensans.draw_glyph(funcs, 1)
-        assert (
-            "".join(container)
-            == "M1120,0L938,465L352,465L172,0L0,0L578,1468L721,1468L1296,0L1120,0ZM885,618L715,1071Q682,1157 647,1282Q625,1186 584,1071L412,618L885,618Z"
-        )
-
-    def test_draw_funcs(self, opensans):
-        funcs = hb.DrawFuncs()
-        container = []
-
-        def move_to(x, y, c):
-            c.append(f"M{x:g},{y:g}")
-
-        def line_to(x, y, c):
-            c.append(f"L{x:g},{y:g}")
-
-        def cubic_to(c1x, c1y, c2x, c2y, x, y, c):
-            c.append(f"C{c1x:g},{c1y:g} {c2x:g},{c2y:g} {x:g},{y:g}")
-
-        def quadratic_to(c1x, c1y, x, y, c):
-            c.append(f"Q{c1x:g},{c1y:g} {x:g},{y:g}")
-
-        def close_path(c):
-            c.append("Z")
-
         funcs.set_move_to_func(move_to)
         funcs.set_line_to_func(line_to)
         funcs.set_cubic_to_func(cubic_to)
