@@ -1785,7 +1785,7 @@ cdef class PaintFuncs:
                                     float,  # yy
                                     float,  # dx
                                     float,  # dy
-                                    object,  # user_data
+                                    object,  # paint_data
                                 ], None]) -> None:
         self._push_transform_func = func
         hb_paint_funcs_set_push_transform_func(
@@ -1793,7 +1793,7 @@ cdef class PaintFuncs:
 
     def set_pop_transform_func(self,
                                func: Callable[[
-                                   object,  # user_data
+                                   object,  # paint_data
                                ], None]) -> None:
         self._pop_transform_func = func
         hb_paint_funcs_set_pop_transform_func(
@@ -1803,7 +1803,7 @@ cdef class PaintFuncs:
                              func: Callable[[
                                  Font,
                                  int,  # gid
-                                 object,  # user_data
+                                 object,  # paint_data
                              ], bool]) -> None:
         self._color_glyph_func = func
         hb_paint_funcs_set_color_glyph_func(
@@ -1813,7 +1813,7 @@ cdef class PaintFuncs:
                                  func: Callable[[
                                      Font,
                                      int,  # gid
-                                     object,  # user_data
+                                     object,  # paint_data
                                  ], None]) -> None:
         self._push_clip_glyph_func = func
         hb_paint_funcs_set_push_clip_glyph_func(
@@ -1825,7 +1825,7 @@ cdef class PaintFuncs:
                                          float,  # ymin
                                          float,  # xmax
                                          float,  # ymax
-                                         object,  # user_data
+                                         object,  # paint_data
                                      ], None]) -> None:
         self._push_clip_rectangle_func = func
         hb_paint_funcs_set_push_clip_rectangle_func(
@@ -1833,7 +1833,7 @@ cdef class PaintFuncs:
 
     def set_pop_clip_func(self,
                           func: Callable[[
-                              object,  # user_data
+                              object,  # paint_data
                           ], None]) -> None:
         self._pop_clip_func = func
         hb_paint_funcs_set_pop_clip_func(
@@ -1843,7 +1843,7 @@ cdef class PaintFuncs:
                        func: Callable[[
                            int,  # color
                            bool,  # is_foreground
-                           object,  # user_data
+                           object,  # paint_data
                        ], None]) -> None:
         self._color_func = func
         hb_paint_funcs_set_color_func(
@@ -1857,7 +1857,7 @@ cdef class PaintFuncs:
                            str,  # format
                            float,  # slant
                            GlyphExtents,  # extents
-                           object,  # user_data
+                           object,  # paint_data
                        ], bool]) -> None:
         self._image_func = func
         hb_paint_funcs_set_image_func(
@@ -1872,7 +1872,7 @@ cdef class PaintFuncs:
                                     float,  # y1
                                     float,  # x2
                                     float,  # y2
-                                    object,  # user_data
+                                    object,  # paint_data
                                  ], None]) -> None:
         self._linear_gradient_func = func
         hb_paint_funcs_set_linear_gradient_func(
@@ -1887,7 +1887,7 @@ cdef class PaintFuncs:
                                     float,  # x1
                                     float,  # y1
                                     float,  # r1
-                                    object,  # user_data
+                                    object,  # paint_data
                                  ], None]) -> None:
         self._radial_gradient_func = func
         hb_paint_funcs_set_radial_gradient_func(
@@ -1900,7 +1900,7 @@ cdef class PaintFuncs:
                                     float,  # y0
                                     float,  # start_angle
                                     float,  # end_angle
-                                    object,  # user_data
+                                    object,  # paint_data
                                 ], None]) -> None:
         self._sweep_gradient_func = func
         hb_paint_funcs_set_sweep_gradient_func(
@@ -1908,7 +1908,7 @@ cdef class PaintFuncs:
 
     def set_push_group_func(self,
                             func: Callable[[
-                                object,  # user_data
+                                object,  # paint_data
                             ], None]) -> None:
         self._push_group_func = func
         hb_paint_funcs_set_push_group_func(
@@ -1917,7 +1917,7 @@ cdef class PaintFuncs:
     def set_pop_group_func(self,
                            func: Callable[[
                                PaintCompositeMode,  # mode
-                               object,  # user_data
+                               object,  # paint_data
                            ], None]) -> None:
         self._pop_group_func = func
         hb_paint_funcs_set_pop_group_func(
@@ -1926,7 +1926,7 @@ cdef class PaintFuncs:
     def set_custom_palette_color_func(self,
                                       func: Callable[[
                                           int,  # color_index
-                                          object,  # user_data
+                                          object,  # paint_data
                                       ], bool]) -> None:
         self._custom_palette_color_func = func
         hb_paint_funcs_set_custom_palette_color_func(
@@ -2021,7 +2021,7 @@ cdef class DrawFuncs:
                          func: Callable[[
                              float,
                              float,
-                             object,  # user_data
+                             object,  # draw_data
                          ], None],
                          user_data: object = None) -> None:
         cdef hb_draw_move_to_func_t func_p
@@ -2045,7 +2045,7 @@ cdef class DrawFuncs:
                          func: Callable[[
                              float,
                              float,
-                             object,  # user_data
+                             object,  # draw_data
                          ], None],
                          user_data: object = None) -> None:
         cdef hb_draw_line_to_func_t func_p
@@ -2073,7 +2073,7 @@ cdef class DrawFuncs:
                              float,
                              float,
                              float,
-                             object,  # user_data
+                             object,  # draw_data
                           ], None],
                           user_data: object = None) -> None:
         cdef hb_draw_cubic_to_func_t func_p
@@ -2099,7 +2099,7 @@ cdef class DrawFuncs:
                                  float,
                                  float,
                                  float,
-                                 object,  # user_data
+                                 object,  # draw_data
                               ], None],
                               user_data: object = None) -> None:
         cdef hb_draw_quadratic_to_func_t func_p
