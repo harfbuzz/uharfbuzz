@@ -1591,16 +1591,16 @@ cdef void _paint_push_transform_func(
         float dx,
         float dy,
         void *user_data) noexcept:
-    f = <object>user_data
-    f(xx, yx, xy, yy, dx, dy, <object>paint_data)
+    py_funcs = <PaintFuncs>user_data
+    py_funcs._push_transform_func(xx, yx, xy, yy, dx, dy, <object>paint_data)
 
 
 cdef void _paint_pop_transform_func(
         hb_paint_funcs_t *funcs,
         void *paint_data,
         void *user_data) noexcept:
-    f = <object>user_data
-    f(<object>paint_data)
+    py_funcs = <PaintFuncs>user_data
+    py_funcs._pop_transform_func(<object>paint_data)
 
 
 cdef hb_bool_t _paint_color_glyph_func(
@@ -1609,9 +1609,9 @@ cdef hb_bool_t _paint_color_glyph_func(
         hb_codepoint_t glyph,
         hb_font_t *font,
         void *user_data) noexcept:
-    f = <object>user_data
+    py_funcs = <PaintFuncs>user_data
     py_font = Font.from_ptr(hb_font_reference(font))
-    if f(py_font, glyph, <object>paint_data):
+    if py_funcs._color_glyph_func(py_font, glyph, <object>paint_data):
         return 1
     return 0
 
@@ -1622,9 +1622,9 @@ cdef void _paint_push_clip_glyph_func(
         hb_codepoint_t glyph,
         hb_font_t *font,
         void *user_data) noexcept:
-    f = <object>user_data
+    py_funcs = <PaintFuncs>user_data
     py_font = Font.from_ptr(hb_font_reference(font))
-    f(py_font, glyph, <object>paint_data)
+    py_funcs._push_clip_glyph_func(py_font, glyph, <object>paint_data)
 
 
 cdef void _paint_push_clip_rectangle_func(
@@ -1635,16 +1635,16 @@ cdef void _paint_push_clip_rectangle_func(
         float xmax,
         float ymax,
         void *user_data) noexcept:
-    f = <object>user_data
-    f(xmin, ymin, xmax, ymax, <object>paint_data)
+    py_funcs = <PaintFuncs>user_data
+    py_funcs._push_clip_rectangle_func(xmin, ymin, xmax, ymax, <object>paint_data)
 
 
 cdef void _paint_pop_clip_func(
         hb_paint_funcs_t *funcs,
         void *paint_data,
         void *user_data) noexcept:
-    f = <object>user_data
-    f(<object>paint_data)
+    py_funcs = <PaintFuncs>user_data
+    py_funcs._pop_clip_func(<object>paint_data)
 
 
 cdef void _paint_color_func(
@@ -1653,8 +1653,8 @@ cdef void _paint_color_func(
         hb_bool_t is_foreground,
         hb_color_t color,
         void *user_data) noexcept:
-    f = <object>user_data
-    f(color, is_foreground, <object>paint_data)
+    py_funcs = <PaintFuncs>user_data
+    py_funcs._color_func(color, is_foreground, <object>paint_data)
 
 
 cdef hb_bool_t _paint_image_func(
@@ -1667,11 +1667,11 @@ cdef hb_bool_t _paint_image_func(
         float slant,
         hb_glyph_extents_t *extents,
         void *user_data) noexcept:
-    f = <object>user_data
+    py_funcs = <PaintFuncs>user_data
     py_image = Blob.from_ptr(hb_blob_reference(image))
     py_format = hb_tag_to_string(format, NULL)
     py_extents = GlyphExtents(extents.x_bearing, extents.y_bearing, extents.width, extents.height)
-    if f(py_image, width, height, py_format, slant, py_extents, <object>paint_data):
+    if py_funcs._image_func(py_image, width, height, py_format, slant, py_extents, <object>paint_data):
         return 1
     return 0
 
@@ -1687,9 +1687,9 @@ cdef void _paint_linear_gradient_func(
         float x2,
         float y2,
         void *user_data) noexcept:
-    f = <object>user_data
+    py_funcs = <PaintFuncs>user_data
     py_color_line = ColorLine.from_ptr(color_line)
-    f(py_color_line, x0, y0, x1, y1, x2, y2, <object>paint_data)
+    py_funcs._linear_gradient_func(py_color_line, x0, y0, x1, y1, x2, y2, <object>paint_data)
 
 
 cdef void _paint_radial_gradient_func(
@@ -1703,9 +1703,9 @@ cdef void _paint_radial_gradient_func(
         float y1,
         float r1,
         void *user_data) noexcept:
-    f = <object>user_data
+    py_funcs = <PaintFuncs>user_data
     py_color_line = ColorLine.from_ptr(color_line)
-    f(py_color_line, x0, y0, r0, x1, y1, r1, <object>paint_data)
+    py_funcs._radial_gradient_func(py_color_line, x0, y0, r0, x1, y1, r1, <object>paint_data)
 
 
 cdef void _paint_sweep_gradient_func(
@@ -1717,17 +1717,17 @@ cdef void _paint_sweep_gradient_func(
         float start_angle,
         float end_angle,
         void *user_data) noexcept:
-    f = <object>user_data
+    py_funcs = <PaintFuncs>user_data
     py_color_line = ColorLine.from_ptr(color_line)
-    f(py_color_line, x0, y0, start_angle, end_angle, <object>paint_data)
+    py_funcs._sweep_gradient_func(py_color_line, x0, y0, start_angle, end_angle, <object>paint_data)
 
 
 cdef void _paint_push_group_func(
         hb_paint_funcs_t *funcs,
         void *paint_data,
         void *user_data) noexcept:
-    f = <object>user_data
-    f(<object>paint_data)
+    py_funcs = <PaintFuncs>user_data
+    py_funcs._push_group_func(<object>paint_data)
 
 
 cdef void _paint_pop_group_func(
@@ -1735,9 +1735,9 @@ cdef void _paint_pop_group_func(
         void *paint_data,
         hb_paint_composite_mode_t mode,
         void *user_data) noexcept:
-    f = <object>user_data
+    py_funcs = <PaintFuncs>user_data
     py_mode = PaintCompositeMode(mode)
-    f(py_mode, <object>paint_data)
+    py_funcs._pop_group_func(py_mode, <object>paint_data)
 
 
 cdef hb_bool_t _paint_custom_palette_color_func(
@@ -1746,8 +1746,8 @@ cdef hb_bool_t _paint_custom_palette_color_func(
         unsigned int color_index,
         hb_color_t *color,
         void *user_data) noexcept:
-    f = <object>user_data
-    py_color = f(color_index, <object>paint_data)
+    py_funcs = <PaintFuncs>user_data
+    py_color = py_funcs._custom_palette_color_func(color_index, <object>paint_data)
     if py_color is not None:
         color[0] = py_color
         return 1
@@ -1789,7 +1789,7 @@ cdef class PaintFuncs:
                                 ], None]) -> None:
         self._push_transform_func = func
         hb_paint_funcs_set_push_transform_func(
-            self._hb_paintfuncs, _paint_push_transform_func, <void*>func, NULL)
+            self._hb_paintfuncs, _paint_push_transform_func, <void*>self, NULL)
 
     def set_pop_transform_func(self,
                                func: Callable[[
@@ -1797,7 +1797,7 @@ cdef class PaintFuncs:
                                ], None]) -> None:
         self._pop_transform_func = func
         hb_paint_funcs_set_pop_transform_func(
-            self._hb_paintfuncs, _paint_pop_transform_func, <void*>func, NULL)
+            self._hb_paintfuncs, _paint_pop_transform_func, <void*>self, NULL)
 
     def set_color_glyph_func(self,
                              func: Callable[[
@@ -1807,7 +1807,7 @@ cdef class PaintFuncs:
                              ], bool]) -> None:
         self._color_glyph_func = func
         hb_paint_funcs_set_color_glyph_func(
-            self._hb_paintfuncs, _paint_color_glyph_func, <void*>func, NULL)
+            self._hb_paintfuncs, _paint_color_glyph_func, <void*>self, NULL)
 
     def set_push_clip_glyph_func(self,
                                  func: Callable[[
@@ -1817,7 +1817,7 @@ cdef class PaintFuncs:
                                  ], None]) -> None:
         self._push_clip_glyph_func = func
         hb_paint_funcs_set_push_clip_glyph_func(
-            self._hb_paintfuncs, _paint_push_clip_glyph_func, <void*>func, NULL)
+            self._hb_paintfuncs, _paint_push_clip_glyph_func, <void*>self, NULL)
 
     def set_push_clip_rectangle_func(self,
                                      func: Callable[[
@@ -1829,7 +1829,7 @@ cdef class PaintFuncs:
                                      ], None]) -> None:
         self._push_clip_rectangle_func = func
         hb_paint_funcs_set_push_clip_rectangle_func(
-            self._hb_paintfuncs, _paint_push_clip_rectangle_func, <void*>func, NULL)
+            self._hb_paintfuncs, _paint_push_clip_rectangle_func, <void*>self, NULL)
 
     def set_pop_clip_func(self,
                           func: Callable[[
@@ -1837,7 +1837,7 @@ cdef class PaintFuncs:
                           ], None]) -> None:
         self._pop_clip_func = func
         hb_paint_funcs_set_pop_clip_func(
-            self._hb_paintfuncs, _paint_pop_clip_func, <void*>func, NULL)
+            self._hb_paintfuncs, _paint_pop_clip_func, <void*>self, NULL)
 
     def set_color_func(self,
                        func: Callable[[
@@ -1847,7 +1847,7 @@ cdef class PaintFuncs:
                        ], None]) -> None:
         self._color_func = func
         hb_paint_funcs_set_color_func(
-            self._hb_paintfuncs, _paint_color_func, <void*>func, NULL)
+            self._hb_paintfuncs, _paint_color_func, <void*>self, NULL)
 
     def set_image_func(self,
                        func: Callable[[
@@ -1861,7 +1861,7 @@ cdef class PaintFuncs:
                        ], bool]) -> None:
         self._image_func = func
         hb_paint_funcs_set_image_func(
-            self._hb_paintfuncs, _paint_image_func, <void*>func, NULL)
+            self._hb_paintfuncs, _paint_image_func, <void*>self, NULL)
 
     def set_linear_gradient_func(self,
                                  func: Callable[[
@@ -1876,7 +1876,7 @@ cdef class PaintFuncs:
                                  ], None]) -> None:
         self._linear_gradient_func = func
         hb_paint_funcs_set_linear_gradient_func(
-            self._hb_paintfuncs, _paint_linear_gradient_func, <void*>func, NULL)
+            self._hb_paintfuncs, _paint_linear_gradient_func, <void*>self, NULL)
 
     def set_radial_gradient_func(self,
                                  func: Callable[[
@@ -1891,7 +1891,7 @@ cdef class PaintFuncs:
                                  ], None]) -> None:
         self._radial_gradient_func = func
         hb_paint_funcs_set_radial_gradient_func(
-            self._hb_paintfuncs, _paint_radial_gradient_func, <void*>func, NULL)
+            self._hb_paintfuncs, _paint_radial_gradient_func, <void*>self, NULL)
 
     def set_sweep_gradient_func(self,
                                 func: Callable[[
@@ -1904,7 +1904,7 @@ cdef class PaintFuncs:
                                 ], None]) -> None:
         self._sweep_gradient_func = func
         hb_paint_funcs_set_sweep_gradient_func(
-            self._hb_paintfuncs, _paint_sweep_gradient_func, <void*>func, NULL)
+            self._hb_paintfuncs, _paint_sweep_gradient_func, <void*>self, NULL)
 
     def set_push_group_func(self,
                             func: Callable[[
@@ -1912,7 +1912,7 @@ cdef class PaintFuncs:
                             ], None]) -> None:
         self._push_group_func = func
         hb_paint_funcs_set_push_group_func(
-            self._hb_paintfuncs, _paint_push_group_func, <void*>func, NULL)
+            self._hb_paintfuncs, _paint_push_group_func, <void*>self, NULL)
 
     def set_pop_group_func(self,
                            func: Callable[[
@@ -1921,7 +1921,7 @@ cdef class PaintFuncs:
                            ], None]) -> None:
         self._pop_group_func = func
         hb_paint_funcs_set_pop_group_func(
-            self._hb_paintfuncs, _paint_pop_group_func, <void*>func, NULL)
+            self._hb_paintfuncs, _paint_pop_group_func, <void*>self, NULL)
 
     def set_custom_palette_color_func(self,
                                       func: Callable[[
@@ -1930,7 +1930,7 @@ cdef class PaintFuncs:
                                       ], bool]) -> None:
         self._custom_palette_color_func = func
         hb_paint_funcs_set_custom_palette_color_func(
-            self._hb_paintfuncs, _paint_custom_palette_color_func, <void*>func, NULL)
+            self._hb_paintfuncs, _paint_custom_palette_color_func, <void*>self, NULL)
 
 
 cdef void _move_to_func(hb_draw_funcs_t *dfuncs,
