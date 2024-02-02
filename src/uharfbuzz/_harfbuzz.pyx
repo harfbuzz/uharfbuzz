@@ -856,14 +856,17 @@ cdef class Font:
                     paint_funcs: PaintFuncs,
                     paint_state: object = None,
                     palette_index: int = 0,
-                    foreground: int = 0x000000FF) -> None:
+                    foreground: Color | None = None) -> None:
         cdef void *paint_state_p = <void *>paint_state
+        cdef hb_color_t c_foreground = 0x000000FF
+        if foreground is not None:
+            c_foreground = foreground.to_int()
         hb_font_paint_glyph(self._hb_font,
                             gid,
                             paint_funcs._hb_paintfuncs,
                             paint_state_p,
                             palette_index,
-                            foreground)
+                            c_foreground)
 
     def draw_glyph_with_pen(self, gid: int, pen):
         global drawfuncs
@@ -1583,7 +1586,7 @@ cdef class ColorLine:
             for i in range(stop_count):
                 c_stop = stops_array[i]
                 py_color = Color.from_int(c_stop.color)
-                stop = ColorStop(c_stop.offset, c_stop.is_foreground, py_color)
+                stop = ColorStop(c_stop.offset, <bint>c_stop.is_foreground, py_color)
                 stops.append(stop)
             start_offset += stop_count
         return stops
@@ -1669,7 +1672,7 @@ cdef void _paint_color_func(
         void *user_data) noexcept:
     py_funcs = <PaintFuncs>user_data
     py_color: Color = Color.from_int(color)
-    py_funcs._color_func(py_color, is_foreground, <object>paint_data)
+    py_funcs._color_func(py_color, <bint>is_foreground, <object>paint_data)
 
 
 cdef hb_bool_t _paint_image_func(
