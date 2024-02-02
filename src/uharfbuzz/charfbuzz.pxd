@@ -54,6 +54,8 @@ cdef extern from "hb.h":
     uint8_t hb_color_get_green(hb_color_t color)
     uint8_t hb_color_get_blue(hb_color_t color)
 
+    hb_color_t HB_COLOR(uint8_t b, uint8_t g, uint8_t r, uint8_t a)
+
     ctypedef struct hb_user_data_key_t:
         pass
 

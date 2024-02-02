@@ -1533,6 +1533,19 @@ class PaintCompositeMode(IntEnum):
     HSL_LUMINOSITY = HB_PAINT_COMPOSITE_MODE_HSL_LUMINOSITY
 
 
+class Color(namedtuple("Color", ["red", "green", "blue", "alpha"])):
+    def to_int(self) -> int:
+        return HB_COLOR(self.blue, self.green, self.red, self.alpha)
+
+    @staticmethod
+    def from_int(value: int) -> Color:
+        r = hb_color_get_red(value)
+        g = hb_color_get_green(value)
+        b = hb_color_get_blue(value)
+        a = hb_color_get_alpha(value)
+        return Color(r, g, b, a)
+
+
 ColorStop = namedtuple("ColorStop", ["offset", "is_foreground", "color"])
 
 
@@ -1569,7 +1582,8 @@ cdef class ColorLine:
                 self._color_line, start_offset, &stop_count, stops_array)
             for i in range(stop_count):
                 c_stop = stops_array[i]
-                stop = ColorStop(c_stop.offset, c_stop.is_foreground, c_stop.color)
+                py_color = Color.from_int(c_stop.color)
+                stop = ColorStop(c_stop.offset, c_stop.is_foreground, py_color)
                 stops.append(stop)
             start_offset += stop_count
         return stops
@@ -1654,7 +1668,8 @@ cdef void _paint_color_func(
         hb_color_t color,
         void *user_data) noexcept:
     py_funcs = <PaintFuncs>user_data
-    py_funcs._color_func(color, is_foreground, <object>paint_data)
+    py_color: Color = Color.from_int(color)
+    py_funcs._color_func(py_color, is_foreground, <object>paint_data)
 
 
 cdef hb_bool_t _paint_image_func(
@@ -1747,9 +1762,9 @@ cdef hb_bool_t _paint_custom_palette_color_func(
         hb_color_t *color,
         void *user_data) noexcept:
     py_funcs = <PaintFuncs>user_data
-    py_color = py_funcs._custom_palette_color_func(color_index, <object>paint_data)
+    py_color: Color = py_funcs._custom_palette_color_func(color_index, <object>paint_data)
     if py_color is not None:
-        color[0] = py_color
+        color[0] = py_color.to_int()
         return 1
     return 0
 
@@ -1841,7 +1856,7 @@ cdef class PaintFuncs:
 
     def set_color_func(self,
                        func: Callable[[
-                           int,  # color
+                           Color,  # color
                            bool,  # is_foreground
                            object,  # paint_data
                        ], None]) -> None:
@@ -1927,7 +1942,7 @@ cdef class PaintFuncs:
                                       func: Callable[[
                                           int,  # color_index
                                           object,  # paint_data
-                                      ], bool]) -> None:
+                                      ], Color]) -> None:
         self._custom_palette_color_func = func
         hb_paint_funcs_set_custom_palette_color_func(
             self._hb_paintfuncs, _paint_custom_palette_color_func, <void*>self, NULL)

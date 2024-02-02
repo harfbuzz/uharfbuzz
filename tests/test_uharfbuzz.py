@@ -786,9 +786,6 @@ class TestCallbacks:
 class TestPaintFuncs:
     @staticmethod
     def setup_funcs():
-        def split_color(color: int):
-            return color.to_bytes(4, "little")
-
         def push_transform_func(xx, xy, yx, yy, dx, dy, conainer):
             conainer.append(
                 f"start transform "
@@ -820,7 +817,7 @@ class TestPaintFuncs:
             conainer.append(f"end clip")
 
         def color_func(color, is_foreground, conainer):
-            a, r, g, b = split_color(color)
+            r, g, b, a = color
             conainer.append(f"solid {r} {g} {b} {a}")
 
         def image_func(image, width, height, format, slant, extents, conainer):
@@ -898,7 +895,7 @@ class TestPaintFuncs:
 
                 self.level += 1
                 for stop in color_line.color_stops:
-                    a, r, g, b = split_color(stop.color)
+                    r, g, b, a = stop.color
                     self.append(f"{stop.offset:.3g} {r} {g} {b} {a}")
                 self.level -= 1
 
