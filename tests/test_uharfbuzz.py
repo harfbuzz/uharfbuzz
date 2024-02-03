@@ -815,11 +815,11 @@ class TestPaintFuncs:
             conainer.level -= 1
             conainer.append(f"end transform")
 
-        def color_glyph_func(font, gid, conainer):
+        def color_glyph_func(gid, conainer):
             conainer.append(f"paint color glyph {gid}; acting as failed")
             return False
 
-        def push_clip_glyph_func(font, gid, conainer):
+        def push_clip_glyph_func(gid, conainer):
             conainer.append(f"start clip glyph {gid}")
             conainer.level += 1
             return True
