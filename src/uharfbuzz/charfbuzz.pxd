@@ -942,6 +942,73 @@ cdef extern from "hb-ot.h":
     # hb-ot-font.h
     void hb_ot_font_set_funcs(hb_font_t* font)
 
+    # hb-ot-name.h
+    ctypedef unsigned int hb_ot_name_id_t
+    ctypedef enum hb_ot_name_id_predefined_t:
+        HB_OT_NAME_ID_COPYRIGHT
+        HB_OT_NAME_ID_FONT_FAMILY
+        HB_OT_NAME_ID_FONT_SUBFAMILY
+        HB_OT_NAME_ID_UNIQUE_ID
+        HB_OT_NAME_ID_FULL_NAME
+        HB_OT_NAME_ID_VERSION_STRING
+        HB_OT_NAME_ID_POSTSCRIPT_NAME
+        HB_OT_NAME_ID_TRADEMARK
+        HB_OT_NAME_ID_MANUFACTURER
+        HB_OT_NAME_ID_DESIGNER
+        HB_OT_NAME_ID_DESCRIPTION
+        HB_OT_NAME_ID_VENDOR_URL
+        HB_OT_NAME_ID_DESIGNER_URL
+        HB_OT_NAME_ID_LICENSE
+        HB_OT_NAME_ID_LICENSE_URL
+        HB_OT_NAME_ID_TYPOGRAPHIC_FAMILY
+        HB_OT_NAME_ID_TYPOGRAPHIC_SUBFAMILY
+        HB_OT_NAME_ID_MAC_FULL_NAME
+        HB_OT_NAME_ID_SAMPLE_TEXT
+        HB_OT_NAME_ID_CID_FINDFONT_NAME
+        HB_OT_NAME_ID_WWS_FAMILY
+        HB_OT_NAME_ID_WWS_SUBFAMILY
+        HB_OT_NAME_ID_LIGHT_BACKGROUND
+        HB_OT_NAME_ID_DARK_BACKGROUND
+        HB_OT_NAME_ID_VARIATIONS_PS_PREFIX
+        HB_OT_NAME_ID_INVALID
+
+    # hb-ot-color.h
+    hb_bool_t hb_ot_color_has_palettes(hb_face_t *face)
+    unsigned int hb_ot_color_palette_get_count(hb_face_t *face)
+    hb_ot_name_id_t hb_ot_color_palette_get_name_id(hb_face_t *face, unsigned int palette_index)
+    hb_ot_name_id_t hb_ot_color_palette_color_get_name_id(hb_face_t *face, unsigned int color_index)
+    ctypedef enum hb_ot_color_palette_flags_t:
+        HB_OT_COLOR_PALETTE_FLAG_DEFAULT
+        HB_OT_COLOR_PALETTE_FLAG_USABLE_WITH_LIGHT_BACKGROUND
+        HB_OT_COLOR_PALETTE_FLAG_USABLE_WITH_DARK_BACKGROUND
+    hb_ot_color_palette_flags_t hb_ot_color_palette_get_flags(hb_face_t *face, unsigned int palette_index)
+    unsigned int hb_ot_color_palette_get_colors(
+        hb_face_t *face,
+        unsigned int palette_index,
+        unsigned int start_offset,
+        unsigned int *color_count,  # IN/OUT. May be NULL.
+        hb_color_t *colors)  # OUT. May be NULL.
+
+    hb_bool_t hb_ot_color_has_layers(hb_face_t *face)
+    ctypedef struct hb_ot_color_layer_t:
+        hb_codepoint_t glyph
+        unsigned int color_index
+    unsigned int hb_ot_color_glyph_get_layers(
+        hb_face_t *face,
+        hb_codepoint_t glyph,
+        unsigned int start_offset,
+        unsigned int *layer_count,  # IN/OUT. May be NULL.
+        hb_ot_color_layer_t *layers)  # OUT. May be NULL.
+
+    hb_bool_t hb_ot_color_has_paint(hb_face_t *face)
+    hb_bool_t hb_ot_color_glyph_has_paint(hb_face_t *face, hb_codepoint_t glyph)
+
+    hb_bool_t hb_ot_color_has_svg(hb_face_t *face)
+    hb_blob_t *hb_ot_color_glyph_reference_svg(hb_face_t *face, hb_codepoint_t glyph)
+
+    hb_bool_t hb_ot_color_has_png(hb_face_t *face)
+    hb_blob_t *hb_ot_color_glyph_reference_png(hb_font_t *font, hb_codepoint_t glyph)
+
     # hb-ot-math.h
     ctypedef enum hb_ot_math_constant_t:
         HB_OT_MATH_CONSTANT_SCRIPT_PERCENT_SCALE_DOWN

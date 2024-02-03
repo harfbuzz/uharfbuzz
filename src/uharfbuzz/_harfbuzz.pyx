@@ -685,7 +685,7 @@ cdef class Font:
         else:
             x_embolden = y_embolden = value
         hb_font_set_synthetic_bold(self._hb_font, x_embolden, y_embolden, in_place)
-       
+
     @property
     def var_named_instance(self) -> int:
         return hb_font_get_var_named_instance(self._hb_font)
@@ -693,7 +693,7 @@ cdef class Font:
     @var_named_instance.setter
     def var_named_instance(self, value: int):
         hb_font_set_var_named_instance(self._hb_font, value)
-    
+
     def set_variations(self, variations: Dict[str, float]) -> None:
         cdef unsigned int size
         cdef hb_variation_t* hb_variations
@@ -817,7 +817,7 @@ cdef class Font:
         cdef const float *coords
         coords = hb_font_get_var_coords_design(self._hb_font, &length)
         return [coords[i] for i in range(length)]
-            
+
     def set_var_coords_design(self, coords):
         cdef unsigned int length
         cdef cython.float *c_coords
@@ -1334,6 +1334,88 @@ def ot_layout_get_baseline(font: Font,
         return hb_position
     else:
         return None
+
+
+def ot_color_has_palettes(face: Face) -> bool:
+    return hb_ot_color_has_palettes(face._hb_face)
+
+def ot_color_palette_get_count(face: Face) -> int:
+    return hb_ot_color_palette_get_count(face._hb_face)
+
+class OTColorPaletteFlags(IntFlag):
+    DEFAULT = HB_OT_COLOR_PALETTE_FLAG_DEFAULT
+    USABLE_WITH_LIGHT_BACKGROUND = HB_OT_COLOR_PALETTE_FLAG_USABLE_WITH_LIGHT_BACKGROUND
+    USABLE_WITH_DARK_BACKGROUND = HB_OT_COLOR_PALETTE_FLAG_USABLE_WITH_DARK_BACKGROUND
+
+def ot_color_palette_get_flags(face: Face, palette_index: int) -> OTColorPaletteFlags:
+    return OTColorPaletteFlags(hb_ot_color_palette_get_flags(face._hb_face, palette_index))
+
+def ot_color_palette_get_colors(face: Face, palette_index: int) -> List[Color]:
+    cdef list ret = []
+    cdef unsigned int i
+    cdef unsigned int start_offset = 0
+    cdef unsigned int color_count = STATIC_ARRAY_SIZE
+    cdef hb_color_t colors[STATIC_ARRAY_SIZE]
+    while color_count == STATIC_ARRAY_SIZE:
+        hb_ot_color_palette_get_colors(face._hb_face, palette_index, start_offset, &color_count, colors)
+        for i in range(color_count):
+            ret.append(Color.from_int(colors[i]))
+    return ret
+
+def ot_color_palette_get_name_id(face: Face, palette_index: int) -> int | None:
+    cdef hb_ot_name_id_t name_id
+    name_id = hb_ot_color_palette_get_name_id(face._hb_face, palette_index)
+    if name_id == HB_OT_NAME_ID_INVALID:
+        return None
+    return name_id
+
+def ot_color_palette_color_get_name_id(face: Face, color_index: int) -> int | None:
+    cdef hb_ot_name_id_t name_id
+    name_id =  hb_ot_color_palette_color_get_name_id(face._hb_face, color_index)
+    if name_id == HB_OT_NAME_ID_INVALID:
+        return None
+    return name_id
+
+def ot_color_has_layers(face: Face) -> bool:
+    return hb_ot_color_has_layers(face._hb_face)
+
+OTColorLayer = namedtuple("OTColorLayer", ["glyph", "color_index"])
+
+def ot_color_glyph_get_layers(face: Face, glyph: int) -> List[OTColorLayer]:
+    cdef list ret = []
+    cdef unsigned int i
+    cdef unsigned int start_offset = 0
+    cdef unsigned int layer_count = STATIC_ARRAY_SIZE
+    cdef hb_ot_color_layer_t layers[STATIC_ARRAY_SIZE]
+    while layer_count == STATIC_ARRAY_SIZE:
+        hb_ot_color_glyph_get_layers(face._hb_face, glyph, start_offset, &layer_count, layers)
+        for i in range(layer_count):
+            ret.append(OTColorLayer(layers[i].glyph, layers[i].color_index))
+        start_offset += layer_count
+    return ret
+
+def ot_color_has_paint(face: Face) -> bool:
+    return hb_ot_color_has_paint(face._hb_face)
+
+def ot_color_glyph_has_paint(face: Face, glyph: int) -> bool:
+    return hb_ot_color_glyph_has_paint(face._hb_face, glyph)
+
+def ot_color_has_svg(face: Face) -> bool:
+    return hb_ot_color_has_svg(face._hb_face)
+
+def ot_color_glyph_get_svg(face: Face, glyph: int) -> Blob:
+    cdef hb_blob_t* blob
+    blob = hb_ot_color_glyph_reference_svg(face._hb_face, glyph)
+    return Blob.from_ptr(blob)
+
+def ot_color_has_png(face: Face) -> bool:
+    return hb_ot_color_has_png(face._hb_face)
+
+def ot_color_glyph_get_png(font: Font, glyph: int) -> Blob:
+    cdef hb_blob_t* blob
+    blob = hb_ot_color_glyph_reference_png(font._hb_font, glyph)
+    return Blob.from_ptr(blob)
+
 
 def ot_math_has_data(face: Face) -> bool:
     return hb_ot_math_has_data(face._hb_face)
@@ -2184,17 +2266,17 @@ cdef class HBObject:
                            char* tail):
         self._hb_obj_list[idx].head = head
         self._hb_obj_list[idx].tail = tail
-       
+
     cdef hb_link_t* create_links(self, unsigned int idx,
                                  unsigned int link_num,
                                  bint is_real_link):
         if link_num == 0:
             return NULL
-        
+
         cdef hb_link_t* p = <hb_link_t*>calloc(link_num, sizeof(hb_link_t))
         if p == NULL:
             raise MemoryError()
-        
+
         if is_real_link:
             self._hb_obj_list[idx].num_real_links = link_num
             self._hb_obj_list[idx].real_links = p
@@ -2211,7 +2293,7 @@ cdef class HBObject:
             l = self._hb_obj_list[idx].real_links
         else:
             l = self._hb_obj_list[idx].virtual_links
-        
+
         for i in range(num_links):
             l[i].position = links[i][0]
             l[i].width = links[i][1]
@@ -2240,20 +2322,20 @@ def repack_with_tag(tag: str,
        list: real_link list and virtual_link list.
 
        A link(egde) is an offset link between parent table and
-       child table. It's represented in the format of a tuple: 
+       child table. It's represented in the format of a tuple:
        (posiiton: int, width: int, objidx: int):
 
        - position: means relative position of the offset field
          in bytes from the beginning of the subtable's C struct.
          e.g:
          a GSUB header struct in C looks like below:
-         
+
          uint16 majorVersion
          uint16 minorVersion
          offset16 scriptListOffset
          offset16 featureListOffset
          offset16 lookupListOffset
-         And the position for scriptListOffset is 4 
+         And the position for scriptListOffset is 4
          which is calculated from (16+16)/8
        - width: size of the offset:
          e.g 2 for offset16 and 4 for offset32
@@ -2286,7 +2368,7 @@ def repack_with_tag(tag: str,
         tail += len(subtables[i])
         obj_list.update_obj_length(i, table_data + head, table_data + tail)
         head = tail
-        
+
         node = graphnodes[i]
         # real_links
         p = obj_list.create_links(i, len(node[0]), True)
@@ -2304,11 +2386,11 @@ def repack_with_tag(tag: str,
 							   num_nodes)
     if packed_blob == NULL:
         raise RepackerError()
-    
+
     cdef unsigned int blob_length
     cdef const_char* blob_data = hb_blob_get_data(packed_blob, &blob_length)
     cdef bytes packed = blob_data[:blob_length]
-    
+
     hb_blob_destroy(packed_blob)
     return packed
 
