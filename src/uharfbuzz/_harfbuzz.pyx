@@ -685,7 +685,7 @@ cdef class Font:
         else:
             x_embolden = y_embolden = value
         hb_font_set_synthetic_bold(self._hb_font, x_embolden, y_embolden, in_place)
-       
+
     @property
     def var_named_instance(self) -> int:
         return hb_font_get_var_named_instance(self._hb_font)
@@ -693,7 +693,7 @@ cdef class Font:
     @var_named_instance.setter
     def var_named_instance(self, value: int):
         hb_font_set_var_named_instance(self._hb_font, value)
-    
+
     def set_variations(self, variations: Dict[str, float]) -> None:
         cdef unsigned int size
         cdef hb_variation_t* hb_variations
@@ -817,7 +817,7 @@ cdef class Font:
         cdef const float *coords
         coords = hb_font_get_var_coords_design(self._hb_font, &length)
         return [coords[i] for i in range(length)]
-            
+
     def set_var_coords_design(self, coords):
         cdef unsigned int length
         cdef cython.float *c_coords
@@ -2184,17 +2184,17 @@ cdef class HBObject:
                            char* tail):
         self._hb_obj_list[idx].head = head
         self._hb_obj_list[idx].tail = tail
-       
+
     cdef hb_link_t* create_links(self, unsigned int idx,
                                  unsigned int link_num,
                                  bint is_real_link):
         if link_num == 0:
             return NULL
-        
+
         cdef hb_link_t* p = <hb_link_t*>calloc(link_num, sizeof(hb_link_t))
         if p == NULL:
             raise MemoryError()
-        
+
         if is_real_link:
             self._hb_obj_list[idx].num_real_links = link_num
             self._hb_obj_list[idx].real_links = p
@@ -2211,7 +2211,7 @@ cdef class HBObject:
             l = self._hb_obj_list[idx].real_links
         else:
             l = self._hb_obj_list[idx].virtual_links
-        
+
         for i in range(num_links):
             l[i].position = links[i][0]
             l[i].width = links[i][1]
@@ -2240,20 +2240,20 @@ def repack_with_tag(tag: str,
        list: real_link list and virtual_link list.
 
        A link(egde) is an offset link between parent table and
-       child table. It's represented in the format of a tuple: 
+       child table. It's represented in the format of a tuple:
        (posiiton: int, width: int, objidx: int):
 
        - position: means relative position of the offset field
          in bytes from the beginning of the subtable's C struct.
          e.g:
          a GSUB header struct in C looks like below:
-         
+
          uint16 majorVersion
          uint16 minorVersion
          offset16 scriptListOffset
          offset16 featureListOffset
          offset16 lookupListOffset
-         And the position for scriptListOffset is 4 
+         And the position for scriptListOffset is 4
          which is calculated from (16+16)/8
        - width: size of the offset:
          e.g 2 for offset16 and 4 for offset32
@@ -2286,7 +2286,7 @@ def repack_with_tag(tag: str,
         tail += len(subtables[i])
         obj_list.update_obj_length(i, table_data + head, table_data + tail)
         head = tail
-        
+
         node = graphnodes[i]
         # real_links
         p = obj_list.create_links(i, len(node[0]), True)
@@ -2304,11 +2304,11 @@ def repack_with_tag(tag: str,
 							   num_nodes)
     if packed_blob == NULL:
         raise RepackerError()
-    
+
     cdef unsigned int blob_length
     cdef const_char* blob_data = hb_blob_get_data(packed_blob, &blob_length)
     cdef bytes packed = blob_data[:blob_length]
-    
+
     hb_blob_destroy(packed_blob)
     return packed
 
