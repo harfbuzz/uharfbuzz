@@ -1728,8 +1728,7 @@ cdef hb_bool_t _paint_color_glyph_func(
         hb_font_t *font,
         void *user_data) noexcept:
     py_funcs = <PaintFuncs>user_data
-    py_font = Font.from_ptr(hb_font_reference(font))
-    if py_funcs._color_glyph_func(py_font, glyph, <object>paint_data):
+    if py_funcs._color_glyph_func(glyph, <object>paint_data):
         return 1
     return 0
 
@@ -1741,8 +1740,7 @@ cdef void _paint_push_clip_glyph_func(
         hb_font_t *font,
         void *user_data) noexcept:
     py_funcs = <PaintFuncs>user_data
-    py_font = Font.from_ptr(hb_font_reference(font))
-    py_funcs._push_clip_glyph_func(py_font, glyph, <object>paint_data)
+    py_funcs._push_clip_glyph_func(glyph, <object>paint_data)
 
 
 cdef void _paint_push_clip_rectangle_func(
@@ -1920,7 +1918,6 @@ cdef class PaintFuncs:
 
     def set_color_glyph_func(self,
                              func: Callable[[
-                                 Font,
                                  int,  # gid
                                  object,  # paint_data
                              ], bool]) -> None:
@@ -1930,7 +1927,6 @@ cdef class PaintFuncs:
 
     def set_push_clip_glyph_func(self,
                                  func: Callable[[
-                                     Font,
                                      int,  # gid
                                      object,  # paint_data
                                  ], None]) -> None:
