@@ -1335,6 +1335,88 @@ def ot_layout_get_baseline(font: Font,
     else:
         return None
 
+
+def ot_color_has_palettes(face: Face) -> bool:
+    return hb_ot_color_has_palettes(face._hb_face)
+
+def ot_color_palette_get_count(face: Face) -> int:
+    return hb_ot_color_palette_get_count(face._hb_face)
+
+class OTColorPaletteFlags(IntFlag):
+    DEFAULT = HB_OT_COLOR_PALETTE_FLAG_DEFAULT
+    USABLE_WITH_LIGHT_BACKGROUND = HB_OT_COLOR_PALETTE_FLAG_USABLE_WITH_LIGHT_BACKGROUND
+    USABLE_WITH_DARK_BACKGROUND = HB_OT_COLOR_PALETTE_FLAG_USABLE_WITH_DARK_BACKGROUND
+
+def ot_color_palette_get_flags(face: Face, palette_index: int) -> OTColorPaletteFlags:
+    return OTColorPaletteFlags(hb_ot_color_palette_get_flags(face._hb_face, palette_index))
+
+def ot_color_palette_get_colors(face: Face, palette_index: int) -> List[Color]:
+    cdef list ret = []
+    cdef unsigned int i
+    cdef unsigned int start_offset = 0
+    cdef unsigned int color_count = STATIC_ARRAY_SIZE
+    cdef hb_color_t colors[STATIC_ARRAY_SIZE]
+    while color_count == STATIC_ARRAY_SIZE:
+        hb_ot_color_palette_get_colors(face._hb_face, palette_index, start_offset, &color_count, colors)
+        for i in range(color_count):
+            ret.append(Color.from_int(colors[i]))
+    return ret
+
+def ot_color_palette_get_name_id(face: Face, palette_index: int) -> int | None:
+    cdef hb_ot_name_id_t name_id
+    name_id = hb_ot_color_palette_get_name_id(face._hb_face, palette_index)
+    if name_id == HB_OT_NAME_ID_INVALID:
+        return None
+    return name_id
+
+def ot_color_palette_color_get_name_id(face: Face, color_index: int) -> int | None:
+    cdef hb_ot_name_id_t name_id
+    name_id =  hb_ot_color_palette_color_get_name_id(face._hb_face, color_index)
+    if name_id == HB_OT_NAME_ID_INVALID:
+        return None
+    return name_id
+
+def ot_color_has_layers(face: Face) -> bool:
+    return hb_ot_color_has_layers(face._hb_face)
+
+OTColorLayer = namedtuple("OTColorLayer", ["glyph", "color_index"])
+
+def ot_color_glyph_get_layers(face: Face, glyph: int) -> List[OTColorLayer]:
+    cdef list ret = []
+    cdef unsigned int i
+    cdef unsigned int start_offset = 0
+    cdef unsigned int layer_count = STATIC_ARRAY_SIZE
+    cdef hb_ot_color_layer_t layers[STATIC_ARRAY_SIZE]
+    while layer_count == STATIC_ARRAY_SIZE:
+        hb_ot_color_glyph_get_layers(face._hb_face, glyph, start_offset, &layer_count, layers)
+        for i in range(layer_count):
+            ret.append(OTColorLayer(layers[i].glyph, layers[i].color_index))
+        start_offset += layer_count
+    return ret
+
+def ot_color_has_paint(face: Face) -> bool:
+    return hb_ot_color_has_paint(face._hb_face)
+
+def ot_color_glyph_has_paint(face: Face, glyph: int) -> bool:
+    return hb_ot_color_glyph_has_paint(face._hb_face, glyph)
+
+def ot_color_has_svg(face: Face) -> bool:
+    return hb_ot_color_has_svg(face._hb_face)
+
+def ot_color_glyph_get_svg(face: Face, glyph: int) -> Blob:
+    cdef hb_blob_t* blob
+    blob = hb_ot_color_glyph_reference_svg(face._hb_face, glyph)
+    return Blob.from_ptr(blob)
+
+def ot_color_has_png(face: Face) -> bool:
+    return hb_ot_color_has_png(face._hb_face)
+
+def ot_color_glyph_get_png(font: Font, glyph: int) -> Blob:
+    cdef hb_blob_t* blob
+    blob = hb_ot_color_glyph_reference_png(font._hb_font, glyph)
+    return Blob.from_ptr(blob)
+
+
 def ot_math_has_data(face: Face) -> bool:
     return hb_ot_math_has_data(face._hb_face)
 
