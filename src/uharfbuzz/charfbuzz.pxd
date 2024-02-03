@@ -939,6 +939,18 @@ cdef extern from "hb-ot.h":
         hb_tag_t language_tag,
         hb_position_t* coord)  # out
 
+    hb_bool_t hb_ot_layout_has_glyph_classes(hb_face_t *face)
+    hb_bool_t hb_ot_layout_has_positioning(hb_face_t *face)
+    hb_bool_t hb_ot_layout_has_substitution(hb_face_t *face)
+
+    ctypedef enum hb_ot_layout_glyph_class_t:
+        HB_OT_LAYOUT_GLYPH_CLASS_UNCLASSIFIED
+        HB_OT_LAYOUT_GLYPH_CLASS_BASE_GLYPH
+        HB_OT_LAYOUT_GLYPH_CLASS_LIGATURE
+        HB_OT_LAYOUT_GLYPH_CLASS_MARK
+        HB_OT_LAYOUT_GLYPH_CLASS_COMPONENT
+    hb_ot_layout_glyph_class_t hb_ot_layout_get_glyph_class(hb_face_t *face, hb_codepoint_t glyph)
+
     # hb-ot-font.h
     void hb_ot_font_set_funcs(hb_font_t* font)
 
