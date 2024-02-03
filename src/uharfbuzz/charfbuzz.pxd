@@ -1192,8 +1192,7 @@ cdef extern from "hb-subset.h":
         HB_SUBSET_FLAGS_NOTDEF_OUTLINE
         HB_SUBSET_FLAGS_GLYPH_NAMES
         HB_SUBSET_FLAGS_NO_PRUNE_UNICODE_RANGES
-        # Not supported yet: HB_SUBSET_FLAGS_PATCH_MODE
-        # Not supported yet: HB_SUBSET_FLAGS_OMIT_GLYF
+        HB_SUBSET_FLAGS_NO_LAYOUT_CLOSURE
     ctypedef enum hb_subset_sets_t:
         HB_SUBSET_SETS_GLYPH_INDEX
         HB_SUBSET_SETS_UNICODE
