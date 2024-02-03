@@ -1335,6 +1335,25 @@ def ot_layout_get_baseline(font: Font,
     else:
         return None
 
+def ot_layout_has_glyph_classes(face: Face) -> bool:
+    return hb_ot_layout_has_glyph_classes(face._hb_face)
+
+def ot_layout_has_positioning(face: Face) -> bool:
+    return hb_ot_layout_has_positioning(face._hb_face)
+
+def ot_layout_has_substitution(face: Face) -> bool:
+    return hb_ot_layout_has_substitution(face._hb_face)
+
+class OTLayoutGlyphClass(IntEnum):
+    UNCLASSIFIED = HB_OT_LAYOUT_GLYPH_CLASS_UNCLASSIFIED
+    BASE_GLYPH = HB_OT_LAYOUT_GLYPH_CLASS_BASE_GLYPH
+    LIGATURE = HB_OT_LAYOUT_GLYPH_CLASS_LIGATURE
+    MARK = HB_OT_LAYOUT_GLYPH_CLASS_MARK
+    COMPONENT = HB_OT_LAYOUT_GLYPH_CLASS_COMPONENT
+
+def ot_layout_get_glyph_class(face: Face, glyph: int) -> OTLayoutGlyphClass:
+    return OTLayoutGlyphClass(hb_ot_layout_get_glyph_class(face._hb_face, glyph))
+
 
 def ot_color_has_palettes(face: Face) -> bool:
     return hb_ot_color_has_palettes(face._hb_face)
