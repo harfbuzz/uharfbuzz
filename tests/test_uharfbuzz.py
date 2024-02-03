@@ -696,36 +696,6 @@ class TestCallbacks:
         def close_path(c):
             c.append("Z")
 
-        funcs.set_move_to_func(move_to, container)
-        funcs.set_line_to_func(line_to, container)
-        funcs.set_cubic_to_func(cubic_to, container)
-        funcs.set_quadratic_to_func(quadratic_to, container)
-        funcs.set_close_path_func(close_path, container)
-        opensans.draw_glyph(funcs, 1)
-        assert (
-            "".join(container)
-            == "M1120,0L938,465L352,465L172,0L0,0L578,1468L721,1468L1296,0L1120,0ZM885,618L715,1071Q682,1157 647,1282Q625,1186 584,1071L412,618L885,618Z"
-        )
-
-    def test_draw_funcs(self, opensans):
-        funcs = hb.DrawFuncs()
-        container = []
-
-        def move_to(x, y, c):
-            c.append(f"M{x:g},{y:g}")
-
-        def line_to(x, y, c):
-            c.append(f"L{x:g},{y:g}")
-
-        def cubic_to(c1x, c1y, c2x, c2y, x, y, c):
-            c.append(f"C{c1x:g},{c1y:g} {c2x:g},{c2y:g} {x:g},{y:g}")
-
-        def quadratic_to(c1x, c1y, x, y, c):
-            c.append(f"Q{c1x:g},{c1y:g} {x:g},{y:g}")
-
-        def close_path(c):
-            c.append("Z")
-
         funcs.set_move_to_func(move_to)
         funcs.set_line_to_func(line_to)
         funcs.set_cubic_to_func(cubic_to)
@@ -811,6 +781,157 @@ class TestCallbacks:
             ("lineTo", ((885, 618),)),
             ("closePath", ()),
         ]
+
+
+class TestPaintFuncs:
+    @staticmethod
+    def setup_funcs():
+        def push_transform_func(xx, xy, yx, yy, dx, dy, conainer):
+            conainer.append(
+                f"start transform "
+                f"{xx:.3g} {xy:.3g} {yx:.3g} {yy:.3g} {dx:.3g} {dy:.3g}"
+            )
+            conainer.level += 1
+
+        def pop_transform_func(conainer):
+            conainer.level -= 1
+            conainer.append(f"end transform")
+
+        def color_glyph_func(font, gid, conainer):
+            conainer.append(f"paint color glyph {gid}; acting as failed")
+            return False
+
+        def push_clip_glyph_func(font, gid, conainer):
+            conainer.append(f"start clip glyph {gid}")
+            conainer.level += 1
+            return True
+
+        def push_clip_rectangle_func(xmin, ymin, xmax, ymax, conainer):
+            conainer.append(
+                f"start clip rectangle {xmin:.3g} {ymin:.3g} {xmax:.3g} {ymax:.3g}"
+            )
+            conainer.level += 1
+
+        def pop_clip_func(conainer):
+            conainer.level -= 1
+            conainer.append(f"end clip")
+
+        def color_func(color, is_foreground, conainer):
+            r, g, b, a = color
+            conainer.append(f"solid {r} {g} {b} {a}")
+
+        def image_func(image, width, height, format, slant, extents, conainer):
+            conainer.append(
+                f"image type {format} "
+                f"size {width} {height} "
+                f"slant {slant:.3g} "
+                f"extents {extents.x_bearing} {extents.y_bearing} {extents.width} {extents.height}"
+            )
+            return True
+
+        def linear_gradient_func(color_line, x0, y0, x1, y1, x2, y2, conainer):
+            conainer.append(f"linear gradient")
+            conainer.level += 1
+            conainer.append(f"p0 {x0:.3g} {y0:.3g}")
+            conainer.append(f"p1 {x1:.3g} {y1:.3g}")
+            conainer.append(f"p2 {x2:.3g} {y2:.3g}")
+            conainer.append_color_line(color_line)
+            conainer.level -= 1
+
+        def radial_gradient_func(color_line, x0, y0, r0, x1, y1, r1, conainer):
+            conainer.append(f"radial gradient")
+            conainer.level += 1
+            conainer.append(f"p0 {x0:.3g} {y0:.3g} radius {r0:.3g}")
+            conainer.append(f"p1 {x1:.3g} {y1:.3g} radius {r1:.3g}")
+            conainer.append_color_line(color_line)
+            conainer.level -= 1
+
+        def sweep_gradient_func(color_line, cx, cy, start_angle, end_angle, conainer):
+            conainer.append(f"sweep gradient")
+            conainer.level += 1
+            conainer.append(f"center {cx:.3g} {cy:.3g}")
+            conainer.append(f"angles {start_angle:.3g} {end_angle:.3g}")
+            conainer.append_color_line(color_line)
+            conainer.level -= 1
+
+        def push_group_func(conainer):
+            conainer.append(f"push group")
+            conainer.level += 1
+
+        def pop_group_func(mode, conainer):
+            conainer.level -= 1
+            conainer.append(f"pop group mode {int(mode)}")
+
+        def custom_palette_color_func(color_index, conainer):
+            return None
+
+        funcs = hb.PaintFuncs()
+        funcs.set_push_transform_func(push_transform_func)
+        funcs.set_pop_transform_func(pop_transform_func)
+        funcs.set_color_glyph_func(color_glyph_func)
+        funcs.set_push_clip_glyph_func(push_clip_glyph_func)
+        funcs.set_push_clip_rectangle_func(push_clip_rectangle_func)
+        funcs.set_pop_clip_func(pop_clip_func)
+        funcs.set_color_func(color_func)
+        funcs.set_image_func(image_func)
+        funcs.set_linear_gradient_func(linear_gradient_func)
+        funcs.set_radial_gradient_func(radial_gradient_func)
+        funcs.set_sweep_gradient_func(sweep_gradient_func)
+        funcs.set_push_group_func(push_group_func)
+        funcs.set_pop_group_func(pop_group_func)
+        funcs.set_custom_palette_color_func(custom_palette_color_func)
+
+        class Container:
+            def __init__(self):
+                self.level = 0
+                self.lines = []
+
+            def append(self, line):
+                indent = " " * self.level * 2
+                self.lines.append(indent + line)
+
+            def append_color_line(self, color_line):
+                self.append(f"colors {int(color_line.extend)}")
+
+                self.level += 1
+                for stop in color_line.color_stops:
+                    r, g, b, a = stop.color
+                    self.append(f"{stop.offset:.3g} {r} {g} {b} {a}")
+                self.level -= 1
+
+            def value(self):
+                return "\n".join(self.lines)
+
+        return funcs, Container()
+
+    @pytest.mark.parametrize(
+        "fontpath, glyph, expectedpath",
+        [
+            ("noto_handwriting-cff2_colr_1.otf", 10, "hand-10"),
+            ("test_glyphs-glyf_colr_1.ttf", 6, "test-6"),
+            ("test_glyphs-glyf_colr_1.ttf", 10, "test-10"),
+            ("test_glyphs-glyf_colr_1.ttf", 92, "test-92"),
+            ("test_glyphs-glyf_colr_1.ttf", 106, "test-106"),
+            ("test_glyphs-glyf_colr_1.ttf", 116, "test-116"),
+            ("test_glyphs-glyf_colr_1.ttf", 123, "test-123"),
+            ("test_glyphs-glyf_colr_1.ttf", 154, "test-154"),
+            ("test_glyphs-glyf_colr_1.ttf", 165, "test-165"),
+            ("test_glyphs-glyf_colr_1.ttf", 175, "test-175"),
+        ],
+    )
+    def test_paint(self, fontpath, glyph, expectedpath):
+        blob = hb.Blob.from_file_path(TESTDATA / fontpath)
+        face = hb.Face(blob)
+        font = hb.Font(face)
+
+        funcs, container = self.setup_funcs()
+        font.paint_glyph(glyph, funcs, container)
+        result = container.value()
+
+        with open(TESTDATA / "expected" / expectedpath) as f:
+            expected = "".join(line for line in f.readlines() if line[0] != "#")
+
+        assert result.strip() == expected.strip()
 
 
 class MessageCollector:
