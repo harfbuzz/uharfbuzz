@@ -1,5 +1,5 @@
 import argparse
-import io
+import sys
 
 import cairo
 import uharfbuzz as hb
@@ -420,7 +420,8 @@ def main(argv=None):
     parser.add_argument(
         "-o",
         "--output-file",
-        default=None,
+        type=argparse.FileType("wb"),
+        default=sys.stdout.buffer,
         help="Set output file-name (default: stdout)",
     )
     parser.add_argument(
@@ -495,13 +496,9 @@ def main(argv=None):
 
     margin = extents.ascender / 10
 
-    output_file = args.output_file
-    if output_file is None:
-        output_file = io.BytesIO()
-
     width = sum(pos.x_advance for pos in positions) + margin * 2
     height = extents.ascender - extents.descender + extents.line_gap + margin * 2
-    with cairo.SVGSurface(output_file, width, height) as surface:
+    with cairo.SVGSurface(args.output_file, width, height) as surface:
         cr = cairo.Context(surface)
         cr.transform(cairo.Matrix(1, 0, 0, -1, margin, extents.ascender + margin))
         state = State(cr, font, drawfuncs, foreground)
@@ -511,9 +508,6 @@ def main(argv=None):
             font.paint_glyph(info.codepoint, paintfuncs, state)
             cr.restore()
             cr.translate(pos.x_advance, 0)
-
-    if isinstance(output_file, io.BytesIO):
-        print(output_file.getvalue().decode("utf-8"))
 
 
 if __name__ == "__main__":
