@@ -1035,6 +1035,12 @@ class TestOTLayout:
     def test_ot_layout_has_no_substitution(self, mathfont):
         assert hb.ot_layout_has_substitution(mathfont.face) == False
 
+    def test_ot_tag_to_script(self):
+        assert hb.ot_tag_to_script("mym2") == "Mymr"
+
+    def test_ot_tag_to_language(self):
+        assert hb.ot_tag_to_language("BGR") == "bg"
+
 
 class TestOTColor:
     def test_ot_color_has_palettes(self, colorv0font):
