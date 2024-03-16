@@ -1208,6 +1208,28 @@ def shape(font: Font, buffer: Buffer,
             free(hb_features)
 
 
+def ot_tag_to_script(tag: str) -> str:
+    cdef bytes packed = tag.encode()
+    cdef hb_tag_t hb_tag = hb_tag_from_string(<char*>packed, -1)
+    cdef hb_script_t hb_script = hb_ot_tag_to_script(hb_tag)
+    cdef char cstr[5]
+    hb_tag_to_string(hb_script, cstr)
+    cstr[4] = b'\0'
+    packed = cstr
+    return packed.decode()
+
+
+def ot_tag_to_language(tag: str) -> str:
+    cdef bytes packed = tag.encode()
+    cdef hb_tag_t hb_tag = hb_tag_from_string(<char*>packed, -1)
+    cdef hb_language_t hb_language = hb_ot_tag_to_language(hb_tag)
+    cdef const_char* cstr = hb_language_to_string(hb_language)
+    if cstr is NULL:
+        return None
+    packed = cstr
+    return packed.decode()
+
+
 def ot_layout_lookup_get_glyph_alternates(
         face: Face, lookup_index : int, glyph : hb_codepoint_t) -> List[int]:
     cdef list alternates = []
