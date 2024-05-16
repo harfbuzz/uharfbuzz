@@ -20,7 +20,7 @@ before-all = "brew install ccache"
 before-test = "ccache --show-stats"
 
 [tool.cibuildwheel.macos.environment]
-CC = "/usr/local/opt/ccache/libexec/cc"
+CC = "/opt/homebrew/opt/ccache/libexec/cc"
 
 [tool.cibuildwheel.linux]
 before-all = [
