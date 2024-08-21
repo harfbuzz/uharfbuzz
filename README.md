@@ -41,6 +41,18 @@ for info, pos in zip(infos, positions):
     print(f"{glyph_name} gid{gid}={cluster}@{x_advance},{y_offset}+{x_advance}")
 ```
 
+### Installation
+
+When building uharfbuzz package, it automatically incorporates minimal HarfBuzz sources, so you don't have to install native HarfBuzz.
+
+However, if you want to use uharfbuzz with your system-provided HarfBuzz (e.g., if you built it from sources with custom configuration), you can set `USE_SYSTEM_LIBS=1` environment variable (see example below). 
+
+```shell
+USE_SYSTEM_LIBS=1 pip install uharfbuzz --no-binary :uharfbuzz:
+```
+
+harfbuzz installation is found using `pkg-config`, so you must have harfbuzz's `.pc` files in your system. 
+If you've built it from sources, meson installes them automatically. Otherwise, you may want to install harfbuzz development package, like `harfbuzz-devel` on Fedora-derived distros.
 
 ### How to make a release
 
