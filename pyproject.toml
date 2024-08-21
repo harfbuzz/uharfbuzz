@@ -4,6 +4,7 @@ requires = [
     "wheel",
     "setuptools_scm >= 2.1",
     "cython >= 0.28.1",
+    "pkgconfig"
 ]
 build-backend = "setuptools.build_meta"
 
