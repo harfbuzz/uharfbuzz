@@ -1,6 +1,8 @@
 [build-system]
 requires = [
-    "setuptools >= 36.4",
+    # pinning setuptools until an issue with pypy3 gets fixed upstream:
+    # https://github.com/pypa/distutils/issues/283
+    "setuptools >= 36.4, < 72.2",
     "wheel",
     "setuptools_scm >= 2.1",
     "cython >= 0.28.1",
