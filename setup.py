@@ -3,6 +3,7 @@
 import os
 import platform
 from io import open
+from typing import List
 
 import pkgconfig
 from Cython.Build import cythonize
@@ -28,7 +29,7 @@ use_system_libraries = bool_from_environ("USE_SYSTEM_LIBS")
 use_cython_linetrace = bool_from_environ("CYTHON_LINETRACE")
 use_cython_annotate = bool_from_environ("CYTHON_ANNOTATE")
 
-def _configure_extensions_with_system_libs() -> list[Extension]:
+def _configure_extensions_with_system_libs() -> List[Extension]:
     include_dirs = []
     define_macros = []
     libraries = []
@@ -92,7 +93,7 @@ def _configure_extensions_with_system_libs() -> list[Extension]:
 
     return [extension, extension_test]
 
-def _configure_extensions_with_vendored_libs() -> list[Extension]:
+def _configure_extensions_with_vendored_libs() -> List[Extension]:
     define_macros = [("HB_NO_MT", "1"), ("HB_EXPERIMENTAL_API", "1")]
     if use_cython_linetrace:
         define_macros.append(("CYTHON_TRACE_NOGIL", "1"))
@@ -147,7 +148,7 @@ def _configure_extensions_with_vendored_libs() -> list[Extension]:
 
     return [extension, extension_test]
 
-def configure_extensions() -> list[Extension]:
+def configure_extensions() -> List[Extension]:
     if use_system_libraries:
         return _configure_extensions_with_system_libs()
     else:
