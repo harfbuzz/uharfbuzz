@@ -1659,37 +1659,29 @@ def ot_metrics_get_position(font: Font,
                             tag: OTMetricsTag) -> int:
     cdef hb_position_t hb_position
     cdef hb_bool_t success
-    success = hb_ot_metrics_get_position(font._hb_font, tag, &hb_position)
-    if success:
+    if hb_ot_metrics_get_position(font._hb_font, tag, &hb_position):
         return hb_position
-    else:
-        return None
+    return None
 
 def ot_metrics_get_position_with_fallback(font: Font,
-                                          tag: OTMathTag) -> int:
+                                          tag: OTMetricsTag) -> int:
     cdef hb_position_t hb_position
-    success = hb_ot_metrics_get_position_with_fallback(font._hb_font,
+    hb_ot_metrics_get_position_with_fallback(font._hb_font,
                                                        tag,
                                                        &hb_position)
     return hb_position
 
 def ot_metrics_get_variation(font: Font,
                              tag: OTMathTag) -> float:
-    cdef float variation
-    variation = hb_ot_metrics_get_variation(font._hb_font, tag)
-    return variation
+    return hb_ot_metrics_get_variation(font._hb_font, tag)
 
 def ot_metrics_get_x_variation(font: Font,
-                               tag: OTMathTag) -> int:
-    cdef hb_position_t hb_position
-    hb_position = hb_ot_metrics_get_x_variation(font._hb_font, tag)
-    return hb_position
+                               tag: OTMetricsTag) -> int:
+    return hb_ot_metrics_get_x_variation(font._hb_font, tag)
 
 def ot_metrics_get_y_variation(font: Font,
-                               tag: OTMathTag) -> int:
-    cdef hb_position_t hb_position
-    hb_position = hb_ot_metrics_get_y_variation(font._hb_font, tag)
-    return hb_position
+                               tag: OTMetricsTag) -> int:
+    return hb_ot_metrics_get_y_variation(font._hb_font, tag)
 
 def ot_font_set_funcs(Font font):
     hb_ot_font_set_funcs(font._hb_font)
