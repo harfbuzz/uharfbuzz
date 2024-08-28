@@ -1656,7 +1656,7 @@ class OTMetricsTag(IntEnum):
     UNDERLINE_OFFSET = HB_OT_METRICS_TAG_UNDERLINE_OFFSET
 
 def ot_metrics_get_position(font: Font,
-                            tag: OTMathTag) -> int:
+                            tag: OTMetricsTag) -> int:
     cdef hb_position_t hb_position
     cdef hb_bool_t success
     success = hb_ot_metrics_get_position(font._hb_font, tag, &hb_position)
