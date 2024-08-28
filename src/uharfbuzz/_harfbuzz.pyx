@@ -1624,6 +1624,65 @@ def ot_math_get_glyph_assembly(font: Font,
         start_offset += count
     return assembly, italics_correction
 
+
+class OTMetricsTag(IntEnum):
+    HORIZONTAL_ASCENDER = HB_OT_METRICS_TAG_HORIZONTAL_ASCENDER
+    HORIZONTAL_DESCENDER = HB_OT_METRICS_TAG_HORIZONTAL_DESCENDER
+    HORIZONTAL_LINE_GAP = HB_OT_METRICS_TAG_HORIZONTAL_LINE_GAP
+    HORIZONTAL_CLIPPING_ASCENT = HB_OT_METRICS_TAG_HORIZONTAL_CLIPPING_ASCENT
+    HORIZONTAL_CLIPPING_DESCENT = HB_OT_METRICS_TAG_HORIZONTAL_CLIPPING_DESCENT
+    VERTICAL_ASCENDER = HB_OT_METRICS_TAG_VERTICAL_ASCENDER
+    VERTICAL_DESCENDER = HB_OT_METRICS_TAG_VERTICAL_DESCENDER
+    VERTICAL_LINE_GAP = HB_OT_METRICS_TAG_VERTICAL_LINE_GAP
+    HORIZONTAL_CARET_RISE = HB_OT_METRICS_TAG_HORIZONTAL_CARET_RISE
+    HORIZONTAL_CARET_RUN = HB_OT_METRICS_TAG_HORIZONTAL_CARET_RUN
+    HORIZONTAL_CARET_OFFSET = HB_OT_METRICS_TAG_HORIZONTAL_CARET_OFFSET
+    VERTICAL_CARET_RISE = HB_OT_METRICS_TAG_VERTICAL_CARET_RISE
+    VERTICAL_CARET_RUN = HB_OT_METRICS_TAG_VERTICAL_CARET_RUN
+    VERTICAL_CARET_OFFSET = HB_OT_METRICS_TAG_VERTICAL_CARET_OFFSET
+    X_HEIGHT = HB_OT_METRICS_TAG_X_HEIGHT
+    CAP_HEIGHT = HB_OT_METRICS_TAG_CAP_HEIGHT
+    SUBSCRIPT_EM_X_SIZE = HB_OT_METRICS_TAG_SUBSCRIPT_EM_X_SIZE
+    SUBSCRIPT_EM_Y_SIZE = HB_OT_METRICS_TAG_SUBSCRIPT_EM_Y_SIZE
+    SUBSCRIPT_EM_X_OFFSET = HB_OT_METRICS_TAG_SUBSCRIPT_EM_X_OFFSET
+    SUBSCRIPT_EM_Y_OFFSET = HB_OT_METRICS_TAG_SUBSCRIPT_EM_Y_OFFSET
+    SUPERSCRIPT_EM_X_SIZE = HB_OT_METRICS_TAG_SUPERSCRIPT_EM_X_SIZE
+    SUPERSCRIPT_EM_Y_SIZE = HB_OT_METRICS_TAG_SUPERSCRIPT_EM_Y_SIZE
+    SUPERSCRIPT_EM_X_OFFSET = HB_OT_METRICS_TAG_SUPERSCRIPT_EM_X_OFFSET
+    SUPERSCRIPT_EM_Y_OFFSET = HB_OT_METRICS_TAG_SUPERSCRIPT_EM_Y_OFFSET
+    STRIKEOUT_SIZE = HB_OT_METRICS_TAG_STRIKEOUT_SIZE
+    STRIKEOUT_OFFSET = HB_OT_METRICS_TAG_STRIKEOUT_OFFSET
+    UNDERLINE_SIZE = HB_OT_METRICS_TAG_UNDERLINE_SIZE
+    UNDERLINE_OFFSET = HB_OT_METRICS_TAG_UNDERLINE_OFFSET
+
+def ot_metrics_get_position(font: Font,
+                            tag: OTMetricsTag) -> int:
+    cdef hb_position_t hb_position
+    cdef hb_bool_t success
+    if hb_ot_metrics_get_position(font._hb_font, tag, &hb_position):
+        return hb_position
+    return None
+
+def ot_metrics_get_position_with_fallback(font: Font,
+                                          tag: OTMetricsTag) -> int:
+    cdef hb_position_t hb_position
+    hb_ot_metrics_get_position_with_fallback(font._hb_font,
+                                                       tag,
+                                                       &hb_position)
+    return hb_position
+
+def ot_metrics_get_variation(font: Font,
+                             tag: OTMathTag) -> float:
+    return hb_ot_metrics_get_variation(font._hb_font, tag)
+
+def ot_metrics_get_x_variation(font: Font,
+                               tag: OTMetricsTag) -> int:
+    return hb_ot_metrics_get_x_variation(font._hb_font, tag)
+
+def ot_metrics_get_y_variation(font: Font,
+                               tag: OTMetricsTag) -> int:
+    return hb_ot_metrics_get_y_variation(font._hb_font, tag)
+
 def ot_font_set_funcs(Font font):
     hb_ot_font_set_funcs(font._hb_font)
 

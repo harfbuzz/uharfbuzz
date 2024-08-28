@@ -1158,6 +1158,59 @@ cdef extern from "hb-ot.h":
         hb_ot_math_glyph_part_t *parts, # out
         hb_position_t *italics_correction) # out
 
+    # hb-ot-metrics.h
+    ctypedef enum hb_ot_metrics_tag_t:
+        HB_OT_METRICS_TAG_HORIZONTAL_ASCENDER
+        HB_OT_METRICS_TAG_HORIZONTAL_DESCENDER
+        HB_OT_METRICS_TAG_HORIZONTAL_LINE_GAP
+        HB_OT_METRICS_TAG_HORIZONTAL_CLIPPING_ASCENT
+        HB_OT_METRICS_TAG_HORIZONTAL_CLIPPING_DESCENT
+        HB_OT_METRICS_TAG_VERTICAL_ASCENDER
+        HB_OT_METRICS_TAG_VERTICAL_DESCENDER
+        HB_OT_METRICS_TAG_VERTICAL_LINE_GAP
+        HB_OT_METRICS_TAG_HORIZONTAL_CARET_RISE
+        HB_OT_METRICS_TAG_HORIZONTAL_CARET_RUN
+        HB_OT_METRICS_TAG_HORIZONTAL_CARET_OFFSET
+        HB_OT_METRICS_TAG_VERTICAL_CARET_RISE
+        HB_OT_METRICS_TAG_VERTICAL_CARET_RUN
+        HB_OT_METRICS_TAG_VERTICAL_CARET_OFFSET
+        HB_OT_METRICS_TAG_X_HEIGHT
+        HB_OT_METRICS_TAG_CAP_HEIGHT
+        HB_OT_METRICS_TAG_SUBSCRIPT_EM_X_SIZE
+        HB_OT_METRICS_TAG_SUBSCRIPT_EM_Y_SIZE
+        HB_OT_METRICS_TAG_SUBSCRIPT_EM_X_OFFSET
+        HB_OT_METRICS_TAG_SUBSCRIPT_EM_Y_OFFSET
+        HB_OT_METRICS_TAG_SUPERSCRIPT_EM_X_SIZE
+        HB_OT_METRICS_TAG_SUPERSCRIPT_EM_Y_SIZE
+        HB_OT_METRICS_TAG_SUPERSCRIPT_EM_X_OFFSET
+        HB_OT_METRICS_TAG_SUPERSCRIPT_EM_Y_OFFSET
+        HB_OT_METRICS_TAG_STRIKEOUT_SIZE
+        HB_OT_METRICS_TAG_STRIKEOUT_OFFSET
+        HB_OT_METRICS_TAG_UNDERLINE_SIZE
+        HB_OT_METRICS_TAG_UNDERLINE_OFFSET
+
+    hb_bool_t hb_ot_metrics_get_position(
+        hb_font_t *font,
+        hb_ot_metrics_tag_t metrics_tag,
+        hb_position_t *position);
+
+    void hb_ot_metrics_get_position_with_fallback(
+        hb_font_t *font,
+        hb_ot_metrics_tag_t metrics_tag,
+        hb_position_t *position);
+
+    float hb_ot_metrics_get_variation(
+        hb_font_t *font,
+        hb_ot_metrics_tag_t metrics_tag);
+
+    hb_position_t hb_ot_metrics_get_x_variation(
+        hb_font_t *font,
+        hb_ot_metrics_tag_t metrics_tag);
+
+    hb_position_t hb_ot_metrics_get_y_variation(
+        hb_font_t *font,
+        hb_ot_metrics_tag_t metrics_tag);
+
 cdef extern from "hb-subset-repacker.h":
     ctypedef struct hb_link_t:
         unsigned int width
