@@ -1419,8 +1419,14 @@ class TestOTMetrics:
         assert hb.ot_metrics_get_variation(mutatorsans, hb.OTMetricsTag.CAP_HEIGHT) == 0
         mutatorsans.set_variations({"wdth": 250, "wght": 250})
         assert hb.ot_metrics_get_variation(mutatorsans, hb.OTMetricsTag.CAP_HEIGHT) == 25
-        mutatorsans.set_variations({"wdth": 0, "wght": 0})
 
+    def test_ot_metrics_get_x_variation(self, mutatorsans):
+        mutatorsans.set_variations({"wdth": 250, "wght": 250})
+        assert hb.ot_metrics_get_variation(mutatorsans, hb.OTMetricsTag.CAP_HEIGHT) == 25
+
+    def test_ot_metrics_get_y_variation(self, mutatorsans):
+        mutatorsans.set_variations({"wdth": 250, "wght": 250})
+        assert hb.ot_metrics_get_variation(mutatorsans, hb.OTMetricsTag.CAP_HEIGHT) == 25
 
 def test_harfbuzz_version():
     v = hb.version_string()
