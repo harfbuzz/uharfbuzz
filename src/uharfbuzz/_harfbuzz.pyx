@@ -6,7 +6,6 @@ from enum import IntEnum, IntFlag
 from .charfbuzz cimport *
 from libc.stdlib cimport free, malloc, calloc
 from libc.string cimport const_char
-from collections import namedtuple
 from cpython.pycapsule cimport PyCapsule_GetPointer, PyCapsule_IsValid
 from typing import Callable, Dict, List, Sequence, Tuple, Union, NamedTuple
 from pathlib import Path
@@ -635,14 +634,18 @@ cdef class Face:
         return instances
 
 
-# typing.NamedTuple doesn't seem to work with cython
-GlyphExtents = namedtuple(
-    "GlyphExtents", ["x_bearing", "y_bearing", "width", "height"]
-)
+class GlyphExtents(NamedTuple):
+    x_bearing: int
+    y_bearing: int
+    width: int
+    height: int
 
-FontExtents = namedtuple(
-    "FontExtents", ["ascender", "descender", "line_gap"]
-)
+
+class FontExtents(NamedTuple):
+    ascender: int
+    descender: int
+    line_gap: int
+
 
 cdef class Font:
     cdef hb_font_t* _hb_font
@@ -1497,7 +1500,9 @@ def ot_color_palette_color_get_name_id(face: Face, color_index: int) -> int | No
 def ot_color_has_layers(face: Face) -> bool:
     return hb_ot_color_has_layers(face._hb_face)
 
-OTColorLayer = namedtuple("OTColorLayer", ["glyph", "color_index"])
+class OTColorLayer(NamedTuple):
+    glyph: int
+    color_index: int
 
 def ot_color_glyph_get_layers(face: Face, glyph: int) -> List[OTColorLayer]:
     cdef list ret = []
@@ -1630,7 +1635,11 @@ def ot_math_get_glyph_kerning(font: Font,
         raise ValueError("invalid kern")
     return hb_ot_math_get_glyph_kerning(font._hb_font, glyph, kern, correction_height)
 
-OTMathKernEntry = namedtuple("OTMathKernEntry", ["max_correction_height", "kern_value"])
+
+class OTMathKernEntry(NamedTuple):
+    max_correction_height: int
+    kern_value: int
+
 
 def ot_math_get_glyph_kernings(font: Font,
                                glyph: int,
@@ -1650,7 +1659,9 @@ def ot_math_get_glyph_kernings(font: Font,
         start_offset += count
     return kerns
 
-OTMathGlyphVariant = namedtuple("OTMathGlyphVariant", ["glyph", "advance"])
+class OTMathGlyphVariant(NamedTuple):
+    glyph: int
+    advance: int
 
 def ot_math_get_glyph_variants(font: Font, glyph: int, direction: str) -> List[OTMathGlyphVariant]:
     cdef bytes packed = direction.encode()
@@ -1672,10 +1683,12 @@ def ot_math_get_glyph_variants(font: Font, glyph: int, direction: str) -> List[O
 class OTMathGlyphPartFlags(IntFlag):
     EXTENDER = HB_OT_MATH_GLYPH_PART_FLAG_EXTENDER
 
-OTMathGlyphPart = namedtuple(
-    "OTMathGlyphPart",
-    ["glyph", "start_connector_length", "end_connector_length", "full_advance", "flags"]
-)
+class OTMathGlyphPart(NamedTuple):
+    glyph: int
+    start_connector_length: int
+    end_connector_length: int
+    full_advance: int
+    flags: OTMathGlyphPartFlags
 
 def ot_math_get_glyph_assembly(font: Font,
                                glyph: int,
@@ -1795,7 +1808,12 @@ class PaintCompositeMode(IntEnum):
     HSL_LUMINOSITY = HB_PAINT_COMPOSITE_MODE_HSL_LUMINOSITY
 
 
-class Color(namedtuple("Color", ["red", "green", "blue", "alpha"])):
+class Color(NamedTuple):
+    red: int
+    green: int
+    blue: int
+    alpha: int
+
     def to_int(self) -> int:
         return HB_COLOR(self.blue, self.green, self.red, self.alpha)
 
@@ -1808,7 +1826,10 @@ class Color(namedtuple("Color", ["red", "green", "blue", "alpha"])):
         return Color(r, g, b, a)
 
 
-ColorStop = namedtuple("ColorStop", ["offset", "is_foreground", "color"])
+class ColorStop(NamedTuple):
+    offset: float
+    is_foreground: bool
+    color: Color
 
 
 class PaintExtend(IntEnum):
