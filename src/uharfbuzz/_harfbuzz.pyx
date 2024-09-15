@@ -766,6 +766,37 @@ class OTMathGlyphPart(NamedTuple):
     flags: OTMathGlyphPartFlags
 
 
+class OTMetricsTag(IntEnum):
+    HORIZONTAL_ASCENDER = HB_OT_METRICS_TAG_HORIZONTAL_ASCENDER
+    HORIZONTAL_DESCENDER = HB_OT_METRICS_TAG_HORIZONTAL_DESCENDER
+    HORIZONTAL_LINE_GAP = HB_OT_METRICS_TAG_HORIZONTAL_LINE_GAP
+    HORIZONTAL_CLIPPING_ASCENT = HB_OT_METRICS_TAG_HORIZONTAL_CLIPPING_ASCENT
+    HORIZONTAL_CLIPPING_DESCENT = HB_OT_METRICS_TAG_HORIZONTAL_CLIPPING_DESCENT
+    VERTICAL_ASCENDER = HB_OT_METRICS_TAG_VERTICAL_ASCENDER
+    VERTICAL_DESCENDER = HB_OT_METRICS_TAG_VERTICAL_DESCENDER
+    VERTICAL_LINE_GAP = HB_OT_METRICS_TAG_VERTICAL_LINE_GAP
+    HORIZONTAL_CARET_RISE = HB_OT_METRICS_TAG_HORIZONTAL_CARET_RISE
+    HORIZONTAL_CARET_RUN = HB_OT_METRICS_TAG_HORIZONTAL_CARET_RUN
+    HORIZONTAL_CARET_OFFSET = HB_OT_METRICS_TAG_HORIZONTAL_CARET_OFFSET
+    VERTICAL_CARET_RISE = HB_OT_METRICS_TAG_VERTICAL_CARET_RISE
+    VERTICAL_CARET_RUN = HB_OT_METRICS_TAG_VERTICAL_CARET_RUN
+    VERTICAL_CARET_OFFSET = HB_OT_METRICS_TAG_VERTICAL_CARET_OFFSET
+    X_HEIGHT = HB_OT_METRICS_TAG_X_HEIGHT
+    CAP_HEIGHT = HB_OT_METRICS_TAG_CAP_HEIGHT
+    SUBSCRIPT_EM_X_SIZE = HB_OT_METRICS_TAG_SUBSCRIPT_EM_X_SIZE
+    SUBSCRIPT_EM_Y_SIZE = HB_OT_METRICS_TAG_SUBSCRIPT_EM_Y_SIZE
+    SUBSCRIPT_EM_X_OFFSET = HB_OT_METRICS_TAG_SUBSCRIPT_EM_X_OFFSET
+    SUBSCRIPT_EM_Y_OFFSET = HB_OT_METRICS_TAG_SUBSCRIPT_EM_Y_OFFSET
+    SUPERSCRIPT_EM_X_SIZE = HB_OT_METRICS_TAG_SUPERSCRIPT_EM_X_SIZE
+    SUPERSCRIPT_EM_Y_SIZE = HB_OT_METRICS_TAG_SUPERSCRIPT_EM_Y_SIZE
+    SUPERSCRIPT_EM_X_OFFSET = HB_OT_METRICS_TAG_SUPERSCRIPT_EM_X_OFFSET
+    SUPERSCRIPT_EM_Y_OFFSET = HB_OT_METRICS_TAG_SUPERSCRIPT_EM_Y_OFFSET
+    STRIKEOUT_SIZE = HB_OT_METRICS_TAG_STRIKEOUT_SIZE
+    STRIKEOUT_OFFSET = HB_OT_METRICS_TAG_STRIKEOUT_OFFSET
+    UNDERLINE_SIZE = HB_OT_METRICS_TAG_UNDERLINE_SIZE
+    UNDERLINE_OFFSET = HB_OT_METRICS_TAG_UNDERLINE_OFFSET
+
+
 cdef class Font:
     cdef hb_font_t* _hb_font
     # GC bookkeeping
@@ -1170,6 +1201,27 @@ cdef class Font:
                         OTMathGlyphPartFlags(assembly_array[i].flags)))
             start_offset += count
         return assembly, italics_correction
+
+    # metrics
+    def get_metric_position(self, tag: OTMetricsTag) -> int:
+        cdef hb_position_t position
+        if hb_ot_metrics_get_position(self._hb_font, tag, &position):
+            return position
+        return None
+
+    def get_metric_position_with_fallback(font, tag: OTMetricsTag) -> int:
+        cdef hb_position_t position
+        hb_ot_metrics_get_position_with_fallback(font._hb_font, tag, &position)
+        return position
+
+    def get_metric_variation(self, tag: OTMetricsTag) -> float:
+        return hb_ot_metrics_get_variation(self._hb_font, tag)
+
+    def get_metric_x_variation(self, tag: OTMetricsTag) -> int:
+        return hb_ot_metrics_get_x_variation(self._hb_font, tag)
+
+    def get_metric_y_variation(self, tag: OTMetricsTag) -> int:
+        return hb_ot_metrics_get_y_variation(self._hb_font, tag)
 
 
 cdef struct _pen_methods:
@@ -1786,63 +1838,31 @@ def ot_math_get_glyph_assembly(font: Font,
     return font.get_math_glyph_assembly(glyph, direction)
 
 
-class OTMetricsTag(IntEnum):
-    HORIZONTAL_ASCENDER = HB_OT_METRICS_TAG_HORIZONTAL_ASCENDER
-    HORIZONTAL_DESCENDER = HB_OT_METRICS_TAG_HORIZONTAL_DESCENDER
-    HORIZONTAL_LINE_GAP = HB_OT_METRICS_TAG_HORIZONTAL_LINE_GAP
-    HORIZONTAL_CLIPPING_ASCENT = HB_OT_METRICS_TAG_HORIZONTAL_CLIPPING_ASCENT
-    HORIZONTAL_CLIPPING_DESCENT = HB_OT_METRICS_TAG_HORIZONTAL_CLIPPING_DESCENT
-    VERTICAL_ASCENDER = HB_OT_METRICS_TAG_VERTICAL_ASCENDER
-    VERTICAL_DESCENDER = HB_OT_METRICS_TAG_VERTICAL_DESCENDER
-    VERTICAL_LINE_GAP = HB_OT_METRICS_TAG_VERTICAL_LINE_GAP
-    HORIZONTAL_CARET_RISE = HB_OT_METRICS_TAG_HORIZONTAL_CARET_RISE
-    HORIZONTAL_CARET_RUN = HB_OT_METRICS_TAG_HORIZONTAL_CARET_RUN
-    HORIZONTAL_CARET_OFFSET = HB_OT_METRICS_TAG_HORIZONTAL_CARET_OFFSET
-    VERTICAL_CARET_RISE = HB_OT_METRICS_TAG_VERTICAL_CARET_RISE
-    VERTICAL_CARET_RUN = HB_OT_METRICS_TAG_VERTICAL_CARET_RUN
-    VERTICAL_CARET_OFFSET = HB_OT_METRICS_TAG_VERTICAL_CARET_OFFSET
-    X_HEIGHT = HB_OT_METRICS_TAG_X_HEIGHT
-    CAP_HEIGHT = HB_OT_METRICS_TAG_CAP_HEIGHT
-    SUBSCRIPT_EM_X_SIZE = HB_OT_METRICS_TAG_SUBSCRIPT_EM_X_SIZE
-    SUBSCRIPT_EM_Y_SIZE = HB_OT_METRICS_TAG_SUBSCRIPT_EM_Y_SIZE
-    SUBSCRIPT_EM_X_OFFSET = HB_OT_METRICS_TAG_SUBSCRIPT_EM_X_OFFSET
-    SUBSCRIPT_EM_Y_OFFSET = HB_OT_METRICS_TAG_SUBSCRIPT_EM_Y_OFFSET
-    SUPERSCRIPT_EM_X_SIZE = HB_OT_METRICS_TAG_SUPERSCRIPT_EM_X_SIZE
-    SUPERSCRIPT_EM_Y_SIZE = HB_OT_METRICS_TAG_SUPERSCRIPT_EM_Y_SIZE
-    SUPERSCRIPT_EM_X_OFFSET = HB_OT_METRICS_TAG_SUPERSCRIPT_EM_X_OFFSET
-    SUPERSCRIPT_EM_Y_OFFSET = HB_OT_METRICS_TAG_SUPERSCRIPT_EM_Y_OFFSET
-    STRIKEOUT_SIZE = HB_OT_METRICS_TAG_STRIKEOUT_SIZE
-    STRIKEOUT_OFFSET = HB_OT_METRICS_TAG_STRIKEOUT_OFFSET
-    UNDERLINE_SIZE = HB_OT_METRICS_TAG_UNDERLINE_SIZE
-    UNDERLINE_OFFSET = HB_OT_METRICS_TAG_UNDERLINE_OFFSET
-
+@deprecated("Font.get_metric_position()")
 def ot_metrics_get_position(font: Font,
                             tag: OTMetricsTag) -> int:
-    cdef hb_position_t hb_position
-    cdef hb_bool_t success
-    if hb_ot_metrics_get_position(font._hb_font, tag, &hb_position):
-        return hb_position
-    return None
+    return font.get_metric_position(tag)
 
+@deprecated("Font.get_metric_position_with_fallback()")
 def ot_metrics_get_position_with_fallback(font: Font,
                                           tag: OTMetricsTag) -> int:
-    cdef hb_position_t hb_position
-    hb_ot_metrics_get_position_with_fallback(font._hb_font,
-                                                       tag,
-                                                       &hb_position)
-    return hb_position
+    return font.get_metric_position_with_fallback(tag)
 
+@deprecated("Font.get_metric_variation()")
 def ot_metrics_get_variation(font: Font,
                              tag: OTMetricsTag) -> float:
-    return hb_ot_metrics_get_variation(font._hb_font, tag)
+    return font.get_metric_variation(tag)
 
+@deprecated("Font.get_metric_x_variation()")
 def ot_metrics_get_x_variation(font: Font,
                                tag: OTMetricsTag) -> int:
-    return hb_ot_metrics_get_x_variation(font._hb_font, tag)
+    return font.get_metric_x_variation(tag)
 
+@deprecated("Font.get_metric_y_variation()")
 def ot_metrics_get_y_variation(font: Font,
                                tag: OTMetricsTag) -> int:
-    return hb_ot_metrics_get_y_variation(font._hb_font, tag)
+    return font.get_metric_y_variation(tag)
+
 
 def ot_font_set_funcs(Font font):
     hb_ot_font_set_funcs(font._hb_font)

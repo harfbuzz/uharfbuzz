@@ -530,6 +530,33 @@ class TestFace:
         ]
         assert (result, italics_correction) == expected
 
+    def test_get_metric_position(self, opensans):
+        assert opensans.get_metric_position(hb.OTMetricsTag.HORIZONTAL_ASCENDER) == 2189
+        assert opensans.get_metric_position(hb.OTMetricsTag.CAP_HEIGHT) == 1462
+        assert opensans.get_metric_position(hb.OTMetricsTag.VERTICAL_CARET_RISE) is None
+
+    def test_get_metric_position_with_fallback(self, opensans):
+        assert (
+            opensans.get_metric_position_with_fallback(
+                hb.OTMetricsTag.VERTICAL_CARET_RISE
+            )
+            == 1
+        )
+
+    def test_get_metric_variation(self, mutatorsans):
+        assert mutatorsans.get_metric_variation(hb.OTMetricsTag.CAP_HEIGHT) == 0
+
+        mutatorsans.set_variations({"wdth": 250, "wght": 250})
+        assert mutatorsans.get_metric_variation(hb.OTMetricsTag.CAP_HEIGHT) == 25
+
+    def test_get_metric_x_variation(self, mutatorsans):
+        mutatorsans.set_variations({"wdth": 250, "wght": 250})
+        assert mutatorsans.get_metric_x_variation(hb.OTMetricsTag.CAP_HEIGHT) == 25
+
+    def test_ot_get_metric_y_variation(self, mutatorsans):
+        mutatorsans.set_variations({"wdth": 250, "wght": 250})
+        assert mutatorsans.get_metric_y_variation(hb.OTMetricsTag.CAP_HEIGHT) == 25
+
 
 class TestFont:
     def test_get_glyph_extents(self, opensans):
@@ -1424,46 +1451,6 @@ class TestOTColor:
 
         blob = hb.ot_color_glyph_get_png(blankfont, 1)
         assert len(blob) == 0
-
-
-class TestOTMetrics:
-    def test_ot_metrics_get_position(self, opensans):
-        assert (
-            hb.ot_metrics_get_position(opensans, hb.OTMetricsTag.HORIZONTAL_ASCENDER)
-            == 2189
-        )
-        assert hb.ot_metrics_get_position(opensans, hb.OTMetricsTag.CAP_HEIGHT) == 1462
-        assert (
-            hb.ot_metrics_get_position(opensans, hb.OTMetricsTag.VERTICAL_CARET_RISE)
-            is None
-        )
-
-    def test_ot_metrics_get_position_with_fallback(self, opensans):
-        assert (
-            hb.ot_metrics_get_position_with_fallback(
-                opensans, hb.OTMetricsTag.VERTICAL_CARET_RISE
-            )
-            == 1
-        )
-
-    def test_ot_metrics_get_variation(self, mutatorsans):
-        assert hb.ot_metrics_get_variation(mutatorsans, hb.OTMetricsTag.CAP_HEIGHT) == 0
-        mutatorsans.set_variations({"wdth": 250, "wght": 250})
-        assert (
-            hb.ot_metrics_get_variation(mutatorsans, hb.OTMetricsTag.CAP_HEIGHT) == 25
-        )
-
-    def test_ot_metrics_get_x_variation(self, mutatorsans):
-        mutatorsans.set_variations({"wdth": 250, "wght": 250})
-        assert (
-            hb.ot_metrics_get_variation(mutatorsans, hb.OTMetricsTag.CAP_HEIGHT) == 25
-        )
-
-    def test_ot_metrics_get_y_variation(self, mutatorsans):
-        mutatorsans.set_variations({"wdth": 250, "wght": 250})
-        assert (
-            hb.ot_metrics_get_variation(mutatorsans, hb.OTMetricsTag.CAP_HEIGHT) == 25
-        )
 
 
 def test_harfbuzz_version():
