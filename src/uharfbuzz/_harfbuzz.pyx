@@ -9,6 +9,7 @@ from libc.string cimport const_char
 from cpython.pycapsule cimport PyCapsule_GetPointer, PyCapsule_IsValid
 from typing import Callable, Dict, List, Sequence, Tuple, Union, NamedTuple
 from pathlib import Path
+from functools import wraps
 
 
 DEF STATIC_ARRAY_SIZE = 128
@@ -41,6 +42,28 @@ def version_string() -> str:
     cdef const char* cstr = hb_version_string()
     cdef bytes packed = cstr
     return packed.decode()
+
+
+WARNED = set()
+
+
+def deprecated(alternate=None):
+    """Decorator to raise a warning when a deprecated function is called."""
+
+    def decorator(func):
+        @wraps(func)
+        def wrapper(*args, **kwargs):
+            message = f"{func.__name__!r} is deprecated"
+            if alternate:
+                message += ", use {alternate} instead"
+            if message not in WARNED:
+                warnings.warn(message, DeprecationWarning, stacklevel=2)
+                WARNED.add(message)
+            return func(*args, **kwargs)
+
+        return wrapper
+
+    return decorator
 
 
 class HarfBuzzError(Exception):
@@ -2284,31 +2307,19 @@ cdef class DrawFuncs:
     cdef object _cubic_to_func
     cdef object _quadratic_to_func
     cdef object _close_path_func
-    cdef int _warned
 
     def __cinit__(self):
         self._hb_drawfuncs = hb_draw_funcs_create()
-        self._warned = False
 
     def __dealloc__(self):
         hb_draw_funcs_destroy(self._hb_drawfuncs)
 
+    @deprecated("Font.draw_glyph()")
     def get_glyph_shape(self, font: Font, gid: int):
-        if not self._warned:
-            warnings.warn(
-                "get_glyph_shape() is deprecated, use Font.draw_glyph() instead",
-                DeprecationWarning,
-            )
-            self._warned = True
         font.draw_glyph(gid, self)
 
+    @deprecated("Font.draw_glyph()")
     def draw_glyph(self, font: Font, gid: int, draw_data: object = None):
-        if not self._warned:
-            warnings.warn(
-                "draw_glyph() is deprecated, use Font.draw_glyph() instead",
-                DeprecationWarning,
-            )
-            self._warned = True
         font.draw_glyph(gid, self, draw_data)
 
     def set_move_to_func(self,
