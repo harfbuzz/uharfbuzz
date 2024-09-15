@@ -1192,24 +1192,24 @@ cdef extern from "hb-ot.h":
     hb_bool_t hb_ot_metrics_get_position(
         hb_font_t *font,
         hb_ot_metrics_tag_t metrics_tag,
-        hb_position_t *position);
+        hb_position_t *position)
 
     void hb_ot_metrics_get_position_with_fallback(
         hb_font_t *font,
         hb_ot_metrics_tag_t metrics_tag,
-        hb_position_t *position);
+        hb_position_t *position)
 
     float hb_ot_metrics_get_variation(
         hb_font_t *font,
-        hb_ot_metrics_tag_t metrics_tag);
+        hb_ot_metrics_tag_t metrics_tag)
 
     hb_position_t hb_ot_metrics_get_x_variation(
         hb_font_t *font,
-        hb_ot_metrics_tag_t metrics_tag);
+        hb_ot_metrics_tag_t metrics_tag)
 
     hb_position_t hb_ot_metrics_get_y_variation(
         hb_font_t *font,
-        hb_ot_metrics_tag_t metrics_tag);
+        hb_ot_metrics_tag_t metrics_tag)
 
 cdef extern from "hb-subset-repacker.h":
     ctypedef struct hb_link_t:
