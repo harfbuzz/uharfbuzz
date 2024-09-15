@@ -1408,25 +1408,43 @@ class TestOTMath:
 
 class TestOTMetrics:
     def test_ot_metrics_get_position(self, opensans):
-        assert hb.ot_metrics_get_position(opensans, hb.OTMetricsTag.HORIZONTAL_ASCENDER) == 2189
+        assert (
+            hb.ot_metrics_get_position(opensans, hb.OTMetricsTag.HORIZONTAL_ASCENDER)
+            == 2189
+        )
         assert hb.ot_metrics_get_position(opensans, hb.OTMetricsTag.CAP_HEIGHT) == 1462
-        assert hb.ot_metrics_get_position(opensans, hb.OTMetricsTag.VERTICAL_CARET_RISE) is None
+        assert (
+            hb.ot_metrics_get_position(opensans, hb.OTMetricsTag.VERTICAL_CARET_RISE)
+            is None
+        )
 
     def test_ot_metrics_get_position_with_fallback(self, opensans):
-        assert hb.ot_metrics_get_position_with_fallback(opensans, hb.OTMetricsTag.VERTICAL_CARET_RISE) == 1
+        assert (
+            hb.ot_metrics_get_position_with_fallback(
+                opensans, hb.OTMetricsTag.VERTICAL_CARET_RISE
+            )
+            == 1
+        )
 
     def test_ot_metrics_get_variation(self, mutatorsans):
         assert hb.ot_metrics_get_variation(mutatorsans, hb.OTMetricsTag.CAP_HEIGHT) == 0
         mutatorsans.set_variations({"wdth": 250, "wght": 250})
-        assert hb.ot_metrics_get_variation(mutatorsans, hb.OTMetricsTag.CAP_HEIGHT) == 25
+        assert (
+            hb.ot_metrics_get_variation(mutatorsans, hb.OTMetricsTag.CAP_HEIGHT) == 25
+        )
 
     def test_ot_metrics_get_x_variation(self, mutatorsans):
         mutatorsans.set_variations({"wdth": 250, "wght": 250})
-        assert hb.ot_metrics_get_variation(mutatorsans, hb.OTMetricsTag.CAP_HEIGHT) == 25
+        assert (
+            hb.ot_metrics_get_variation(mutatorsans, hb.OTMetricsTag.CAP_HEIGHT) == 25
+        )
 
     def test_ot_metrics_get_y_variation(self, mutatorsans):
         mutatorsans.set_variations({"wdth": 250, "wght": 250})
-        assert hb.ot_metrics_get_variation(mutatorsans, hb.OTMetricsTag.CAP_HEIGHT) == 25
+        assert (
+            hb.ot_metrics_get_variation(mutatorsans, hb.OTMetricsTag.CAP_HEIGHT) == 25
+        )
+
 
 def test_harfbuzz_version():
     v = hb.version_string()
