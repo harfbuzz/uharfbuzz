@@ -1211,6 +1211,58 @@ cdef extern from "hb-ot.h":
         hb_font_t *font,
         hb_ot_metrics_tag_t metrics_tag)
 
+    # hb-ot-var.h
+    ctypedef enum hb_ot_var_axis_flags_t:
+        HB_OT_VAR_AXIS_FLAG_HIDDEN
+        _HB_OT_VAR_AXIS_FLAG_MAX_VALUE
+
+    ctypedef struct hb_ot_var_axis_info_t:
+        unsigned int axis_index
+        hb_tag_t tag
+        hb_ot_name_id_t name_id
+        hb_ot_var_axis_flags_t flags
+        float min_value
+        float default_value
+        float max_value
+        unsigned int reserved
+
+    hb_bool_t hb_ot_var_has_data(hb_face_t *face)
+    unsigned int hb_ot_var_get_axis_count(hb_face_t *face)
+    unsigned int hb_ot_var_get_axis_infos(
+        hb_face_t *face,
+		unsigned int start_offset,
+		unsigned int *axes_count, # IN/OUT
+	    hb_ot_var_axis_info_t *axes_array) # OUT
+    hb_bool_t hb_ot_var_find_axis_info(
+        hb_face_t *face,
+        hb_tag_t tag,
+        hb_ot_var_axis_info_t *axis_info)
+
+    unsigned int hb_ot_var_get_named_instance_count(hb_face_t *face)
+    hb_ot_name_id_t hb_ot_var_named_instance_get_subfamily_name_id(
+        hb_face_t *face,
+        unsigned int instance_index)
+    hb_ot_name_id_t hb_ot_var_named_instance_get_postscript_name_id(
+        hb_face_t *face,
+        unsigned int instance_index)
+    unsigned int hb_ot_var_named_instance_get_design_coords(
+        hb_face_t *face,
+		unsigned int instance_index,
+		unsigned int *coords_length, # IN/OUT
+		float *coords) # OUT
+
+    void hb_ot_var_normalize_variations(
+        hb_face_t *face,
+        const hb_variation_t *variations, # IN
+        unsigned int variations_length,
+        int *coords, # OUT
+        unsigned int coords_length)
+    void hb_ot_var_normalize_coords(
+        hb_face_t *face,
+        unsigned int coords_length,
+        const float *design_coords, # IN
+        int *normalized_coords) # OUT
+
 cdef extern from "hb-subset-repacker.h":
     ctypedef struct hb_link_t:
         unsigned int width

@@ -260,6 +260,32 @@ class TestFace:
         assert face.variation_selectors == hb.Set()
         assert face.variation_unicodes(1) == hb.Set()
 
+    def test_has_var_data(self, blankfont, mutatorsans):
+        assert blankfont.face.has_var_data == False
+        assert mutatorsans.face.has_var_data == True
+
+    def test_axis_infos(self, mutatorsans):
+        face = mutatorsans.face
+        assert face.axis_infos == [
+            (0, "wdth", 256, 0, 0.0, 0.0, 1000.0),
+            (1, "wght", 257, 0, 0.0, 0.0, 1000.0),
+        ]
+
+    def test_named_instances(self, mutatorsans):
+        face = mutatorsans.face
+        assert face.named_instances == [
+            (258, 259, [0.0, 0.0]),
+            (260, 261, [0.0, 1000.0]),
+            (262, 263, [1000.0, 0.0]),
+            (264, 265, [1000.0, 1000.0]),
+            (266, 267, [327.0, 500.0]),
+            (268, 269, [569.0780029296875, 1000.0]),
+            (270, 271, [1000.0, 500.0]),
+            (272, 273, [794.52197265625, 775.6090087890625]),
+            (274, 65535, [93.052001953125, 658.5969848632812]),
+            (275, 276, [328.0, 500.0]),
+        ]
+
 
 class TestFont:
     def test_get_glyph_extents(self, opensans):
