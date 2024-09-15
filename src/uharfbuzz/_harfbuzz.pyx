@@ -463,6 +463,45 @@ class OTVarNamedInstance(NamedTuple):
     design_coords: List[float]
 
 
+class Color(NamedTuple):
+    red: int
+    green: int
+    blue: int
+    alpha: int
+
+    def to_int(self) -> int:
+        return HB_COLOR(self.blue, self.green, self.red, self.alpha)
+
+    @staticmethod
+    def from_int(value: int) -> Color:
+        r = hb_color_get_red(value)
+        g = hb_color_get_green(value)
+        b = hb_color_get_blue(value)
+        a = hb_color_get_alpha(value)
+        return Color(r, g, b, a)
+
+
+class OTColor(Color):
+    name_id: int | None
+
+
+class OTColorPaletteFlags(IntFlag):
+    DEFAULT = HB_OT_COLOR_PALETTE_FLAG_DEFAULT
+    USABLE_WITH_LIGHT_BACKGROUND = HB_OT_COLOR_PALETTE_FLAG_USABLE_WITH_LIGHT_BACKGROUND
+    USABLE_WITH_DARK_BACKGROUND = HB_OT_COLOR_PALETTE_FLAG_USABLE_WITH_DARK_BACKGROUND
+
+
+class OTColorPalette(NamedTuple):
+    colors: List[OTColor]
+    name_id: int | None
+    flags: OTColorPaletteFlags
+
+
+class OTColorLayer(NamedTuple):
+    glyph: int
+    color_index: int
+
+
 cdef hb_user_data_key_t k
 
 
@@ -599,6 +638,7 @@ cdef class Face:
         hb_face_collect_variation_unicodes(self._hb_face, variation_selector, s._hb_set)
         return s
 
+    # variations
     @property
     def has_var_data(self) -> bool:
         return hb_ot_var_has_data(self._hb_face)
@@ -663,6 +703,81 @@ cdef class Face:
 
     def is_glyph_extended_math_shape(self, glyph: int) -> bool:
         return hb_ot_math_is_glyph_extended_shape(self._hb_face, glyph)
+
+    # color
+    @property
+    def has_color_layers(self) -> bool:
+        return hb_ot_color_has_layers(self._hb_face)
+
+    def get_glyph_color_layers(self, glyph: int) -> List[OTColorLayer]:
+        cdef list ret = []
+        cdef unsigned int i
+        cdef unsigned int start_offset = 0
+        cdef unsigned int layer_count = STATIC_ARRAY_SIZE
+        cdef hb_ot_color_layer_t layers[STATIC_ARRAY_SIZE]
+        while layer_count == STATIC_ARRAY_SIZE:
+            hb_ot_color_glyph_get_layers(self._hb_face, glyph, start_offset, &layer_count, layers)
+            for i in range(layer_count):
+                ret.append(OTColorLayer(layers[i].glyph, layers[i].color_index))
+            start_offset += layer_count
+        return ret
+
+    @property
+    def has_color_palettes(self) -> bool:
+        return hb_ot_color_has_palettes(self._hb_face)
+
+    def get_color_palette(self, palette_index: int) -> OTColorPalette:
+        cdef hb_face_t* face = self._hb_face
+        cdef list colors = []
+        cdef unsigned int i
+        cdef unsigned int start_offset = 0
+        cdef unsigned int color_count = STATIC_ARRAY_SIZE
+        cdef hb_color_t c_colors[STATIC_ARRAY_SIZE]
+        while color_count == STATIC_ARRAY_SIZE:
+            hb_ot_color_palette_get_colors(face, palette_index, start_offset, &color_count, c_colors)
+            for i in range(color_count):
+                colors.append(Color.from_int(c_colors[i]))
+
+        return OTColorPalette(
+            colors=colors,
+            name_id=hb_ot_color_palette_get_name_id(face, palette_index),
+            flags=OTColorPaletteFlags(hb_ot_color_palette_get_flags(face, palette_index))
+        )
+
+    @property
+    def color_palettes(self) -> list[OTColorPalette]:
+        cdef list palettes = []
+        cdef unsigned int palette_count = hb_ot_color_palette_get_count(self._hb_face)
+        for i in range(palette_count):
+            palettes.append(self.get_color_palette(i))
+        return palettes
+
+    def color_palette_color_get_name_id(self, color_index: int) -> int | None:
+        cdef hb_ot_name_id_t name_id
+        name_id =  hb_ot_color_palette_color_get_name_id(self._hb_face, color_index)
+        if name_id == HB_OT_NAME_ID_INVALID:
+            return None
+        return name_id
+
+    @property
+    def has_color_paint(self) -> bool:
+        return hb_ot_color_has_paint(self._hb_face)
+
+    def glyph_has_color_paint(self, glyph: int) -> bool:
+        return hb_ot_color_glyph_has_paint(self._hb_face, glyph)
+
+    @property
+    def has_color_svg(self) -> bool:
+        return hb_ot_color_has_svg(self._hb_face)
+
+    def get_glyph_color_svg(self, glyph: int) -> Blob:
+        cdef hb_blob_t* blob
+        blob = hb_ot_color_glyph_reference_svg(self._hb_face, glyph)
+        return Blob.from_ptr(blob)
+
+    @property
+    def has_color_png(self) -> bool:
+        return hb_ot_color_has_png(self._hb_face)
 
 
 class GlyphExtents(NamedTuple):
@@ -1223,6 +1338,11 @@ cdef class Font:
     def get_metric_y_variation(self, tag: OTMetricsTag) -> int:
         return hb_ot_metrics_get_y_variation(self._hb_font, tag)
 
+    # color
+    def get_glyph_color_png(self, glyph: int) -> Blob:
+        cdef hb_blob_t* blob
+        blob = hb_ot_color_glyph_reference_png(self._hb_font, glyph)
+        return Blob.from_ptr(blob)
 
 cdef struct _pen_methods:
     void *moveTo
@@ -1707,20 +1827,19 @@ def ot_layout_get_glyph_class(face: Face, glyph: int) -> OTLayoutGlyphClass:
     return OTLayoutGlyphClass(hb_ot_layout_get_glyph_class(face._hb_face, glyph))
 
 
+@deprecated("Face.has_color_palettes")
 def ot_color_has_palettes(face: Face) -> bool:
-    return hb_ot_color_has_palettes(face._hb_face)
+    return face.has_color_palettes
 
+@deprecated("Face.color_palettes")
 def ot_color_palette_get_count(face: Face) -> int:
     return hb_ot_color_palette_get_count(face._hb_face)
 
-class OTColorPaletteFlags(IntFlag):
-    DEFAULT = HB_OT_COLOR_PALETTE_FLAG_DEFAULT
-    USABLE_WITH_LIGHT_BACKGROUND = HB_OT_COLOR_PALETTE_FLAG_USABLE_WITH_LIGHT_BACKGROUND
-    USABLE_WITH_DARK_BACKGROUND = HB_OT_COLOR_PALETTE_FLAG_USABLE_WITH_DARK_BACKGROUND
-
+@deprecated("Face.get_color_palette()")
 def ot_color_palette_get_flags(face: Face, palette_index: int) -> OTColorPaletteFlags:
     return OTColorPaletteFlags(hb_ot_color_palette_get_flags(face._hb_face, palette_index))
 
+@deprecated("Face.get_color_palette()")
 def ot_color_palette_get_colors(face: Face, palette_index: int) -> List[Color]:
     cdef list ret = []
     cdef unsigned int i
@@ -1733,6 +1852,7 @@ def ot_color_palette_get_colors(face: Face, palette_index: int) -> List[Color]:
             ret.append(Color.from_int(colors[i]))
     return ret
 
+@deprecated("Face.get_color_palette()")
 def ot_color_palette_get_name_id(face: Face, palette_index: int) -> int | None:
     cdef hb_ot_name_id_t name_id
     name_id = hb_ot_color_palette_get_name_id(face._hb_face, palette_index)
@@ -1740,54 +1860,41 @@ def ot_color_palette_get_name_id(face: Face, palette_index: int) -> int | None:
         return None
     return name_id
 
+@deprecated("Face.color_palette_color_get_name_id()")
 def ot_color_palette_color_get_name_id(face: Face, color_index: int) -> int | None:
-    cdef hb_ot_name_id_t name_id
-    name_id =  hb_ot_color_palette_color_get_name_id(face._hb_face, color_index)
-    if name_id == HB_OT_NAME_ID_INVALID:
-        return None
-    return name_id
+    return face.color_palette_color_get_name_id(color_index)
 
+@deprecated("Face.has_color_layers")
 def ot_color_has_layers(face: Face) -> bool:
-    return hb_ot_color_has_layers(face._hb_face)
+    return face.has_color_layers
 
-class OTColorLayer(NamedTuple):
-    glyph: int
-    color_index: int
-
+@deprecated("Face.get_glyph_color_layers()")
 def ot_color_glyph_get_layers(face: Face, glyph: int) -> List[OTColorLayer]:
-    cdef list ret = []
-    cdef unsigned int i
-    cdef unsigned int start_offset = 0
-    cdef unsigned int layer_count = STATIC_ARRAY_SIZE
-    cdef hb_ot_color_layer_t layers[STATIC_ARRAY_SIZE]
-    while layer_count == STATIC_ARRAY_SIZE:
-        hb_ot_color_glyph_get_layers(face._hb_face, glyph, start_offset, &layer_count, layers)
-        for i in range(layer_count):
-            ret.append(OTColorLayer(layers[i].glyph, layers[i].color_index))
-        start_offset += layer_count
-    return ret
+    return face.get_glyph_color_layers(glyph)
 
+@deprecated("Face.has_color_paint")
 def ot_color_has_paint(face: Face) -> bool:
-    return hb_ot_color_has_paint(face._hb_face)
+    return face.has_color_paint
 
+@deprecated("Face.glyph_has_color_paint()")
 def ot_color_glyph_has_paint(face: Face, glyph: int) -> bool:
-    return hb_ot_color_glyph_has_paint(face._hb_face, glyph)
+    return face.glyph_has_color_paint(glyph)
 
+@deprecated("Face.has_color_svg")
 def ot_color_has_svg(face: Face) -> bool:
-    return hb_ot_color_has_svg(face._hb_face)
+    return face.has_color_svg
 
+@deprecated("Face.get_glyph_color_svg()")
 def ot_color_glyph_get_svg(face: Face, glyph: int) -> Blob:
-    cdef hb_blob_t* blob
-    blob = hb_ot_color_glyph_reference_svg(face._hb_face, glyph)
-    return Blob.from_ptr(blob)
+    return face.get_glyph_color_svg(glyph)
 
+@deprecated("Face.has_color_png")
 def ot_color_has_png(face: Face) -> bool:
-    return hb_ot_color_has_png(face._hb_face)
+    return face.has_color_png
 
+@deprecated("Font.get_glyph_color_png()")
 def ot_color_glyph_get_png(font: Font, glyph: int) -> Blob:
-    cdef hb_blob_t* blob
-    blob = hb_ot_color_glyph_reference_png(font._hb_font, glyph)
-    return Blob.from_ptr(blob)
+    return font.get_glyph_color_png(glyph)
 
 
 @deprecated("Face.has_math_data")
@@ -1897,25 +2004,6 @@ class PaintCompositeMode(IntEnum):
     HSL_SATURATION = HB_PAINT_COMPOSITE_MODE_HSL_SATURATION
     HSL_COLOR = HB_PAINT_COMPOSITE_MODE_HSL_COLOR
     HSL_LUMINOSITY = HB_PAINT_COMPOSITE_MODE_HSL_LUMINOSITY
-
-
-class Color(NamedTuple):
-    red: int
-    green: int
-    blue: int
-    alpha: int
-
-    def to_int(self) -> int:
-        return HB_COLOR(self.blue, self.green, self.red, self.alpha)
-
-    @staticmethod
-    def from_int(value: int) -> Color:
-        r = hb_color_get_red(value)
-        g = hb_color_get_green(value)
-        b = hb_color_get_blue(value)
-        a = hb_color_get_alpha(value)
-        return Color(r, g, b, a)
-
 
 class ColorStop(NamedTuple):
     offset: float

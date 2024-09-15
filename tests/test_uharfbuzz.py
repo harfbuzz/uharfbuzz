@@ -557,6 +557,86 @@ class TestFace:
         mutatorsans.set_variations({"wdth": 250, "wght": 250})
         assert mutatorsans.get_metric_y_variation(hb.OTMetricsTag.CAP_HEIGHT) == 25
 
+    def test_has_color_palettes(self, colorv0font):
+        assert colorv0font.face.has_color_palettes
+
+    def test_has_no_color_palettes(self, blankfont):
+        assert blankfont.face.has_color_palettes == False
+
+    def test_color_palettes(self, colorv0font, colorv1font):
+        palettes1 = colorv0font.face.color_palettes
+        palettes2 = colorv1font.face.color_palettes
+        assert len(palettes1) == 1
+        assert len(palettes2) == 3
+
+        assert palettes1[0].colors == [(200, 0, 0, 255)]
+        assert palettes2[0].colors == [
+            (255, 0, 0, 255),
+            (255, 165, 0, 255),
+            (255, 255, 0, 255),
+            (0, 128, 0, 255),
+            (0, 0, 255, 255),
+            (75, 0, 130, 255),
+            (238, 130, 238, 255),
+            (250, 240, 230, 255),
+            (47, 79, 79, 255),
+            (255, 255, 255, 255),
+            (0, 0, 0, 255),
+            (104, 199, 232, 255),
+            (255, 220, 1, 255),
+            (128, 128, 128, 255),
+        ]
+
+        assert palettes2[0].flags == hb.OTColorPaletteFlags.DEFAULT
+        assert palettes2[1].flags == hb.OTColorPaletteFlags.USABLE_WITH_DARK_BACKGROUND
+        assert palettes2[2].flags == hb.OTColorPaletteFlags.USABLE_WITH_LIGHT_BACKGROUND
+
+    def test_no_color_palettes(self, blankfont):
+        assert blankfont.face.color_palettes == []
+
+    def test_color_palette_color_get_name_id(self, colorv1font):
+        assert colorv1font.face.color_palette_color_get_name_id(0) is None
+        assert colorv1font.face.color_palette_color_get_name_id(1) is None
+        assert colorv1font.face.color_palette_color_get_name_id(2) is None
+
+    def test_color_palette_color_get_name_id_no_palettes(self, blankfont):
+        assert blankfont.face.color_palette_color_get_name_id(0) is None
+
+    def test_has_color_layers(self, colorv0font):
+        assert colorv0font.face.has_color_layers
+
+    def test_has_no_color_layers(self, blankfont):
+        assert blankfont.face.has_color_layers == False
+
+    def test_get_glyph_color_layers(self, colorv0font):
+        assert colorv0font.face.get_glyph_color_layers(1) == [(1, 0)]
+        assert colorv0font.face.get_glyph_color_layers(0) == []
+
+    def test_get_glyph_color_layers_no_layers(self, blankfont):
+        assert blankfont.face.get_glyph_color_layers(1) == []
+
+    def test_has_color_paint(self, colorv1font):
+        assert colorv1font.face.has_color_paint
+
+    def test_has_no_color_paint(self, blankfont):
+        assert blankfont.face.has_color_paint == False
+
+    def test_glyph_has_color_paint(self, colorv1font):
+        assert colorv1font.face.glyph_has_color_paint(1) == False
+        assert colorv1font.face.glyph_has_color_paint(7) == True
+
+    def test_glyph_has_no_color_paint(self, blankfont):
+        assert blankfont.face.glyph_has_color_paint(1) == False
+
+    def test_has_color_svg(self, blankfont):
+        assert blankfont.face.has_color_svg == False
+
+        blob = blankfont.face.get_glyph_color_svg(1)
+        assert len(blob) == 0
+
+    def test_has_color_png(self, blankfont):
+        assert blankfont.face.has_color_png == False
+
 
 class TestFont:
     def test_get_glyph_extents(self, opensans):
@@ -636,6 +716,10 @@ class TestFont:
         assert blankfont.synthetic_slant == 0
         blankfont.synthetic_slant = 0.2
         assert blankfont.synthetic_slant == pytest.approx(0.2)
+
+    def test_get_glyph_color_png(self, blankfont):
+        blob = blankfont.get_glyph_color_png(1)
+        assert len(blob) == 0
 
 
 class TestShape:
@@ -1340,117 +1424,53 @@ class TestOTLayout:
 
 
 class TestOTColor:
-    def test_ot_color_has_palettes(self, colorv0font):
-        assert hb.ot_color_has_palettes(colorv0font.face)
-
-    def test_ot_color_has_no_palettes(self, blankfont):
-        assert hb.ot_color_has_palettes(blankfont.face) == False
-
     def test_ot_color_palette_get_count(self, colorv0font, colorv1font):
-        assert hb.ot_color_palette_get_count(colorv0font.face) == 1
-        assert hb.ot_color_palette_get_count(colorv1font.face) == 3
+        with pytest.deprecated_call():
+            assert hb.ot_color_palette_get_count(colorv0font.face) == 1
+            assert hb.ot_color_palette_get_count(colorv1font.face) == 3
 
-    def test_ot_color_palette_get_colors(self, colorv0font, colorv1font):
-        palette = hb.ot_color_palette_get_colors(colorv0font.face, 0)
-        assert palette == [(200, 0, 0, 255)]
+    def test_ot_color_palette_get_colors(self, colorv0font, colorv1font, blankfont):
+        with pytest.deprecated_call():
+            palette = hb.ot_color_palette_get_colors(colorv0font.face, 0)
+            assert palette == [(200, 0, 0, 255)]
 
-        palette = hb.ot_color_palette_get_colors(colorv1font.face, 0)
-        assert palette == [
-            (255, 0, 0, 255),
-            (255, 165, 0, 255),
-            (255, 255, 0, 255),
-            (0, 128, 0, 255),
-            (0, 0, 255, 255),
-            (75, 0, 130, 255),
-            (238, 130, 238, 255),
-            (250, 240, 230, 255),
-            (47, 79, 79, 255),
-            (255, 255, 255, 255),
-            (0, 0, 0, 255),
-            (104, 199, 232, 255),
-            (255, 220, 1, 255),
-            (128, 128, 128, 255),
-        ]
+            palette = hb.ot_color_palette_get_colors(colorv1font.face, 0)
+            assert palette == [
+                (255, 0, 0, 255),
+                (255, 165, 0, 255),
+                (255, 255, 0, 255),
+                (0, 128, 0, 255),
+                (0, 0, 255, 255),
+                (75, 0, 130, 255),
+                (238, 130, 238, 255),
+                (250, 240, 230, 255),
+                (47, 79, 79, 255),
+                (255, 255, 255, 255),
+                (0, 0, 0, 255),
+                (104, 199, 232, 255),
+                (255, 220, 1, 255),
+                (128, 128, 128, 255),
+            ]
 
-    def test_ot_color_palette_get_colors_no_palettes(self, blankfont):
-        palette = hb.ot_color_palette_get_colors(blankfont.face, 0)
-        assert palette == []
+            assert hb.ot_color_palette_get_colors(blankfont.face, 0) == []
 
-    def test_ot_color_palette_get_flags(self, colorv1font):
-        flags = hb.ot_color_palette_get_flags(colorv1font.face, 0)
-        assert flags == hb.OTColorPaletteFlags.DEFAULT
+    def test_ot_color_palette_get_flags(self, colorv1font, colorv0font):
+        with pytest.deprecated_call():
+            flags = hb.ot_color_palette_get_flags(colorv1font.face, 0)
+            assert flags == hb.OTColorPaletteFlags.DEFAULT
+            flags = hb.ot_color_palette_get_flags(colorv1font.face, 1)
+            assert flags == hb.OTColorPaletteFlags.USABLE_WITH_DARK_BACKGROUND
+            flags = hb.ot_color_palette_get_flags(colorv1font.face, 2)
+            assert flags == hb.OTColorPaletteFlags.USABLE_WITH_LIGHT_BACKGROUND
+            flags = hb.ot_color_palette_get_flags(colorv0font.face, 0)
+            assert flags == hb.OTColorPaletteFlags.DEFAULT
 
-        flags = hb.ot_color_palette_get_flags(colorv1font.face, 1)
-        assert flags == hb.OTColorPaletteFlags.USABLE_WITH_DARK_BACKGROUND
-
-        flags = hb.ot_color_palette_get_flags(colorv1font.face, 2)
-        assert flags == hb.OTColorPaletteFlags.USABLE_WITH_LIGHT_BACKGROUND
-
-    def test_ot_color_palette_get_flags_no_palettes(self, colorv0font):
-        flags = hb.ot_color_palette_get_flags(colorv0font.face, 0)
-        assert flags == hb.OTColorPaletteFlags.DEFAULT
-
-    def test_ot_color_palette_get_name_id(self, colorv1font):
-        name_id = hb.ot_color_palette_get_name_id(colorv1font.face, 0)
-        assert name_id == None
-        name_id = hb.ot_color_palette_get_name_id(colorv1font.face, 1)
-        assert name_id == None
-        name_id = hb.ot_color_palette_get_name_id(colorv1font.face, 2)
-        assert name_id == None
-
-    def test_ot_color_palette_get_name_id_no_palettes(self, blankfont):
-        name_id = hb.ot_color_palette_get_name_id(blankfont.face, 0)
-        assert name_id == None
-
-    def test_ot_color_palette_color_get_name_id(self, colorv1font):
-        name_id = hb.ot_color_palette_color_get_name_id(colorv1font.face, 0)
-        assert name_id == None
-        name_id = hb.ot_color_palette_color_get_name_id(colorv1font.face, 1)
-        assert name_id == None
-        name_id = hb.ot_color_palette_color_get_name_id(colorv1font.face, 2)
-        assert name_id == None
-
-    def test_ot_color_has_layers(self, colorv0font):
-        assert hb.ot_color_has_layers(colorv0font.face)
-
-    def test_ot_color_has_no_layers(self, blankfont):
-        assert hb.ot_color_has_layers(blankfont.face) == False
-
-    def test_ot_color_glyph_get_layers(self, colorv0font):
-        layers = hb.ot_color_glyph_get_layers(colorv0font.face, 1)
-        assert layers == [(1, 0)]
-
-        layers = hb.ot_color_glyph_get_layers(colorv0font.face, 0)
-        assert layers == []
-
-    def test_ot_color_glyph_get_layers_no_layers(self, blankfont):
-        layers = hb.ot_color_glyph_get_layers(blankfont.face, 1)
-        assert layers == []
-
-    def test_ot_color_has_paint(self, colorv1font):
-        assert hb.ot_color_has_paint(colorv1font.face)
-
-    def test_ot_color_has_no_paint(self, blankfont):
-        assert hb.ot_color_has_paint(blankfont.face) == False
-
-    def test_ot_color_glyph_has_paint(self, colorv1font):
-        assert hb.ot_color_glyph_has_paint(colorv1font.face, 1) == False
-        assert hb.ot_color_glyph_has_paint(colorv1font.face, 7) == True
-
-    def test_ot_color_glyph_has_paint_no_paint(self, blankfont):
-        assert hb.ot_color_glyph_has_paint(blankfont.face, 1) == False
-
-    def test_ot_color_has_svg(self, blankfont):
-        assert hb.ot_color_has_svg(blankfont.face) == False
-
-        blob = hb.ot_color_glyph_get_svg(blankfont.face, 1)
-        assert len(blob) == 0
-
-    def test_ot_color_has_png(self, blankfont):
-        assert hb.ot_color_has_png(blankfont.face) == False
-
-        blob = hb.ot_color_glyph_get_png(blankfont, 1)
-        assert len(blob) == 0
+    def test_ot_color_palette_get_name_id(self, colorv1font, blankfont):
+        with pytest.deprecated_call():
+            assert hb.ot_color_palette_get_name_id(colorv1font.face, 0) is None
+            assert hb.ot_color_palette_get_name_id(colorv1font.face, 1) is None
+            assert hb.ot_color_palette_get_name_id(colorv1font.face, 2) is None
+            assert hb.ot_color_palette_get_name_id(blankfont.face, 0) is None
 
 
 def test_harfbuzz_version():
