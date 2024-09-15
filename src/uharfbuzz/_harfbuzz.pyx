@@ -8,7 +8,7 @@ from libc.stdlib cimport free, malloc, calloc
 from libc.string cimport const_char
 from collections import namedtuple
 from cpython.pycapsule cimport PyCapsule_GetPointer, PyCapsule_IsValid
-from typing import Callable, Dict, List, Sequence, Tuple, Union
+from typing import Callable, Dict, List, Sequence, Tuple, Union, NamedTuple
 from pathlib import Path
 
 
@@ -421,6 +421,26 @@ cdef class Blob:
         return self._data
 
 
+class OTVarAxisFlags(IntFlag):
+    HIDDEN = HB_OT_VAR_AXIS_FLAG_HIDDEN
+
+
+class OTVarAxisInfo(NamedTuple):
+    axis_index: int
+    tag: str
+    name_id: int
+    flags: OTVarAxisFlags
+    min_value: float
+    default_value: float
+    max_value: float
+
+
+class OTVarNamedInstance(NamedTuple):
+    subfamily_name_id: int
+    postscript_name_id: int
+    design_coords: List[float]
+
+
 cdef hb_user_data_key_t k
 
 
@@ -556,6 +576,63 @@ cdef class Face:
         s = Set()
         hb_face_collect_variation_unicodes(self._hb_face, variation_selector, s._hb_set)
         return s
+
+    @property
+    def has_var_data(self) -> bool:
+        return hb_ot_var_has_data(self._hb_face)
+
+    @property
+    def axis_infos(self) -> list[OTVarAxisInfo]:
+        cdef unsigned int axis_count = STATIC_ARRAY_SIZE
+        cdef hb_ot_var_axis_info_t axis_array[STATIC_ARRAY_SIZE]
+        cdef list infos = []
+        cdef char cstr[5]
+        cdef bytes packed
+        cdef unsigned int i
+        cdef unsigned int start_offset = 0
+        while axis_count == STATIC_ARRAY_SIZE:
+            hb_ot_var_get_axis_infos(
+                self._hb_face, start_offset, &axis_count, axis_array)
+            for i in range(axis_count):
+                hb_tag_to_string(axis_array[i].tag, cstr)
+                cstr[4] = b'\0'
+                packed = cstr
+                infos.append(
+                    OTVarAxisInfo(
+                        axis_index=axis_array[i].axis_index,
+                        tag=packed.decode(),
+                        name_id=axis_array[i].name_id,
+                        flags=axis_array[i].flags,
+                        min_value=axis_array[i].min_value,
+                        default_value=axis_array[i].default_value,
+                        max_value=axis_array[i].max_value
+                    )
+                )
+            start_offset += axis_count
+        return infos
+
+    @property
+    def named_instances(self) -> list[OTVarNamedInstance]:
+        instances = []
+        cdef hb_face_t* face = self._hb_face
+        cdef unsigned int instance_count = hb_ot_var_get_named_instance_count(face)
+        cdef unsigned int axis_count = hb_ot_var_get_axis_count(face)
+        cdef hb_ot_name_id_t subfamily_name_id
+        cdef hb_ot_name_id_t postscript_name_id
+        cdef float* coords = <float*>malloc(axis_count * sizeof(float))
+        cdef unsigned int coord_length
+        for i in range(instance_count):
+            coord_length = axis_count
+            hb_ot_var_named_instance_get_design_coords(face, i, &coord_length, coords)
+            instances.append(
+                OTVarNamedInstance(
+                    subfamily_name_id=hb_ot_var_named_instance_get_subfamily_name_id(face, i),
+                    postscript_name_id=hb_ot_var_named_instance_get_postscript_name_id(face, i),
+                    design_coords=[coords[j] for j in range(coord_length)],
+                )
+            )
+        free(coords)
+        return instances
 
 
 # typing.NamedTuple doesn't seem to work with cython
