@@ -1672,7 +1672,7 @@ def ot_metrics_get_position_with_fallback(font: Font,
     return hb_position
 
 def ot_metrics_get_variation(font: Font,
-                             tag: OTMathTag) -> float:
+                             tag: OTMetricsTag) -> float:
     return hb_ot_metrics_get_variation(font._hb_font, tag)
 
 def ot_metrics_get_x_variation(font: Font,
