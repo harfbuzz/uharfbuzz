@@ -637,6 +637,42 @@ class TestFace:
     def test_has_color_png(self, blankfont):
         assert blankfont.face.has_color_png == False
 
+    def test_get_language_feature_tags(self, blankfont):
+        assert blankfont.face.get_language_feature_tags("GPOS") == ["kern"]
+        assert blankfont.face.get_language_feature_tags("GSUB") == ["calt"]
+
+    def test_get_table_script_tags(self, blankfont):
+        assert blankfont.face.get_table_script_tags("GPOS") == ["DFLT"]
+
+    def test_script_get_language_tags(self, blankfont):
+        assert blankfont.face.get_script_language_tags("GPOS", 0) == []
+
+    def test_lookup_get_glyph_alternates(self, blankfont):
+        gid = blankfont.get_nominal_glyph(ord("c"))
+        assert blankfont.face.get_lookup_glyph_alternates(1, gid) == [1]
+
+    def test_has_layout_glyph_classes(self, opensans):
+        assert opensans.face.has_layout_glyph_classes
+
+    def test_has_no_layout_glyph_classes(self, blankfont):
+        assert blankfont.face.has_layout_glyph_classes == False
+
+    def test_get_layout_glyph_class(self, opensans):
+        glyph_class = opensans.face.get_layout_glyph_class(1)
+        assert glyph_class == hb.OTLayoutGlyphClass.BASE_GLYPH
+
+    def test_has_layout_positioning(self, opensans):
+        assert opensans.face.has_layout_positioning
+
+    def test_has_no_positioning(self, mathfont):
+        assert mathfont.face.has_layout_positioning == False
+
+    def test_has_layout_substitution(self, opensans):
+        assert opensans.face.has_layout_substitution
+
+    def test_has_no_layout_substitution(self, mathfont):
+        assert mathfont.face.has_layout_substitution == False
+
 
 class TestFont:
     def test_get_glyph_extents(self, opensans):
@@ -720,6 +756,40 @@ class TestFont:
     def test_get_glyph_color_png(self, blankfont):
         blob = blankfont.get_glyph_color_png(1)
         assert len(blob) == 0
+
+    # The test font contains a BASE table with some test values
+    def test_get_layout_baseline_invalid_tag(self, blankfont):
+        with pytest.raises(ValueError):
+            # invalid baseline tag
+            baseline = blankfont.get_layout_baseline("xxxx", "LTR", "", "")
+
+    @pytest.mark.parametrize(
+        "baseline_tag, script_tag, direction, expected_value",
+        [
+            ("icfb", "grek", "LTR", None),  # BASE table doesn't contain grek script
+            ("icfb", "latn", "LTR", -70),
+            ("icft", "latn", "LTR", 830),
+            ("romn", "latn", "LTR", 0),
+            ("ideo", "latn", "LTR", -120),
+            ("icfb", "kana", "LTR", -71),
+            ("icft", "kana", "LTR", 831),
+            ("romn", "kana", "LTR", 1),
+            ("ideo", "kana", "LTR", -121),
+            ("icfb", "latn", "TTB", 50),
+            ("icft", "latn", "TTB", 950),
+            ("romn", "latn", "TTB", 120),
+            ("ideo", "latn", "TTB", 0),
+            ("icfb", "kana", "TTB", 51),
+            ("icft", "kana", "TTB", 951),
+            ("romn", "kana", "TTB", 121),
+            ("ideo", "kana", "TTB", 1),
+        ],
+    )
+    def test_get_layout_baseline(
+        self, blankfont, baseline_tag, script_tag, direction, expected_value
+    ):
+        value = blankfont.get_layout_baseline(baseline_tag, direction, script_tag, "")
+        assert value == expected_value
 
 
 class TestShape:
@@ -1339,83 +1409,6 @@ class MessageCollector:
 
 
 class TestOTLayout:
-    # The test font contains a BASE table with some test values
-    def test_ot_layout_get_baseline_invalid_tag(self, blankfont):
-        with pytest.raises(ValueError):
-            # invalid baseline tag
-            baseline = hb.ot_layout_get_baseline(blankfont, "xxxx", "LTR", "", "")
-
-    @pytest.mark.parametrize(
-        "baseline_tag, script_tag, direction, expected_value",
-        [
-            ("icfb", "grek", "LTR", None),  # BASE table doesn't contain grek script
-            ("icfb", "latn", "LTR", -70),
-            ("icft", "latn", "LTR", 830),
-            ("romn", "latn", "LTR", 0),
-            ("ideo", "latn", "LTR", -120),
-            ("icfb", "kana", "LTR", -71),
-            ("icft", "kana", "LTR", 831),
-            ("romn", "kana", "LTR", 1),
-            ("ideo", "kana", "LTR", -121),
-            ("icfb", "latn", "TTB", 50),
-            ("icft", "latn", "TTB", 950),
-            ("romn", "latn", "TTB", 120),
-            ("ideo", "latn", "TTB", 0),
-            ("icfb", "kana", "TTB", 51),
-            ("icft", "kana", "TTB", 951),
-            ("romn", "kana", "TTB", 121),
-            ("ideo", "kana", "TTB", 1),
-        ],
-    )
-    def test_ot_layout_get_baseline(
-        self, blankfont, baseline_tag, script_tag, direction, expected_value
-    ):
-        value = hb.ot_layout_get_baseline(
-            blankfont, baseline_tag, direction, script_tag, ""
-        )
-        assert value == expected_value
-
-    def test_ot_layout_language_get_feature_tags(self, blankfont):
-        tags = hb.ot_layout_language_get_feature_tags(blankfont.face, "GPOS")
-        assert tags == ["kern"]
-        tags = hb.ot_layout_language_get_feature_tags(blankfont.face, "GSUB")
-        assert tags == ["calt"]
-
-    def test_ot_layout_table_get_script_tags(self, blankfont):
-        tags = hb.ot_layout_table_get_script_tags(blankfont.face, "GPOS")
-        assert tags == ["DFLT"]
-
-    def test_ot_layout_script_get_language_tags(self, blankfont):
-        tags = hb.ot_layout_script_get_language_tags(blankfont.face, "GPOS", 0)
-        assert tags == []
-
-    def test_ot_layout_lookup_get_glyph_alternates(self, blankfont):
-        gid = blankfont.get_nominal_glyph(ord("c"))
-        alternates = hb.ot_layout_lookup_get_glyph_alternates(blankfont.face, 1, gid)
-        assert alternates == [1]
-
-    def test_ot_layout_has_glyph_classes(self, opensans):
-        assert hb.ot_layout_has_glyph_classes(opensans.face)
-
-    def test_ot_layout_has_no_glyph_classes(self, blankfont):
-        assert hb.ot_layout_has_glyph_classes(blankfont.face) == False
-
-    def test_ot_layout_get_glyph_class(self, opensans):
-        glyph_class = hb.ot_layout_get_glyph_class(opensans.face, 1)
-        assert glyph_class == hb.OTLayoutGlyphClass.BASE_GLYPH
-
-    def test_ot_layout_has_positioning(self, opensans):
-        assert hb.ot_layout_has_positioning(opensans.face)
-
-    def test_ot_layout_has_no_positioning(self, mathfont):
-        assert hb.ot_layout_has_positioning(mathfont.face) == False
-
-    def test_ot_layout_has_substitution(self, opensans):
-        assert hb.ot_layout_has_substitution(opensans.face)
-
-    def test_ot_layout_has_no_substitution(self, mathfont):
-        assert hb.ot_layout_has_substitution(mathfont.face) == False
-
     def test_ot_tag_to_script(self):
         assert hb.ot_tag_to_script("mym2") == "Mymr"
 

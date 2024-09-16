@@ -502,6 +502,14 @@ class OTColorLayer(NamedTuple):
     color_index: int
 
 
+class OTLayoutGlyphClass(IntEnum):
+    UNCLASSIFIED = HB_OT_LAYOUT_GLYPH_CLASS_UNCLASSIFIED
+    BASE_GLYPH = HB_OT_LAYOUT_GLYPH_CLASS_BASE_GLYPH
+    LIGATURE = HB_OT_LAYOUT_GLYPH_CLASS_LIGATURE
+    MARK = HB_OT_LAYOUT_GLYPH_CLASS_MARK
+    COMPONENT = HB_OT_LAYOUT_GLYPH_CLASS_COMPONENT
+
+
 cdef hb_user_data_key_t k
 
 
@@ -779,6 +787,112 @@ cdef class Face:
     def has_color_png(self) -> bool:
         return hb_ot_color_has_png(self._hb_face)
 
+    # layout
+    @property
+    def has_layout_glyph_classes(self) -> bool:
+        return hb_ot_layout_has_glyph_classes(self._hb_face)
+
+    def get_layout_glyph_class(self, glyph: int) -> OTLayoutGlyphClass:
+        return OTLayoutGlyphClass(hb_ot_layout_get_glyph_class(self._hb_face, glyph))
+
+    @property
+    def has_layout_positioning(self) -> bool:
+        return hb_ot_layout_has_positioning(self._hb_face)
+
+    @property
+    def has_layout_substitution(self) -> bool:
+        return hb_ot_layout_has_substitution(self._hb_face)
+
+    def get_lookup_glyph_alternates(self, lookup_index: int, glyph: int) -> List[int]:
+        cdef list alternates = []
+        cdef unsigned int i
+        cdef unsigned int start_offset = 0
+        cdef unsigned int alternate_count = STATIC_ARRAY_SIZE
+        cdef hb_codepoint_t c_alternates[STATIC_ARRAY_SIZE]
+        while alternate_count == STATIC_ARRAY_SIZE:
+            hb_ot_layout_lookup_get_glyph_alternates(self._hb_face, lookup_index, glyph, start_offset,
+                &alternate_count, c_alternates)
+            for i in range(alternate_count):
+                alternates.append(c_alternates[i])
+            start_offset += alternate_count
+        return alternates
+
+    def get_language_feature_tags(self,
+                                  tag: str,
+                                  script_index: int = 0,
+                                  language_index: int = 0xFFFF) -> List[str]:
+        cdef bytes packed = tag.encode()
+        cdef hb_tag_t hb_tag = hb_tag_from_string(<char*>packed, -1)
+        cdef unsigned int feature_count = STATIC_ARRAY_SIZE
+        cdef hb_tag_t c_tags[STATIC_ARRAY_SIZE]
+        cdef list tags = []
+        cdef char cstr[5]
+        cdef unsigned int i
+        cdef unsigned int start_offset = 0
+        while feature_count == STATIC_ARRAY_SIZE:
+            hb_ot_layout_language_get_feature_tags(
+                self._hb_face,
+                hb_tag, script_index,
+                language_index,
+                start_offset,
+                &feature_count,
+                c_tags)
+            for i in range(feature_count):
+                hb_tag_to_string(c_tags[i], cstr)
+                cstr[4] = b'\0'
+                packed = cstr
+                tags.append(packed.decode())
+            start_offset += feature_count
+        return tags
+
+    def get_script_language_tags(self, tag: str, script_index: int = 0) -> List[str]:
+        cdef bytes packed = tag.encode()
+        cdef hb_tag_t hb_tag = hb_tag_from_string(<char*>packed, -1)
+        cdef unsigned int language_count = STATIC_ARRAY_SIZE
+        cdef hb_tag_t c_tags[STATIC_ARRAY_SIZE]
+        cdef list tags = []
+        cdef char cstr[5]
+        cdef unsigned int i
+        cdef unsigned int start_offset = 0
+        while language_count == STATIC_ARRAY_SIZE:
+            hb_ot_layout_script_get_language_tags(
+                self._hb_face,
+                hb_tag,
+                script_index,
+                start_offset,
+                &language_count,
+                c_tags)
+            for i in range(language_count):
+                hb_tag_to_string(c_tags[i], cstr)
+                cstr[4] = b'\0'
+                packed = cstr
+                tags.append(packed.decode())
+            start_offset += language_count
+        return tags
+
+    def get_table_script_tags(face: Face, tag: str) -> List[str]:
+        cdef bytes packed = tag.encode()
+        cdef hb_tag_t hb_tag = hb_tag_from_string(<char*>packed, -1)
+        cdef unsigned int script_count = STATIC_ARRAY_SIZE
+        cdef hb_tag_t c_tags[STATIC_ARRAY_SIZE]
+        cdef list tags = []
+        cdef char cstr[5]
+        cdef unsigned int i
+        cdef unsigned int start_offset = 0
+        while script_count == STATIC_ARRAY_SIZE:
+            hb_ot_layout_table_get_script_tags(
+                face._hb_face,
+                hb_tag,
+                start_offset,
+                &script_count,
+                c_tags)
+            for i in range(script_count):
+                hb_tag_to_string(c_tags[i], cstr)
+                cstr[4] = b'\0'
+                packed = cstr
+                tags.append(packed.decode())
+            start_offset += script_count
+        return tags
 
 class GlyphExtents(NamedTuple):
     x_bearing: int
@@ -1344,6 +1458,54 @@ cdef class Font:
         blob = hb_ot_color_glyph_reference_png(self._hb_font, glyph)
         return Blob.from_ptr(blob)
 
+    #layout
+    def get_layout_baseline(self,
+                           baseline_tag: str,
+                           direction: str,
+                           script_tag: str,
+                           language_tag: str) -> int:
+        cdef hb_ot_layout_baseline_tag_t hb_baseline_tag
+        cdef hb_direction_t hb_direction
+        cdef hb_tag_t hb_script_tag
+        cdef hb_tag_t hb_language_tag
+        cdef hb_position_t hb_position
+        cdef hb_bool_t success
+        cdef bytes packed
+
+        if baseline_tag == "romn":
+            hb_baseline_tag = HB_OT_LAYOUT_BASELINE_TAG_ROMAN
+        elif baseline_tag == "hang":
+            hb_baseline_tag = HB_OT_LAYOUT_BASELINE_TAG_HANGING
+        elif baseline_tag == "icfb":
+            hb_baseline_tag = HB_OT_LAYOUT_BASELINE_TAG_IDEO_FACE_BOTTOM_OR_LEFT
+        elif baseline_tag == "icft":
+            hb_baseline_tag = HB_OT_LAYOUT_BASELINE_TAG_IDEO_FACE_TOP_OR_RIGHT
+        elif baseline_tag == "ideo":
+            hb_baseline_tag = HB_OT_LAYOUT_BASELINE_TAG_IDEO_EMBOX_BOTTOM_OR_LEFT
+        elif baseline_tag == "idtp":
+            hb_baseline_tag = HB_OT_LAYOUT_BASELINE_TAG_IDEO_EMBOX_TOP_OR_RIGHT
+        elif baseline_tag == "math":
+            hb_baseline_tag = HB_OT_LAYOUT_BASELINE_TAG_MATH
+        else:
+            raise ValueError(f"invalid baseline tag '{baseline_tag}'")
+        packed = direction.encode()
+        hb_direction = hb_direction_from_string(<char*>packed, -1)
+        packed = script_tag.encode()
+        hb_script_tag = hb_tag_from_string(<char*>packed, -1)
+        packed = language_tag.encode()
+        hb_language_tag = hb_tag_from_string(<char*>packed, -1)
+        success = hb_ot_layout_get_baseline(self._hb_font,
+                                            hb_baseline_tag,
+                                            hb_direction,
+                                            hb_script_tag,
+                                            hb_language_tag,
+                                            &hb_position)
+        if success:
+            return hb_position
+        else:
+            return None
+
+
 cdef struct _pen_methods:
     void *moveTo
     void *lineTo
@@ -1680,152 +1842,51 @@ def ot_tag_to_language(tag: str) -> str:
     return packed.decode()
 
 
+@deprecated("Face.get_lookup_glyph_alternates()")
 def ot_layout_lookup_get_glyph_alternates(
         face: Face, lookup_index : int, glyph : hb_codepoint_t) -> List[int]:
-    cdef list alternates = []
-    cdef unsigned int i
-    cdef unsigned int start_offset = 0
-    cdef unsigned int alternate_count = STATIC_ARRAY_SIZE
-    cdef hb_codepoint_t alternate_glyphs[STATIC_ARRAY_SIZE]
-    while alternate_count == STATIC_ARRAY_SIZE:
-        hb_ot_layout_lookup_get_glyph_alternates(face._hb_face, lookup_index, glyph, start_offset,
-            &alternate_count, alternate_glyphs)
-        for i in range(alternate_count):
-            alternates.append(alternate_glyphs[i])
-        start_offset += alternate_count
-    return alternates
+   return face.get_lookup_glyph_alternates(lookup_index, glyph)
 
 
+@deprecated("Face.get_language_feature_tags()")
 def ot_layout_language_get_feature_tags(
         face: Face, tag: str, script_index: int = 0,
         language_index: int = 0xFFFF) -> List[str]:
-    cdef bytes packed = tag.encode()
-    cdef hb_tag_t hb_tag = hb_tag_from_string(<char*>packed, -1)
-    cdef unsigned int feature_count = STATIC_ARRAY_SIZE
-    cdef hb_tag_t feature_tags[STATIC_ARRAY_SIZE]
-    cdef list tags = []
-    cdef char cstr[5]
-    cdef unsigned int i
-    cdef unsigned int start_offset = 0
-    while feature_count == STATIC_ARRAY_SIZE:
-        hb_ot_layout_language_get_feature_tags(
-            face._hb_face, hb_tag, script_index, language_index, start_offset, &feature_count,
-            feature_tags)
-        for i in range(feature_count):
-            hb_tag_to_string(feature_tags[i], cstr)
-            cstr[4] = b'\0'
-            packed = cstr
-            tags.append(packed.decode())
-        start_offset += feature_count
-    return tags
+    return face.get_language_feature_tags(tag, script_index, language_index)
 
 
+@deprecated("Face.get_script_language_tags()")
 def ot_layout_script_get_language_tags(
         face: Face, tag: str, script_index: int = 0) -> List[str]:
-    cdef bytes packed = tag.encode()
-    cdef hb_tag_t hb_tag = hb_tag_from_string(<char*>packed, -1)
-    cdef unsigned int language_count = STATIC_ARRAY_SIZE
-    cdef hb_tag_t language_tags[STATIC_ARRAY_SIZE]
-    cdef list tags = []
-    cdef char cstr[5]
-    cdef unsigned int i
-    cdef unsigned int start_offset = 0
-    while language_count == STATIC_ARRAY_SIZE:
-        hb_ot_layout_script_get_language_tags(
-            face._hb_face, hb_tag, script_index, start_offset, &language_count, language_tags)
-        for i in range(language_count):
-            hb_tag_to_string(language_tags[i], cstr)
-            cstr[4] = b'\0'
-            packed = cstr
-            tags.append(packed.decode())
-        start_offset += language_count
-    return tags
+    return face.get_script_language_tags(tag, script_index)
 
+@deprecated("Face.get_table_script_tags()")
 def ot_layout_table_get_script_tags(face: Face, tag: str) -> List[str]:
-    cdef bytes packed = tag.encode()
-    cdef hb_tag_t hb_tag = hb_tag_from_string(<char*>packed, -1)
-    cdef unsigned int script_count = STATIC_ARRAY_SIZE
-    cdef hb_tag_t script_tags[STATIC_ARRAY_SIZE]
-    cdef list tags = []
-    cdef char cstr[5]
-    cdef unsigned int i
-    cdef unsigned int start_offset = 0
-    while script_count == STATIC_ARRAY_SIZE:
-        hb_ot_layout_table_get_script_tags(
-            face._hb_face, hb_tag, start_offset, &script_count, script_tags)
-        for i in range(script_count):
-            hb_tag_to_string(script_tags[i], cstr)
-            cstr[4] = b'\0'
-            packed = cstr
-            tags.append(packed.decode())
-        start_offset += script_count
-    return tags
+    return face.get_table_script_tags(tag)
 
+@deprecated("Face.get_layout_baseline()")
 def ot_layout_get_baseline(font: Font,
                            baseline_tag: str,
                            direction: str,
                            script_tag: str,
                            language_tag: str) -> int:
-    cdef hb_ot_layout_baseline_tag_t hb_baseline_tag
-    cdef hb_direction_t hb_direction
-    cdef hb_tag_t hb_script_tag
-    cdef hb_tag_t hb_language_tag
-    cdef hb_position_t hb_position
-    cdef hb_bool_t success
-    cdef bytes packed
+    return font.get_layout_baseline(baseline_tag, direction, script_tag, language_tag)
 
-    if baseline_tag == "romn":
-        hb_baseline_tag = HB_OT_LAYOUT_BASELINE_TAG_ROMAN
-    elif baseline_tag == "hang":
-        hb_baseline_tag = HB_OT_LAYOUT_BASELINE_TAG_HANGING
-    elif baseline_tag == "icfb":
-        hb_baseline_tag = HB_OT_LAYOUT_BASELINE_TAG_IDEO_FACE_BOTTOM_OR_LEFT
-    elif baseline_tag == "icft":
-        hb_baseline_tag = HB_OT_LAYOUT_BASELINE_TAG_IDEO_FACE_TOP_OR_RIGHT
-    elif baseline_tag == "ideo":
-        hb_baseline_tag = HB_OT_LAYOUT_BASELINE_TAG_IDEO_EMBOX_BOTTOM_OR_LEFT
-    elif baseline_tag == "idtp":
-        hb_baseline_tag = HB_OT_LAYOUT_BASELINE_TAG_IDEO_EMBOX_TOP_OR_RIGHT
-    elif baseline_tag == "math":
-        hb_baseline_tag = HB_OT_LAYOUT_BASELINE_TAG_MATH
-    else:
-        raise ValueError(f"invalid baseline tag '{baseline_tag}'")
-    packed = direction.encode()
-    hb_direction = hb_direction_from_string(<char*>packed, -1)
-    packed = script_tag.encode()
-    hb_script_tag = hb_tag_from_string(<char*>packed, -1)
-    packed = language_tag.encode()
-    hb_language_tag = hb_tag_from_string(<char*>packed, -1)
-    success = hb_ot_layout_get_baseline(font._hb_font,
-                                        hb_baseline_tag,
-                                        hb_direction,
-                                        hb_script_tag,
-                                        hb_language_tag,
-                                        &hb_position)
-    if success:
-        return hb_position
-    else:
-        return None
-
+@deprecated("Face.face.has_layout_glyph_classes")
 def ot_layout_has_glyph_classes(face: Face) -> bool:
-    return hb_ot_layout_has_glyph_classes(face._hb_face)
+    return face.has_layout_glyph_classes
 
+@deprecated("Face.has_layout_positioning")
 def ot_layout_has_positioning(face: Face) -> bool:
-    return hb_ot_layout_has_positioning(face._hb_face)
+    return face.has_layout_positioning
 
+@deprecated("Face.has_layout_substitution")
 def ot_layout_has_substitution(face: Face) -> bool:
-    return hb_ot_layout_has_substitution(face._hb_face)
+    return face.has_layout_substitution
 
-class OTLayoutGlyphClass(IntEnum):
-    UNCLASSIFIED = HB_OT_LAYOUT_GLYPH_CLASS_UNCLASSIFIED
-    BASE_GLYPH = HB_OT_LAYOUT_GLYPH_CLASS_BASE_GLYPH
-    LIGATURE = HB_OT_LAYOUT_GLYPH_CLASS_LIGATURE
-    MARK = HB_OT_LAYOUT_GLYPH_CLASS_MARK
-    COMPONENT = HB_OT_LAYOUT_GLYPH_CLASS_COMPONENT
-
+@deprecated("Face.get_layout_glyph_class()")
 def ot_layout_get_glyph_class(face: Face, glyph: int) -> OTLayoutGlyphClass:
-    return OTLayoutGlyphClass(hb_ot_layout_get_glyph_class(face._hb_face, glyph))
-
+    return face.get_layout_glyph_class(glyph)
 
 @deprecated("Face.has_color_palettes")
 def ot_color_has_palettes(face: Face) -> bool:
