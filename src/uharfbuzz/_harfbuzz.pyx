@@ -47,15 +47,15 @@ def version_string() -> str:
 WARNED = set()
 
 
-def deprecated(alternate=None):
+def deprecated(replacement=None):
     """Decorator to raise a warning when a deprecated function is called."""
 
     def decorator(func):
         @wraps(func)
         def wrapper(*args, **kwargs):
             message = f"{func.__name__!r} is deprecated"
-            if alternate:
-                message += ", use {alternate} instead"
+            if replacement:
+                message += f", use {replacement} instead"
             if message not in WARNED:
                 warnings.warn(message, DeprecationWarning, stacklevel=2)
                 WARNED.add(message)
