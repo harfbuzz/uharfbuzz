@@ -286,6 +286,393 @@ class TestFace:
             (275, 276, [328.0, 500.0]),
         ]
 
+    def test_has_math_data(self, blankfont, mathfont):
+        assert blankfont.face.has_math_data == False
+        assert mathfont.face.has_math_data == True
+
+    @pytest.mark.parametrize(
+        "constant, expected",
+        [
+            (hb.OTMathConstant.SCRIPT_PERCENT_SCALE_DOWN, 70),
+            (hb.OTMathConstant.SCRIPT_SCRIPT_PERCENT_SCALE_DOWN, 55),
+            (hb.OTMathConstant.RADICAL_KERN_BEFORE_DEGREE, 65),
+            (hb.OTMathConstant.RADICAL_KERN_AFTER_DEGREE, -335),
+            (hb.OTMathConstant.RADICAL_DEGREE_BOTTOM_RAISE_PERCENT, 55),
+        ],
+    )
+    def test_get_math_constant(self, mathfont, constant, expected):
+        assert mathfont.get_math_constant(constant) == expected
+
+    def test_get_math_constant_invalid(self, mathfont):
+        with pytest.raises(ValueError):
+            mathfont.get_math_constant(1000)
+
+    @pytest.mark.parametrize(
+        "glyph, expected",
+        [
+            ("uni222B", 230),
+            ("uni210B", 40),
+            ("uni222B.dsp", 540),
+            ("u1D435", 30),
+            ("A", 0),
+        ],
+    )
+    def test_get_math_glyph_italics_correction(self, mathfont, glyph, expected):
+        gid = mathfont.get_glyph_from_name(glyph)
+        assert mathfont.get_math_glyph_italics_correction(gid) == expected
+
+    @pytest.mark.parametrize(
+        "glyph, expected",
+        [
+            ("u1D435", 380),
+            ("A", 360),
+            ("parenleft", 250),
+        ],
+    )
+    def test_get_math_glyph_top_accent_attachment(self, mathfont, glyph, expected):
+        gid = mathfont.get_glyph_from_name(glyph)
+        assert mathfont.get_math_glyph_top_accent_attachment(gid) == expected
+
+    @pytest.mark.parametrize(
+        "glyph, expected",
+        [
+            ("A", False),
+            ("parenleft", True),
+            ("parenright", True),
+            ("bar", True),
+            ("uni221A", True),
+        ],
+    )
+    def test_ot_math_is_glyph_extended_shape(self, mathfont, glyph, expected):
+        gid = mathfont.get_glyph_from_name(glyph)
+        assert mathfont.face.is_glyph_extended_math_shape(gid) == expected
+
+    @pytest.mark.parametrize(
+        "direction, expected",
+        [
+            ("LTR", 100),
+            ("RTL", 100),
+            ("TTB", 100),
+            ("BTT", 100),
+        ],
+    )
+    def test_get_math_min_connector_overlap(self, mathfont, direction, expected):
+        assert mathfont.get_math_min_connector_overlap(direction) == expected
+
+    @pytest.mark.parametrize(
+        "glyph, kern, height, expected",
+        [
+            ("A", hb.OTMathKern.TOP_RIGHT, 250, 0),
+            ("A", hb.OTMathKern.TOP_RIGHT, 300, -18),
+            ("A", hb.OTMathKern.TOP_RIGHT, 400, -66),
+            ("F", hb.OTMathKern.BOTTOM_RIGHT, 0, -200),
+            ("F", hb.OTMathKern.BOTTOM_RIGHT, 150, -44),
+            ("F", hb.OTMathKern.BOTTOM_RIGHT, 300, 44),
+            ("J", hb.OTMathKern.TOP_LEFT, 250, 64),
+            ("J", hb.OTMathKern.TOP_LEFT, 300, -28),
+            ("J", hb.OTMathKern.TOP_LEFT, 400, -28),
+            ("M", hb.OTMathKern.BOTTOM_LEFT, 0, 40),
+            ("M", hb.OTMathKern.BOTTOM_LEFT, 150, 40),
+            ("M", hb.OTMathKern.BOTTOM_LEFT, 300, 40),
+        ],
+    )
+    def test_get_math_glyph_kerning(self, mathfont, glyph, kern, height, expected):
+        gid = mathfont.get_glyph_from_name(glyph)
+        assert mathfont.get_math_glyph_kerning(gid, kern, height) == expected
+
+    def test_get_math_glyph_kerning_invalid(self, mathfont):
+        gid = mathfont.get_glyph_from_name("A")
+        with pytest.raises(ValueError):
+            mathfont.get_math_glyph_kerning(gid, 1000, 100)
+
+    @pytest.mark.parametrize(
+        "glyph, kern, expected",
+        [
+            (
+                "u1D434",
+                hb.OTMathKern.TOP_RIGHT,
+                [(213, 58), (350, -58), (0x7FFFFFFF, -70)],
+            ),
+            (
+                "u1D435",
+                hb.OTMathKern.BOTTOM_RIGHT,
+                [(160, -50), (283, -12), (0x7FFFFFFF, 20)],
+            ),
+            (
+                "u1D435",
+                hb.OTMathKern.TOP_LEFT,
+                [(176, 81), (0x7FFFFFFF, -50)],
+            ),
+            (
+                "U",
+                hb.OTMathKern.BOTTOM_LEFT,
+                [(126, -80), (256, -60), (0x7FFFFFFF, 36)],
+            ),
+        ],
+    )
+    def test_get_math_glyph_kernings(self, mathfont, glyph, kern, expected):
+        gid = mathfont.get_glyph_from_name(glyph)
+        assert mathfont.get_math_glyph_kernings(gid, kern) == expected
+
+    def test_get_math_glyph_kernings_invalid(self, mathfont):
+        gid = mathfont.get_glyph_from_name("A")
+        with pytest.raises(ValueError):
+            mathfont.get_math_glyph_kernings(gid, 1000)
+
+    @pytest.mark.parametrize(
+        "glyph, direction, expected",
+        [
+            (
+                "parenleft",
+                "TTB",
+                [
+                    ("parenleft", 933),
+                    ("parenleft.s1", 1187),
+                    ("parenleft.s2", 1427),
+                    ("parenleft.s3", 1667),
+                    ("parenleft.s4", 1907),
+                    ("parenleft.s5", 2145),
+                    ("parenleft.s6", 2385),
+                    ("parenleft.s7", 2625),
+                    ("parenleft.s8", 2865),
+                    ("parenleft.s9", 3101),
+                    ("parenleft.s10", 3341),
+                    ("parenleft.s11", 3581),
+                    ("parenleft.s12", 3821),
+                ],
+            ),
+            ("parenleft", "LTR", []),
+            ("uni2211", "TTB", [("uni2211", 1031), ("uni2211.s1", 1326)]),
+            (
+                "uni0302",
+                "LTR",
+                [
+                    ("uni0302", 283),
+                    ("circumflex.s1", 574),
+                    ("circumflex.s2", 1003),
+                    ("circumflex.s3", 1496),
+                    ("circumflex.s4", 1932),
+                    ("circumflex.s5", 2385),
+                ],
+            ),
+            ("uni0302", "TTB", []),
+        ],
+    )
+    def test_get_math_glyph_variants(self, mathfont, glyph, direction, expected):
+        gid = mathfont.get_glyph_from_name(glyph)
+        variants = mathfont.get_math_glyph_variants(gid, direction)
+        result = [(mathfont.get_glyph_name(v.glyph), v.advance) for v in variants]
+        assert result == expected
+
+    @pytest.mark.parametrize(
+        "glyph, direction, expected",
+        [
+            (
+                "parenleft",
+                "TTB",
+                (
+                    [
+                        ("uni239D", 0, 250, 1273, 0),
+                        ("uni239C", 1000, 1000, 1252, hb.OTMathGlyphPartFlags.EXTENDER),
+                        ("uni239B", 250, 0, 1273, 0),
+                    ],
+                    0,
+                ),
+            ),
+            ("parenleft", "LTR", ([], 0)),
+            (
+                "uni222B",
+                "TTB",
+                (
+                    [
+                        ("uni2321", 0, 800, 1896, 0),
+                        (
+                            "integral.x",
+                            600,
+                            600,
+                            1251,
+                            hb.OTMathGlyphPartFlags.EXTENDER,
+                        ),
+                        ("uni2320", 800, 0, 1630, 0),
+                    ],
+                    80,
+                ),
+            ),
+            (
+                "uni23DE",
+                "LTR",
+                (
+                    [
+                        ("uni23DE.l", 0, 300, 957, 0),
+                        ("uni23B4.x", 600, 600, 751, hb.OTMathGlyphPartFlags.EXTENDER),
+                        ("uni23DE.m", 300, 300, 943, 0),
+                        ("uni23B4.x", 600, 600, 751, hb.OTMathGlyphPartFlags.EXTENDER),
+                        ("uni23DE.r", 300, 0, 957, 0),
+                    ],
+                    0,
+                ),
+            ),
+            ("uni0302", "TTB", ([], 0)),
+        ],
+    )
+    def test_get_math_glyph_assembly(self, mathfont, glyph, direction, expected):
+        gid = mathfont.get_glyph_from_name(glyph)
+        assembly, italics_correction = mathfont.get_math_glyph_assembly(gid, direction)
+        result = [
+            (
+                mathfont.get_glyph_name(v.glyph),
+                v.start_connector_length,
+                v.end_connector_length,
+                v.full_advance,
+                v.flags,
+            )
+            for v in assembly
+        ]
+        assert (result, italics_correction) == expected
+
+    def test_get_metric_position(self, opensans):
+        assert opensans.get_metric_position(hb.OTMetricsTag.HORIZONTAL_ASCENDER) == 2189
+        assert opensans.get_metric_position(hb.OTMetricsTag.CAP_HEIGHT) == 1462
+        assert opensans.get_metric_position(hb.OTMetricsTag.VERTICAL_CARET_RISE) is None
+
+    def test_get_metric_position_with_fallback(self, opensans):
+        assert (
+            opensans.get_metric_position_with_fallback(
+                hb.OTMetricsTag.VERTICAL_CARET_RISE
+            )
+            == 1
+        )
+
+    def test_get_metric_variation(self, mutatorsans):
+        assert mutatorsans.get_metric_variation(hb.OTMetricsTag.CAP_HEIGHT) == 0
+
+        mutatorsans.set_variations({"wdth": 250, "wght": 250})
+        assert mutatorsans.get_metric_variation(hb.OTMetricsTag.CAP_HEIGHT) == 25
+
+    def test_get_metric_x_variation(self, mutatorsans):
+        mutatorsans.set_variations({"wdth": 250, "wght": 250})
+        assert mutatorsans.get_metric_x_variation(hb.OTMetricsTag.CAP_HEIGHT) == 25
+
+    def test_ot_get_metric_y_variation(self, mutatorsans):
+        mutatorsans.set_variations({"wdth": 250, "wght": 250})
+        assert mutatorsans.get_metric_y_variation(hb.OTMetricsTag.CAP_HEIGHT) == 25
+
+    def test_has_color_palettes(self, colorv0font):
+        assert colorv0font.face.has_color_palettes
+
+    def test_has_no_color_palettes(self, blankfont):
+        assert blankfont.face.has_color_palettes == False
+
+    def test_color_palettes(self, colorv0font, colorv1font):
+        palettes1 = colorv0font.face.color_palettes
+        palettes2 = colorv1font.face.color_palettes
+        assert len(palettes1) == 1
+        assert len(palettes2) == 3
+
+        assert palettes1[0].colors == [(200, 0, 0, 255)]
+        assert palettes2[0].colors == [
+            (255, 0, 0, 255),
+            (255, 165, 0, 255),
+            (255, 255, 0, 255),
+            (0, 128, 0, 255),
+            (0, 0, 255, 255),
+            (75, 0, 130, 255),
+            (238, 130, 238, 255),
+            (250, 240, 230, 255),
+            (47, 79, 79, 255),
+            (255, 255, 255, 255),
+            (0, 0, 0, 255),
+            (104, 199, 232, 255),
+            (255, 220, 1, 255),
+            (128, 128, 128, 255),
+        ]
+
+        assert palettes2[0].flags == hb.OTColorPaletteFlags.DEFAULT
+        assert palettes2[1].flags == hb.OTColorPaletteFlags.USABLE_WITH_DARK_BACKGROUND
+        assert palettes2[2].flags == hb.OTColorPaletteFlags.USABLE_WITH_LIGHT_BACKGROUND
+
+    def test_no_color_palettes(self, blankfont):
+        assert blankfont.face.color_palettes == []
+
+    def test_color_palette_color_get_name_id(self, colorv1font):
+        assert colorv1font.face.color_palette_color_get_name_id(0) is None
+        assert colorv1font.face.color_palette_color_get_name_id(1) is None
+        assert colorv1font.face.color_palette_color_get_name_id(2) is None
+
+    def test_color_palette_color_get_name_id_no_palettes(self, blankfont):
+        assert blankfont.face.color_palette_color_get_name_id(0) is None
+
+    def test_has_color_layers(self, colorv0font):
+        assert colorv0font.face.has_color_layers
+
+    def test_has_no_color_layers(self, blankfont):
+        assert blankfont.face.has_color_layers == False
+
+    def test_get_glyph_color_layers(self, colorv0font):
+        assert colorv0font.face.get_glyph_color_layers(1) == [(1, 0)]
+        assert colorv0font.face.get_glyph_color_layers(0) == []
+
+    def test_get_glyph_color_layers_no_layers(self, blankfont):
+        assert blankfont.face.get_glyph_color_layers(1) == []
+
+    def test_has_color_paint(self, colorv1font):
+        assert colorv1font.face.has_color_paint
+
+    def test_has_no_color_paint(self, blankfont):
+        assert blankfont.face.has_color_paint == False
+
+    def test_glyph_has_color_paint(self, colorv1font):
+        assert colorv1font.face.glyph_has_color_paint(1) == False
+        assert colorv1font.face.glyph_has_color_paint(7) == True
+
+    def test_glyph_has_no_color_paint(self, blankfont):
+        assert blankfont.face.glyph_has_color_paint(1) == False
+
+    def test_has_color_svg(self, blankfont):
+        assert blankfont.face.has_color_svg == False
+
+        blob = blankfont.face.get_glyph_color_svg(1)
+        assert len(blob) == 0
+
+    def test_has_color_png(self, blankfont):
+        assert blankfont.face.has_color_png == False
+
+    def test_get_language_feature_tags(self, blankfont):
+        assert blankfont.face.get_language_feature_tags("GPOS") == ["kern"]
+        assert blankfont.face.get_language_feature_tags("GSUB") == ["calt"]
+
+    def test_get_table_script_tags(self, blankfont):
+        assert blankfont.face.get_table_script_tags("GPOS") == ["DFLT"]
+
+    def test_script_get_language_tags(self, blankfont):
+        assert blankfont.face.get_script_language_tags("GPOS", 0) == []
+
+    def test_lookup_get_glyph_alternates(self, blankfont):
+        gid = blankfont.get_nominal_glyph(ord("c"))
+        assert blankfont.face.get_lookup_glyph_alternates(1, gid) == [1]
+
+    def test_has_layout_glyph_classes(self, opensans):
+        assert opensans.face.has_layout_glyph_classes
+
+    def test_has_no_layout_glyph_classes(self, blankfont):
+        assert blankfont.face.has_layout_glyph_classes == False
+
+    def test_get_layout_glyph_class(self, opensans):
+        glyph_class = opensans.face.get_layout_glyph_class(1)
+        assert glyph_class == hb.OTLayoutGlyphClass.BASE_GLYPH
+
+    def test_has_layout_positioning(self, opensans):
+        assert opensans.face.has_layout_positioning
+
+    def test_has_no_positioning(self, mathfont):
+        assert mathfont.face.has_layout_positioning == False
+
+    def test_has_layout_substitution(self, opensans):
+        assert opensans.face.has_layout_substitution
+
+    def test_has_no_layout_substitution(self, mathfont):
+        assert mathfont.face.has_layout_substitution == False
+
 
 class TestFont:
     def test_get_glyph_extents(self, opensans):
@@ -365,6 +752,44 @@ class TestFont:
         assert blankfont.synthetic_slant == 0
         blankfont.synthetic_slant = 0.2
         assert blankfont.synthetic_slant == pytest.approx(0.2)
+
+    def test_get_glyph_color_png(self, blankfont):
+        blob = blankfont.get_glyph_color_png(1)
+        assert len(blob) == 0
+
+    # The test font contains a BASE table with some test values
+    def test_get_layout_baseline_invalid_tag(self, blankfont):
+        with pytest.raises(ValueError):
+            # invalid baseline tag
+            baseline = blankfont.get_layout_baseline("xxxx", "LTR", "", "")
+
+    @pytest.mark.parametrize(
+        "baseline_tag, script_tag, direction, expected_value",
+        [
+            ("icfb", "grek", "LTR", None),  # BASE table doesn't contain grek script
+            ("icfb", "latn", "LTR", -70),
+            ("icft", "latn", "LTR", 830),
+            ("romn", "latn", "LTR", 0),
+            ("ideo", "latn", "LTR", -120),
+            ("icfb", "kana", "LTR", -71),
+            ("icft", "kana", "LTR", 831),
+            ("romn", "kana", "LTR", 1),
+            ("ideo", "kana", "LTR", -121),
+            ("icfb", "latn", "TTB", 50),
+            ("icft", "latn", "TTB", 950),
+            ("romn", "latn", "TTB", 120),
+            ("ideo", "latn", "TTB", 0),
+            ("icfb", "kana", "TTB", 51),
+            ("icft", "kana", "TTB", 951),
+            ("romn", "kana", "TTB", 121),
+            ("ideo", "kana", "TTB", 1),
+        ],
+    )
+    def test_get_layout_baseline(
+        self, blankfont, baseline_tag, script_tag, direction, expected_value
+    ):
+        value = blankfont.get_layout_baseline(baseline_tag, direction, script_tag, "")
+        assert value == expected_value
 
 
 class TestShape:
@@ -984,83 +1409,6 @@ class MessageCollector:
 
 
 class TestOTLayout:
-    # The test font contains a BASE table with some test values
-    def test_ot_layout_get_baseline_invalid_tag(self, blankfont):
-        with pytest.raises(ValueError):
-            # invalid baseline tag
-            baseline = hb.ot_layout_get_baseline(blankfont, "xxxx", "LTR", "", "")
-
-    @pytest.mark.parametrize(
-        "baseline_tag, script_tag, direction, expected_value",
-        [
-            ("icfb", "grek", "LTR", None),  # BASE table doesn't contain grek script
-            ("icfb", "latn", "LTR", -70),
-            ("icft", "latn", "LTR", 830),
-            ("romn", "latn", "LTR", 0),
-            ("ideo", "latn", "LTR", -120),
-            ("icfb", "kana", "LTR", -71),
-            ("icft", "kana", "LTR", 831),
-            ("romn", "kana", "LTR", 1),
-            ("ideo", "kana", "LTR", -121),
-            ("icfb", "latn", "TTB", 50),
-            ("icft", "latn", "TTB", 950),
-            ("romn", "latn", "TTB", 120),
-            ("ideo", "latn", "TTB", 0),
-            ("icfb", "kana", "TTB", 51),
-            ("icft", "kana", "TTB", 951),
-            ("romn", "kana", "TTB", 121),
-            ("ideo", "kana", "TTB", 1),
-        ],
-    )
-    def test_ot_layout_get_baseline(
-        self, blankfont, baseline_tag, script_tag, direction, expected_value
-    ):
-        value = hb.ot_layout_get_baseline(
-            blankfont, baseline_tag, direction, script_tag, ""
-        )
-        assert value == expected_value
-
-    def test_ot_layout_language_get_feature_tags(self, blankfont):
-        tags = hb.ot_layout_language_get_feature_tags(blankfont.face, "GPOS")
-        assert tags == ["kern"]
-        tags = hb.ot_layout_language_get_feature_tags(blankfont.face, "GSUB")
-        assert tags == ["calt"]
-
-    def test_ot_layout_table_get_script_tags(self, blankfont):
-        tags = hb.ot_layout_table_get_script_tags(blankfont.face, "GPOS")
-        assert tags == ["DFLT"]
-
-    def test_ot_layout_script_get_language_tags(self, blankfont):
-        tags = hb.ot_layout_script_get_language_tags(blankfont.face, "GPOS", 0)
-        assert tags == []
-
-    def test_ot_layout_lookup_get_glyph_alternates(self, blankfont):
-        gid = blankfont.get_nominal_glyph(ord("c"))
-        alternates = hb.ot_layout_lookup_get_glyph_alternates(blankfont.face, 1, gid)
-        assert alternates == [1]
-
-    def test_ot_layout_has_glyph_classes(self, opensans):
-        assert hb.ot_layout_has_glyph_classes(opensans.face)
-
-    def test_ot_layout_has_no_glyph_classes(self, blankfont):
-        assert hb.ot_layout_has_glyph_classes(blankfont.face) == False
-
-    def test_ot_layout_get_glyph_class(self, opensans):
-        glyph_class = hb.ot_layout_get_glyph_class(opensans.face, 1)
-        assert glyph_class == hb.OTLayoutGlyphClass.BASE_GLYPH
-
-    def test_ot_layout_has_positioning(self, opensans):
-        assert hb.ot_layout_has_positioning(opensans.face)
-
-    def test_ot_layout_has_no_positioning(self, mathfont):
-        assert hb.ot_layout_has_positioning(mathfont.face) == False
-
-    def test_ot_layout_has_substitution(self, opensans):
-        assert hb.ot_layout_has_substitution(opensans.face)
-
-    def test_ot_layout_has_no_substitution(self, mathfont):
-        assert hb.ot_layout_has_substitution(mathfont.face) == False
-
     def test_ot_tag_to_script(self):
         assert hb.ot_tag_to_script("mym2") == "Mymr"
 
@@ -1069,407 +1417,53 @@ class TestOTLayout:
 
 
 class TestOTColor:
-    def test_ot_color_has_palettes(self, colorv0font):
-        assert hb.ot_color_has_palettes(colorv0font.face)
-
-    def test_ot_color_has_no_palettes(self, blankfont):
-        assert hb.ot_color_has_palettes(blankfont.face) == False
-
     def test_ot_color_palette_get_count(self, colorv0font, colorv1font):
-        assert hb.ot_color_palette_get_count(colorv0font.face) == 1
-        assert hb.ot_color_palette_get_count(colorv1font.face) == 3
+        with pytest.deprecated_call():
+            assert hb.ot_color_palette_get_count(colorv0font.face) == 1
+            assert hb.ot_color_palette_get_count(colorv1font.face) == 3
 
-    def test_ot_color_palette_get_colors(self, colorv0font, colorv1font):
-        palette = hb.ot_color_palette_get_colors(colorv0font.face, 0)
-        assert palette == [(200, 0, 0, 255)]
+    def test_ot_color_palette_get_colors(self, colorv0font, colorv1font, blankfont):
+        with pytest.deprecated_call():
+            palette = hb.ot_color_palette_get_colors(colorv0font.face, 0)
+            assert palette == [(200, 0, 0, 255)]
 
-        palette = hb.ot_color_palette_get_colors(colorv1font.face, 0)
-        assert palette == [
-            (255, 0, 0, 255),
-            (255, 165, 0, 255),
-            (255, 255, 0, 255),
-            (0, 128, 0, 255),
-            (0, 0, 255, 255),
-            (75, 0, 130, 255),
-            (238, 130, 238, 255),
-            (250, 240, 230, 255),
-            (47, 79, 79, 255),
-            (255, 255, 255, 255),
-            (0, 0, 0, 255),
-            (104, 199, 232, 255),
-            (255, 220, 1, 255),
-            (128, 128, 128, 255),
-        ]
+            palette = hb.ot_color_palette_get_colors(colorv1font.face, 0)
+            assert palette == [
+                (255, 0, 0, 255),
+                (255, 165, 0, 255),
+                (255, 255, 0, 255),
+                (0, 128, 0, 255),
+                (0, 0, 255, 255),
+                (75, 0, 130, 255),
+                (238, 130, 238, 255),
+                (250, 240, 230, 255),
+                (47, 79, 79, 255),
+                (255, 255, 255, 255),
+                (0, 0, 0, 255),
+                (104, 199, 232, 255),
+                (255, 220, 1, 255),
+                (128, 128, 128, 255),
+            ]
 
-    def test_ot_color_palette_get_colors_no_palettes(self, blankfont):
-        palette = hb.ot_color_palette_get_colors(blankfont.face, 0)
-        assert palette == []
+            assert hb.ot_color_palette_get_colors(blankfont.face, 0) == []
 
-    def test_ot_color_palette_get_flags(self, colorv1font):
-        flags = hb.ot_color_palette_get_flags(colorv1font.face, 0)
-        assert flags == hb.OTColorPaletteFlags.DEFAULT
+    def test_ot_color_palette_get_flags(self, colorv1font, colorv0font):
+        with pytest.deprecated_call():
+            flags = hb.ot_color_palette_get_flags(colorv1font.face, 0)
+            assert flags == hb.OTColorPaletteFlags.DEFAULT
+            flags = hb.ot_color_palette_get_flags(colorv1font.face, 1)
+            assert flags == hb.OTColorPaletteFlags.USABLE_WITH_DARK_BACKGROUND
+            flags = hb.ot_color_palette_get_flags(colorv1font.face, 2)
+            assert flags == hb.OTColorPaletteFlags.USABLE_WITH_LIGHT_BACKGROUND
+            flags = hb.ot_color_palette_get_flags(colorv0font.face, 0)
+            assert flags == hb.OTColorPaletteFlags.DEFAULT
 
-        flags = hb.ot_color_palette_get_flags(colorv1font.face, 1)
-        assert flags == hb.OTColorPaletteFlags.USABLE_WITH_DARK_BACKGROUND
-
-        flags = hb.ot_color_palette_get_flags(colorv1font.face, 2)
-        assert flags == hb.OTColorPaletteFlags.USABLE_WITH_LIGHT_BACKGROUND
-
-    def test_ot_color_palette_get_flags_no_palettes(self, colorv0font):
-        flags = hb.ot_color_palette_get_flags(colorv0font.face, 0)
-        assert flags == hb.OTColorPaletteFlags.DEFAULT
-
-    def test_ot_color_palette_get_name_id(self, colorv1font):
-        name_id = hb.ot_color_palette_get_name_id(colorv1font.face, 0)
-        assert name_id == None
-        name_id = hb.ot_color_palette_get_name_id(colorv1font.face, 1)
-        assert name_id == None
-        name_id = hb.ot_color_palette_get_name_id(colorv1font.face, 2)
-        assert name_id == None
-
-    def test_ot_color_palette_get_name_id_no_palettes(self, blankfont):
-        name_id = hb.ot_color_palette_get_name_id(blankfont.face, 0)
-        assert name_id == None
-
-    def test_ot_color_palette_color_get_name_id(self, colorv1font):
-        name_id = hb.ot_color_palette_color_get_name_id(colorv1font.face, 0)
-        assert name_id == None
-        name_id = hb.ot_color_palette_color_get_name_id(colorv1font.face, 1)
-        assert name_id == None
-        name_id = hb.ot_color_palette_color_get_name_id(colorv1font.face, 2)
-        assert name_id == None
-
-    def test_ot_color_has_layers(self, colorv0font):
-        assert hb.ot_color_has_layers(colorv0font.face)
-
-    def test_ot_color_has_no_layers(self, blankfont):
-        assert hb.ot_color_has_layers(blankfont.face) == False
-
-    def test_ot_color_glyph_get_layers(self, colorv0font):
-        layers = hb.ot_color_glyph_get_layers(colorv0font.face, 1)
-        assert layers == [(1, 0)]
-
-        layers = hb.ot_color_glyph_get_layers(colorv0font.face, 0)
-        assert layers == []
-
-    def test_ot_color_glyph_get_layers_no_layers(self, blankfont):
-        layers = hb.ot_color_glyph_get_layers(blankfont.face, 1)
-        assert layers == []
-
-    def test_ot_color_has_paint(self, colorv1font):
-        assert hb.ot_color_has_paint(colorv1font.face)
-
-    def test_ot_color_has_no_paint(self, blankfont):
-        assert hb.ot_color_has_paint(blankfont.face) == False
-
-    def test_ot_color_glyph_has_paint(self, colorv1font):
-        assert hb.ot_color_glyph_has_paint(colorv1font.face, 1) == False
-        assert hb.ot_color_glyph_has_paint(colorv1font.face, 7) == True
-
-    def test_ot_color_glyph_has_paint_no_paint(self, blankfont):
-        assert hb.ot_color_glyph_has_paint(blankfont.face, 1) == False
-
-    def test_ot_color_has_svg(self, blankfont):
-        assert hb.ot_color_has_svg(blankfont.face) == False
-
-        blob = hb.ot_color_glyph_get_svg(blankfont.face, 1)
-        assert len(blob) == 0
-
-    def test_ot_color_has_png(self, blankfont):
-        assert hb.ot_color_has_png(blankfont.face) == False
-
-        blob = hb.ot_color_glyph_get_png(blankfont, 1)
-        assert len(blob) == 0
-
-
-class TestOTMath:
-    def test_ot_math_has_data(self, mathfont):
-        assert hb.ot_math_has_data(mathfont.face)
-
-    def test_ot_math_has_no_data(self, blankfont):
-        assert hb.ot_math_has_data(blankfont.face) == False
-
-    @pytest.mark.parametrize(
-        "constant, expected",
-        [
-            (hb.OTMathConstant.SCRIPT_PERCENT_SCALE_DOWN, 70),
-            (hb.OTMathConstant.SCRIPT_SCRIPT_PERCENT_SCALE_DOWN, 55),
-            (hb.OTMathConstant.RADICAL_KERN_BEFORE_DEGREE, 65),
-            (hb.OTMathConstant.RADICAL_KERN_AFTER_DEGREE, -335),
-            (hb.OTMathConstant.RADICAL_DEGREE_BOTTOM_RAISE_PERCENT, 55),
-        ],
-    )
-    def test_ot_math_get_constant(self, mathfont, constant, expected):
-        assert hb.ot_math_get_constant(mathfont, constant) == expected
-
-    def test_ot_math_get_constant_invalid(self, mathfont):
-        with pytest.raises(ValueError):
-            hb.ot_math_get_constant(mathfont, 1000)
-
-    @pytest.mark.parametrize(
-        "glyph, expected",
-        [
-            ("uni222B", 230),
-            ("uni210B", 40),
-            ("uni222B.dsp", 540),
-            ("u1D435", 30),
-            ("A", 0),
-        ],
-    )
-    def test_ot_math_get_glyph_italics_correction(self, mathfont, glyph, expected):
-        gid = mathfont.get_glyph_from_name(glyph)
-        assert hb.ot_math_get_glyph_italics_correction(mathfont, gid) == expected
-
-    @pytest.mark.parametrize(
-        "glyph, expected",
-        [
-            ("u1D435", 380),
-            ("A", 360),
-            ("parenleft", 250),
-        ],
-    )
-    def test_ot_math_get_glyph_top_accent_attachment(self, mathfont, glyph, expected):
-        gid = mathfont.get_glyph_from_name(glyph)
-        assert hb.ot_math_get_glyph_top_accent_attachment(mathfont, gid) == expected
-
-    @pytest.mark.parametrize(
-        "glyph, expected",
-        [
-            ("A", False),
-            ("parenleft", True),
-            ("parenright", True),
-            ("bar", True),
-            ("uni221A", True),
-        ],
-    )
-    def test_ot_math_is_glyph_extended_shape(self, mathfont, glyph, expected):
-        gid = mathfont.get_glyph_from_name(glyph)
-        assert hb.ot_math_is_glyph_extended_shape(mathfont.face, gid) == expected
-
-    @pytest.mark.parametrize(
-        "direction, expected",
-        [
-            ("LTR", 100),
-            ("RTL", 100),
-            ("TTB", 100),
-            ("BTT", 100),
-        ],
-    )
-    def test_ot_math_get_min_connector_overlap(self, mathfont, direction, expected):
-        assert hb.ot_math_get_min_connector_overlap(mathfont, direction) == expected
-
-    @pytest.mark.parametrize(
-        "glyph, kern, height, expected",
-        [
-            ("A", hb.OTMathKern.TOP_RIGHT, 250, 0),
-            ("A", hb.OTMathKern.TOP_RIGHT, 300, -18),
-            ("A", hb.OTMathKern.TOP_RIGHT, 400, -66),
-            ("F", hb.OTMathKern.BOTTOM_RIGHT, 0, -200),
-            ("F", hb.OTMathKern.BOTTOM_RIGHT, 150, -44),
-            ("F", hb.OTMathKern.BOTTOM_RIGHT, 300, 44),
-            ("J", hb.OTMathKern.TOP_LEFT, 250, 64),
-            ("J", hb.OTMathKern.TOP_LEFT, 300, -28),
-            ("J", hb.OTMathKern.TOP_LEFT, 400, -28),
-            ("M", hb.OTMathKern.BOTTOM_LEFT, 0, 40),
-            ("M", hb.OTMathKern.BOTTOM_LEFT, 150, 40),
-            ("M", hb.OTMathKern.BOTTOM_LEFT, 300, 40),
-        ],
-    )
-    def test_ot_math_get_glyph_kerning(self, mathfont, glyph, kern, height, expected):
-        gid = mathfont.get_glyph_from_name(glyph)
-        assert hb.ot_math_get_glyph_kerning(mathfont, gid, kern, height) == expected
-
-    def test_ot_math_get_glyph_kerning_invalid(self, mathfont):
-        gid = mathfont.get_glyph_from_name("A")
-        with pytest.raises(ValueError):
-            hb.ot_math_get_glyph_kerning(mathfont, gid, 1000, 100)
-
-    @pytest.mark.parametrize(
-        "glyph, kern, expected",
-        [
-            (
-                "u1D434",
-                hb.OTMathKern.TOP_RIGHT,
-                [(213, 58), (350, -58), (0x7FFFFFFF, -70)],
-            ),
-            (
-                "u1D435",
-                hb.OTMathKern.BOTTOM_RIGHT,
-                [(160, -50), (283, -12), (0x7FFFFFFF, 20)],
-            ),
-            (
-                "u1D435",
-                hb.OTMathKern.TOP_LEFT,
-                [(176, 81), (0x7FFFFFFF, -50)],
-            ),
-            (
-                "U",
-                hb.OTMathKern.BOTTOM_LEFT,
-                [(126, -80), (256, -60), (0x7FFFFFFF, 36)],
-            ),
-        ],
-    )
-    def test_ot_math_get_glyph_kernings(self, mathfont, glyph, kern, expected):
-        gid = mathfont.get_glyph_from_name(glyph)
-        assert hb.ot_math_get_glyph_kernings(mathfont, gid, kern) == expected
-
-    def test_ot_math_get_glyph_kernings_invalid(self, mathfont):
-        gid = mathfont.get_glyph_from_name("A")
-        with pytest.raises(ValueError):
-            hb.ot_math_get_glyph_kernings(mathfont, gid, 1000)
-
-    @pytest.mark.parametrize(
-        "glyph, direction, expected",
-        [
-            (
-                "parenleft",
-                "TTB",
-                [
-                    ("parenleft", 933),
-                    ("parenleft.s1", 1187),
-                    ("parenleft.s2", 1427),
-                    ("parenleft.s3", 1667),
-                    ("parenleft.s4", 1907),
-                    ("parenleft.s5", 2145),
-                    ("parenleft.s6", 2385),
-                    ("parenleft.s7", 2625),
-                    ("parenleft.s8", 2865),
-                    ("parenleft.s9", 3101),
-                    ("parenleft.s10", 3341),
-                    ("parenleft.s11", 3581),
-                    ("parenleft.s12", 3821),
-                ],
-            ),
-            ("parenleft", "LTR", []),
-            ("uni2211", "TTB", [("uni2211", 1031), ("uni2211.s1", 1326)]),
-            (
-                "uni0302",
-                "LTR",
-                [
-                    ("uni0302", 283),
-                    ("circumflex.s1", 574),
-                    ("circumflex.s2", 1003),
-                    ("circumflex.s3", 1496),
-                    ("circumflex.s4", 1932),
-                    ("circumflex.s5", 2385),
-                ],
-            ),
-            ("uni0302", "TTB", []),
-        ],
-    )
-    def test_ot_math_get_glyph_variants(self, mathfont, glyph, direction, expected):
-        gid = mathfont.get_glyph_from_name(glyph)
-        variants = hb.ot_math_get_glyph_variants(mathfont, gid, direction)
-        result = [(mathfont.get_glyph_name(v.glyph), v.advance) for v in variants]
-        assert result == expected
-
-    @pytest.mark.parametrize(
-        "glyph, direction, expected",
-        [
-            (
-                "parenleft",
-                "TTB",
-                (
-                    [
-                        ("uni239D", 0, 250, 1273, 0),
-                        ("uni239C", 1000, 1000, 1252, hb.OTMathGlyphPartFlags.EXTENDER),
-                        ("uni239B", 250, 0, 1273, 0),
-                    ],
-                    0,
-                ),
-            ),
-            ("parenleft", "LTR", ([], 0)),
-            (
-                "uni222B",
-                "TTB",
-                (
-                    [
-                        ("uni2321", 0, 800, 1896, 0),
-                        (
-                            "integral.x",
-                            600,
-                            600,
-                            1251,
-                            hb.OTMathGlyphPartFlags.EXTENDER,
-                        ),
-                        ("uni2320", 800, 0, 1630, 0),
-                    ],
-                    80,
-                ),
-            ),
-            (
-                "uni23DE",
-                "LTR",
-                (
-                    [
-                        ("uni23DE.l", 0, 300, 957, 0),
-                        ("uni23B4.x", 600, 600, 751, hb.OTMathGlyphPartFlags.EXTENDER),
-                        ("uni23DE.m", 300, 300, 943, 0),
-                        ("uni23B4.x", 600, 600, 751, hb.OTMathGlyphPartFlags.EXTENDER),
-                        ("uni23DE.r", 300, 0, 957, 0),
-                    ],
-                    0,
-                ),
-            ),
-            ("uni0302", "TTB", ([], 0)),
-        ],
-    )
-    def test_ot_math_get_glyph_assembly(self, mathfont, glyph, direction, expected):
-        gid = mathfont.get_glyph_from_name(glyph)
-        assembly, italics_correction = hb.ot_math_get_glyph_assembly(
-            mathfont, gid, direction
-        )
-        result = [
-            (
-                mathfont.get_glyph_name(v.glyph),
-                v.start_connector_length,
-                v.end_connector_length,
-                v.full_advance,
-                v.flags,
-            )
-            for v in assembly
-        ]
-        assert (result, italics_correction) == expected
-
-
-class TestOTMetrics:
-    def test_ot_metrics_get_position(self, opensans):
-        assert (
-            hb.ot_metrics_get_position(opensans, hb.OTMetricsTag.HORIZONTAL_ASCENDER)
-            == 2189
-        )
-        assert hb.ot_metrics_get_position(opensans, hb.OTMetricsTag.CAP_HEIGHT) == 1462
-        assert (
-            hb.ot_metrics_get_position(opensans, hb.OTMetricsTag.VERTICAL_CARET_RISE)
-            is None
-        )
-
-    def test_ot_metrics_get_position_with_fallback(self, opensans):
-        assert (
-            hb.ot_metrics_get_position_with_fallback(
-                opensans, hb.OTMetricsTag.VERTICAL_CARET_RISE
-            )
-            == 1
-        )
-
-    def test_ot_metrics_get_variation(self, mutatorsans):
-        assert hb.ot_metrics_get_variation(mutatorsans, hb.OTMetricsTag.CAP_HEIGHT) == 0
-        mutatorsans.set_variations({"wdth": 250, "wght": 250})
-        assert (
-            hb.ot_metrics_get_variation(mutatorsans, hb.OTMetricsTag.CAP_HEIGHT) == 25
-        )
-
-    def test_ot_metrics_get_x_variation(self, mutatorsans):
-        mutatorsans.set_variations({"wdth": 250, "wght": 250})
-        assert (
-            hb.ot_metrics_get_variation(mutatorsans, hb.OTMetricsTag.CAP_HEIGHT) == 25
-        )
-
-    def test_ot_metrics_get_y_variation(self, mutatorsans):
-        mutatorsans.set_variations({"wdth": 250, "wght": 250})
-        assert (
-            hb.ot_metrics_get_variation(mutatorsans, hb.OTMetricsTag.CAP_HEIGHT) == 25
-        )
+    def test_ot_color_palette_get_name_id(self, colorv1font, blankfont):
+        with pytest.deprecated_call():
+            assert hb.ot_color_palette_get_name_id(colorv1font.face, 0) is None
+            assert hb.ot_color_palette_get_name_id(colorv1font.face, 1) is None
+            assert hb.ot_color_palette_get_name_id(colorv1font.face, 2) is None
+            assert hb.ot_color_palette_get_name_id(blankfont.face, 0) is None
 
 
 def test_harfbuzz_version():

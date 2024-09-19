@@ -6,10 +6,10 @@ from enum import IntEnum, IntFlag
 from .charfbuzz cimport *
 from libc.stdlib cimport free, malloc, calloc
 from libc.string cimport const_char
-from collections import namedtuple
 from cpython.pycapsule cimport PyCapsule_GetPointer, PyCapsule_IsValid
 from typing import Callable, Dict, List, Sequence, Tuple, Union, NamedTuple
 from pathlib import Path
+from functools import wraps
 
 
 DEF STATIC_ARRAY_SIZE = 128
@@ -42,6 +42,28 @@ def version_string() -> str:
     cdef const char* cstr = hb_version_string()
     cdef bytes packed = cstr
     return packed.decode()
+
+
+WARNED = set()
+
+
+def deprecated(alternate=None):
+    """Decorator to raise a warning when a deprecated function is called."""
+
+    def decorator(func):
+        @wraps(func)
+        def wrapper(*args, **kwargs):
+            message = f"{func.__name__!r} is deprecated"
+            if alternate:
+                message += ", use {alternate} instead"
+            if message not in WARNED:
+                warnings.warn(message, DeprecationWarning, stacklevel=2)
+                WARNED.add(message)
+            return func(*args, **kwargs)
+
+        return wrapper
+
+    return decorator
 
 
 class HarfBuzzError(Exception):
@@ -441,6 +463,53 @@ class OTVarNamedInstance(NamedTuple):
     design_coords: List[float]
 
 
+class Color(NamedTuple):
+    red: int
+    green: int
+    blue: int
+    alpha: int
+
+    def to_int(self) -> int:
+        return HB_COLOR(self.blue, self.green, self.red, self.alpha)
+
+    @staticmethod
+    def from_int(value: int) -> Color:
+        r = hb_color_get_red(value)
+        g = hb_color_get_green(value)
+        b = hb_color_get_blue(value)
+        a = hb_color_get_alpha(value)
+        return Color(r, g, b, a)
+
+
+class OTColor(Color):
+    name_id: int | None
+
+
+class OTColorPaletteFlags(IntFlag):
+    DEFAULT = HB_OT_COLOR_PALETTE_FLAG_DEFAULT
+    USABLE_WITH_LIGHT_BACKGROUND = HB_OT_COLOR_PALETTE_FLAG_USABLE_WITH_LIGHT_BACKGROUND
+    USABLE_WITH_DARK_BACKGROUND = HB_OT_COLOR_PALETTE_FLAG_USABLE_WITH_DARK_BACKGROUND
+
+
+class OTColorPalette(NamedTuple):
+    colors: List[OTColor]
+    name_id: int | None
+    flags: OTColorPaletteFlags
+
+
+class OTColorLayer(NamedTuple):
+    glyph: int
+    color_index: int
+
+
+class OTLayoutGlyphClass(IntEnum):
+    UNCLASSIFIED = HB_OT_LAYOUT_GLYPH_CLASS_UNCLASSIFIED
+    BASE_GLYPH = HB_OT_LAYOUT_GLYPH_CLASS_BASE_GLYPH
+    LIGATURE = HB_OT_LAYOUT_GLYPH_CLASS_LIGATURE
+    MARK = HB_OT_LAYOUT_GLYPH_CLASS_MARK
+    COMPONENT = HB_OT_LAYOUT_GLYPH_CLASS_COMPONENT
+
+
 cdef hb_user_data_key_t k
 
 
@@ -577,6 +646,7 @@ cdef class Face:
         hb_face_collect_variation_unicodes(self._hb_face, variation_selector, s._hb_set)
         return s
 
+    # variations
     @property
     def has_var_data(self) -> bool:
         return hb_ot_var_has_data(self._hb_face)
@@ -634,15 +704,327 @@ cdef class Face:
         free(coords)
         return instances
 
+    # math
+    @property
+    def has_math_data(self) -> bool:
+        return hb_ot_math_has_data(self._hb_face)
 
-# typing.NamedTuple doesn't seem to work with cython
-GlyphExtents = namedtuple(
-    "GlyphExtents", ["x_bearing", "y_bearing", "width", "height"]
-)
+    def is_glyph_extended_math_shape(self, glyph: int) -> bool:
+        return hb_ot_math_is_glyph_extended_shape(self._hb_face, glyph)
 
-FontExtents = namedtuple(
-    "FontExtents", ["ascender", "descender", "line_gap"]
-)
+    # color
+    @property
+    def has_color_layers(self) -> bool:
+        return hb_ot_color_has_layers(self._hb_face)
+
+    def get_glyph_color_layers(self, glyph: int) -> List[OTColorLayer]:
+        cdef list ret = []
+        cdef unsigned int i
+        cdef unsigned int start_offset = 0
+        cdef unsigned int layer_count = STATIC_ARRAY_SIZE
+        cdef hb_ot_color_layer_t layers[STATIC_ARRAY_SIZE]
+        while layer_count == STATIC_ARRAY_SIZE:
+            hb_ot_color_glyph_get_layers(self._hb_face, glyph, start_offset, &layer_count, layers)
+            for i in range(layer_count):
+                ret.append(OTColorLayer(layers[i].glyph, layers[i].color_index))
+            start_offset += layer_count
+        return ret
+
+    @property
+    def has_color_palettes(self) -> bool:
+        return hb_ot_color_has_palettes(self._hb_face)
+
+    def get_color_palette(self, palette_index: int) -> OTColorPalette:
+        cdef hb_face_t* face = self._hb_face
+        cdef list colors = []
+        cdef unsigned int i
+        cdef unsigned int start_offset = 0
+        cdef unsigned int color_count = STATIC_ARRAY_SIZE
+        cdef hb_color_t c_colors[STATIC_ARRAY_SIZE]
+        while color_count == STATIC_ARRAY_SIZE:
+            hb_ot_color_palette_get_colors(face, palette_index, start_offset, &color_count, c_colors)
+            for i in range(color_count):
+                colors.append(Color.from_int(c_colors[i]))
+
+        return OTColorPalette(
+            colors=colors,
+            name_id=hb_ot_color_palette_get_name_id(face, palette_index),
+            flags=OTColorPaletteFlags(hb_ot_color_palette_get_flags(face, palette_index))
+        )
+
+    @property
+    def color_palettes(self) -> list[OTColorPalette]:
+        cdef list palettes = []
+        cdef unsigned int palette_count = hb_ot_color_palette_get_count(self._hb_face)
+        for i in range(palette_count):
+            palettes.append(self.get_color_palette(i))
+        return palettes
+
+    def color_palette_color_get_name_id(self, color_index: int) -> int | None:
+        cdef hb_ot_name_id_t name_id
+        name_id =  hb_ot_color_palette_color_get_name_id(self._hb_face, color_index)
+        if name_id == HB_OT_NAME_ID_INVALID:
+            return None
+        return name_id
+
+    @property
+    def has_color_paint(self) -> bool:
+        return hb_ot_color_has_paint(self._hb_face)
+
+    def glyph_has_color_paint(self, glyph: int) -> bool:
+        return hb_ot_color_glyph_has_paint(self._hb_face, glyph)
+
+    @property
+    def has_color_svg(self) -> bool:
+        return hb_ot_color_has_svg(self._hb_face)
+
+    def get_glyph_color_svg(self, glyph: int) -> Blob:
+        cdef hb_blob_t* blob
+        blob = hb_ot_color_glyph_reference_svg(self._hb_face, glyph)
+        return Blob.from_ptr(blob)
+
+    @property
+    def has_color_png(self) -> bool:
+        return hb_ot_color_has_png(self._hb_face)
+
+    # layout
+    @property
+    def has_layout_glyph_classes(self) -> bool:
+        return hb_ot_layout_has_glyph_classes(self._hb_face)
+
+    def get_layout_glyph_class(self, glyph: int) -> OTLayoutGlyphClass:
+        return OTLayoutGlyphClass(hb_ot_layout_get_glyph_class(self._hb_face, glyph))
+
+    @property
+    def has_layout_positioning(self) -> bool:
+        return hb_ot_layout_has_positioning(self._hb_face)
+
+    @property
+    def has_layout_substitution(self) -> bool:
+        return hb_ot_layout_has_substitution(self._hb_face)
+
+    def get_lookup_glyph_alternates(self, lookup_index: int, glyph: int) -> List[int]:
+        cdef list alternates = []
+        cdef unsigned int i
+        cdef unsigned int start_offset = 0
+        cdef unsigned int alternate_count = STATIC_ARRAY_SIZE
+        cdef hb_codepoint_t c_alternates[STATIC_ARRAY_SIZE]
+        while alternate_count == STATIC_ARRAY_SIZE:
+            hb_ot_layout_lookup_get_glyph_alternates(self._hb_face, lookup_index, glyph, start_offset,
+                &alternate_count, c_alternates)
+            for i in range(alternate_count):
+                alternates.append(c_alternates[i])
+            start_offset += alternate_count
+        return alternates
+
+    def get_language_feature_tags(self,
+                                  tag: str,
+                                  script_index: int = 0,
+                                  language_index: int = 0xFFFF) -> List[str]:
+        cdef bytes packed = tag.encode()
+        cdef hb_tag_t hb_tag = hb_tag_from_string(<char*>packed, -1)
+        cdef unsigned int feature_count = STATIC_ARRAY_SIZE
+        cdef hb_tag_t c_tags[STATIC_ARRAY_SIZE]
+        cdef list tags = []
+        cdef char cstr[5]
+        cdef unsigned int i
+        cdef unsigned int start_offset = 0
+        while feature_count == STATIC_ARRAY_SIZE:
+            hb_ot_layout_language_get_feature_tags(
+                self._hb_face,
+                hb_tag, script_index,
+                language_index,
+                start_offset,
+                &feature_count,
+                c_tags)
+            for i in range(feature_count):
+                hb_tag_to_string(c_tags[i], cstr)
+                cstr[4] = b'\0'
+                packed = cstr
+                tags.append(packed.decode())
+            start_offset += feature_count
+        return tags
+
+    def get_script_language_tags(self, tag: str, script_index: int = 0) -> List[str]:
+        cdef bytes packed = tag.encode()
+        cdef hb_tag_t hb_tag = hb_tag_from_string(<char*>packed, -1)
+        cdef unsigned int language_count = STATIC_ARRAY_SIZE
+        cdef hb_tag_t c_tags[STATIC_ARRAY_SIZE]
+        cdef list tags = []
+        cdef char cstr[5]
+        cdef unsigned int i
+        cdef unsigned int start_offset = 0
+        while language_count == STATIC_ARRAY_SIZE:
+            hb_ot_layout_script_get_language_tags(
+                self._hb_face,
+                hb_tag,
+                script_index,
+                start_offset,
+                &language_count,
+                c_tags)
+            for i in range(language_count):
+                hb_tag_to_string(c_tags[i], cstr)
+                cstr[4] = b'\0'
+                packed = cstr
+                tags.append(packed.decode())
+            start_offset += language_count
+        return tags
+
+    def get_table_script_tags(face: Face, tag: str) -> List[str]:
+        cdef bytes packed = tag.encode()
+        cdef hb_tag_t hb_tag = hb_tag_from_string(<char*>packed, -1)
+        cdef unsigned int script_count = STATIC_ARRAY_SIZE
+        cdef hb_tag_t c_tags[STATIC_ARRAY_SIZE]
+        cdef list tags = []
+        cdef char cstr[5]
+        cdef unsigned int i
+        cdef unsigned int start_offset = 0
+        while script_count == STATIC_ARRAY_SIZE:
+            hb_ot_layout_table_get_script_tags(
+                face._hb_face,
+                hb_tag,
+                start_offset,
+                &script_count,
+                c_tags)
+            for i in range(script_count):
+                hb_tag_to_string(c_tags[i], cstr)
+                cstr[4] = b'\0'
+                packed = cstr
+                tags.append(packed.decode())
+            start_offset += script_count
+        return tags
+
+class GlyphExtents(NamedTuple):
+    x_bearing: int
+    y_bearing: int
+    width: int
+    height: int
+
+
+class FontExtents(NamedTuple):
+    ascender: int
+    descender: int
+    line_gap: int
+
+
+class OTMathConstant(IntEnum):
+    SCRIPT_PERCENT_SCALE_DOWN = HB_OT_MATH_CONSTANT_SCRIPT_PERCENT_SCALE_DOWN
+    SCRIPT_SCRIPT_PERCENT_SCALE_DOWN = HB_OT_MATH_CONSTANT_SCRIPT_SCRIPT_PERCENT_SCALE_DOWN
+    DELIMITED_SUB_FORMULA_MIN_HEIGHT = HB_OT_MATH_CONSTANT_DELIMITED_SUB_FORMULA_MIN_HEIGHT
+    DISPLAY_OPERATOR_MIN_HEIGHT = HB_OT_MATH_CONSTANT_DISPLAY_OPERATOR_MIN_HEIGHT
+    MATH_LEADING = HB_OT_MATH_CONSTANT_MATH_LEADING
+    AXIS_HEIGHT = HB_OT_MATH_CONSTANT_AXIS_HEIGHT
+    ACCENT_BASE_HEIGHT = HB_OT_MATH_CONSTANT_ACCENT_BASE_HEIGHT
+    FLATTENED_ACCENT_BASE_HEIGHT = HB_OT_MATH_CONSTANT_FLATTENED_ACCENT_BASE_HEIGHT
+    SUBSCRIPT_SHIFT_DOWN = HB_OT_MATH_CONSTANT_SUBSCRIPT_SHIFT_DOWN
+    SUBSCRIPT_TOP_MAX = HB_OT_MATH_CONSTANT_SUBSCRIPT_TOP_MAX
+    SUBSCRIPT_BASELINE_DROP_MIN = HB_OT_MATH_CONSTANT_SUBSCRIPT_BASELINE_DROP_MIN
+    SUPERSCRIPT_SHIFT_UP = HB_OT_MATH_CONSTANT_SUPERSCRIPT_SHIFT_UP
+    SUPERSCRIPT_SHIFT_UP_CRAMPED = HB_OT_MATH_CONSTANT_SUPERSCRIPT_SHIFT_UP_CRAMPED
+    SUPERSCRIPT_BOTTOM_MIN = HB_OT_MATH_CONSTANT_SUPERSCRIPT_BOTTOM_MIN
+    SUPERSCRIPT_BASELINE_DROP_MAX = HB_OT_MATH_CONSTANT_SUPERSCRIPT_BASELINE_DROP_MAX
+    SUB_SUPERSCRIPT_GAP_MIN = HB_OT_MATH_CONSTANT_SUB_SUPERSCRIPT_GAP_MIN
+    SUPERSCRIPT_BOTTOM_MAX_WITH_SUBSCRIPT = HB_OT_MATH_CONSTANT_SUPERSCRIPT_BOTTOM_MAX_WITH_SUBSCRIPT
+    SPACE_AFTER_SCRIPT = HB_OT_MATH_CONSTANT_SPACE_AFTER_SCRIPT
+    UPPER_LIMIT_GAP_MIN = HB_OT_MATH_CONSTANT_UPPER_LIMIT_GAP_MIN
+    UPPER_LIMIT_BASELINE_RISE_MIN = HB_OT_MATH_CONSTANT_UPPER_LIMIT_BASELINE_RISE_MIN
+    LOWER_LIMIT_GAP_MIN = HB_OT_MATH_CONSTANT_LOWER_LIMIT_GAP_MIN
+    LOWER_LIMIT_BASELINE_DROP_MIN = HB_OT_MATH_CONSTANT_LOWER_LIMIT_BASELINE_DROP_MIN
+    STACK_TOP_SHIFT_UP = HB_OT_MATH_CONSTANT_STACK_TOP_SHIFT_UP
+    STACK_TOP_DISPLAY_STYLE_SHIFT_UP = HB_OT_MATH_CONSTANT_STACK_TOP_DISPLAY_STYLE_SHIFT_UP
+    STACK_BOTTOM_SHIFT_DOWN = HB_OT_MATH_CONSTANT_STACK_BOTTOM_SHIFT_DOWN
+    STACK_BOTTOM_DISPLAY_STYLE_SHIFT_DOWN = HB_OT_MATH_CONSTANT_STACK_BOTTOM_DISPLAY_STYLE_SHIFT_DOWN
+    STACK_GAP_MIN = HB_OT_MATH_CONSTANT_STACK_GAP_MIN
+    STACK_DISPLAY_STYLE_GAP_MIN = HB_OT_MATH_CONSTANT_STACK_DISPLAY_STYLE_GAP_MIN
+    STRETCH_STACK_TOP_SHIFT_UP = HB_OT_MATH_CONSTANT_STRETCH_STACK_TOP_SHIFT_UP
+    STRETCH_STACK_BOTTOM_SHIFT_DOWN = HB_OT_MATH_CONSTANT_STRETCH_STACK_BOTTOM_SHIFT_DOWN
+    STRETCH_STACK_GAP_ABOVE_MIN = HB_OT_MATH_CONSTANT_STRETCH_STACK_GAP_ABOVE_MIN
+    STRETCH_STACK_GAP_BELOW_MIN = HB_OT_MATH_CONSTANT_STRETCH_STACK_GAP_BELOW_MIN
+    FRACTION_NUMERATOR_SHIFT_UP = HB_OT_MATH_CONSTANT_FRACTION_NUMERATOR_SHIFT_UP
+    FRACTION_NUMERATOR_DISPLAY_STYLE_SHIFT_UP = HB_OT_MATH_CONSTANT_FRACTION_NUMERATOR_DISPLAY_STYLE_SHIFT_UP
+    FRACTION_DENOMINATOR_SHIFT_DOWN = HB_OT_MATH_CONSTANT_FRACTION_DENOMINATOR_SHIFT_DOWN
+    FRACTION_DENOMINATOR_DISPLAY_STYLE_SHIFT_DOWN = HB_OT_MATH_CONSTANT_FRACTION_DENOMINATOR_DISPLAY_STYLE_SHIFT_DOWN
+    FRACTION_NUMERATOR_GAP_MIN = HB_OT_MATH_CONSTANT_FRACTION_NUMERATOR_GAP_MIN
+    FRACTION_NUM_DISPLAY_STYLE_GAP_MIN = HB_OT_MATH_CONSTANT_FRACTION_NUM_DISPLAY_STYLE_GAP_MIN
+    FRACTION_RULE_THICKNESS = HB_OT_MATH_CONSTANT_FRACTION_RULE_THICKNESS
+    FRACTION_DENOMINATOR_GAP_MIN = HB_OT_MATH_CONSTANT_FRACTION_DENOMINATOR_GAP_MIN
+    FRACTION_DENOM_DISPLAY_STYLE_GAP_MIN = HB_OT_MATH_CONSTANT_FRACTION_DENOM_DISPLAY_STYLE_GAP_MIN
+    SKEWED_FRACTION_HORIZONTAL_GAP = HB_OT_MATH_CONSTANT_SKEWED_FRACTION_HORIZONTAL_GAP
+    SKEWED_FRACTION_VERTICAL_GAP = HB_OT_MATH_CONSTANT_SKEWED_FRACTION_VERTICAL_GAP
+    OVERBAR_VERTICAL_GAP = HB_OT_MATH_CONSTANT_OVERBAR_VERTICAL_GAP
+    OVERBAR_RULE_THICKNESS = HB_OT_MATH_CONSTANT_OVERBAR_RULE_THICKNESS
+    OVERBAR_EXTRA_ASCENDER = HB_OT_MATH_CONSTANT_OVERBAR_EXTRA_ASCENDER
+    UNDERBAR_VERTICAL_GAP = HB_OT_MATH_CONSTANT_UNDERBAR_VERTICAL_GAP
+    UNDERBAR_RULE_THICKNESS = HB_OT_MATH_CONSTANT_UNDERBAR_RULE_THICKNESS
+    UNDERBAR_EXTRA_DESCENDER = HB_OT_MATH_CONSTANT_UNDERBAR_EXTRA_DESCENDER
+    RADICAL_VERTICAL_GAP = HB_OT_MATH_CONSTANT_RADICAL_VERTICAL_GAP
+    RADICAL_DISPLAY_STYLE_VERTICAL_GAP = HB_OT_MATH_CONSTANT_RADICAL_DISPLAY_STYLE_VERTICAL_GAP
+    RADICAL_RULE_THICKNESS = HB_OT_MATH_CONSTANT_RADICAL_RULE_THICKNESS
+    RADICAL_EXTRA_ASCENDER = HB_OT_MATH_CONSTANT_RADICAL_EXTRA_ASCENDER
+    RADICAL_KERN_BEFORE_DEGREE = HB_OT_MATH_CONSTANT_RADICAL_KERN_BEFORE_DEGREE
+    RADICAL_KERN_AFTER_DEGREE = HB_OT_MATH_CONSTANT_RADICAL_KERN_AFTER_DEGREE
+    RADICAL_DEGREE_BOTTOM_RAISE_PERCENT = HB_OT_MATH_CONSTANT_RADICAL_DEGREE_BOTTOM_RAISE_PERCENT
+
+
+class OTMathKernEntry(NamedTuple):
+    max_correction_height: int
+    kern_value: int
+
+
+class OTMathKern(IntEnum):
+    TOP_RIGHT = HB_OT_MATH_KERN_TOP_RIGHT
+    TOP_LEFT = HB_OT_MATH_KERN_TOP_LEFT
+    BOTTOM_RIGHT = HB_OT_MATH_KERN_BOTTOM_RIGHT
+    BOTTOM_LEFT = HB_OT_MATH_KERN_BOTTOM_LEFT
+
+
+class OTMathGlyphVariant(NamedTuple):
+    glyph: int
+    advance: int
+
+
+class OTMathGlyphPartFlags(IntFlag):
+    EXTENDER = HB_OT_MATH_GLYPH_PART_FLAG_EXTENDER
+
+
+class OTMathGlyphPart(NamedTuple):
+    glyph: int
+    start_connector_length: int
+    end_connector_length: int
+    full_advance: int
+    flags: OTMathGlyphPartFlags
+
+
+class OTMetricsTag(IntEnum):
+    HORIZONTAL_ASCENDER = HB_OT_METRICS_TAG_HORIZONTAL_ASCENDER
+    HORIZONTAL_DESCENDER = HB_OT_METRICS_TAG_HORIZONTAL_DESCENDER
+    HORIZONTAL_LINE_GAP = HB_OT_METRICS_TAG_HORIZONTAL_LINE_GAP
+    HORIZONTAL_CLIPPING_ASCENT = HB_OT_METRICS_TAG_HORIZONTAL_CLIPPING_ASCENT
+    HORIZONTAL_CLIPPING_DESCENT = HB_OT_METRICS_TAG_HORIZONTAL_CLIPPING_DESCENT
+    VERTICAL_ASCENDER = HB_OT_METRICS_TAG_VERTICAL_ASCENDER
+    VERTICAL_DESCENDER = HB_OT_METRICS_TAG_VERTICAL_DESCENDER
+    VERTICAL_LINE_GAP = HB_OT_METRICS_TAG_VERTICAL_LINE_GAP
+    HORIZONTAL_CARET_RISE = HB_OT_METRICS_TAG_HORIZONTAL_CARET_RISE
+    HORIZONTAL_CARET_RUN = HB_OT_METRICS_TAG_HORIZONTAL_CARET_RUN
+    HORIZONTAL_CARET_OFFSET = HB_OT_METRICS_TAG_HORIZONTAL_CARET_OFFSET
+    VERTICAL_CARET_RISE = HB_OT_METRICS_TAG_VERTICAL_CARET_RISE
+    VERTICAL_CARET_RUN = HB_OT_METRICS_TAG_VERTICAL_CARET_RUN
+    VERTICAL_CARET_OFFSET = HB_OT_METRICS_TAG_VERTICAL_CARET_OFFSET
+    X_HEIGHT = HB_OT_METRICS_TAG_X_HEIGHT
+    CAP_HEIGHT = HB_OT_METRICS_TAG_CAP_HEIGHT
+    SUBSCRIPT_EM_X_SIZE = HB_OT_METRICS_TAG_SUBSCRIPT_EM_X_SIZE
+    SUBSCRIPT_EM_Y_SIZE = HB_OT_METRICS_TAG_SUBSCRIPT_EM_Y_SIZE
+    SUBSCRIPT_EM_X_OFFSET = HB_OT_METRICS_TAG_SUBSCRIPT_EM_X_OFFSET
+    SUBSCRIPT_EM_Y_OFFSET = HB_OT_METRICS_TAG_SUBSCRIPT_EM_Y_OFFSET
+    SUPERSCRIPT_EM_X_SIZE = HB_OT_METRICS_TAG_SUPERSCRIPT_EM_X_SIZE
+    SUPERSCRIPT_EM_Y_SIZE = HB_OT_METRICS_TAG_SUPERSCRIPT_EM_Y_SIZE
+    SUPERSCRIPT_EM_X_OFFSET = HB_OT_METRICS_TAG_SUPERSCRIPT_EM_X_OFFSET
+    SUPERSCRIPT_EM_Y_OFFSET = HB_OT_METRICS_TAG_SUPERSCRIPT_EM_Y_OFFSET
+    STRIKEOUT_SIZE = HB_OT_METRICS_TAG_STRIKEOUT_SIZE
+    STRIKEOUT_OFFSET = HB_OT_METRICS_TAG_STRIKEOUT_OFFSET
+    UNDERLINE_SIZE = HB_OT_METRICS_TAG_UNDERLINE_SIZE
+    UNDERLINE_OFFSET = HB_OT_METRICS_TAG_UNDERLINE_OFFSET
+
 
 cdef class Font:
     cdef hb_font_t* _hb_font
@@ -970,6 +1352,159 @@ cdef class Font:
         methods.closePath = <void*>closePath
 
         hb_font_draw_glyph(self._hb_font, gid, drawfuncs, <void*>&methods)
+
+    # math
+    def get_math_constant(self, constant: OTMathConstant) -> int:
+        if constant >= len(OTMathConstant):
+            raise ValueError("invalid constant")
+        return hb_ot_math_get_constant(self._hb_font, constant)
+
+    def get_math_glyph_italics_correction(self, glyph: int) -> int:
+        return hb_ot_math_get_glyph_italics_correction(self._hb_font, glyph)
+
+    def get_math_glyph_top_accent_attachment(self, glyph: int) -> int:
+        return hb_ot_math_get_glyph_top_accent_attachment(self._hb_font, glyph)
+
+    def get_math_min_connector_overlap(self, direction: str) -> int:
+        cdef bytes packed = direction.encode()
+        cdef char* cstr = packed
+        cdef hb_direction_t hb_direction = hb_direction_from_string(cstr, -1)
+        return hb_ot_math_get_min_connector_overlap(self._hb_font, hb_direction)
+
+    def get_math_glyph_kerning(self, glyph: int, kern: OTMathKern, int correction_height) -> int:
+        if kern >= len(OTMathKern):
+            raise ValueError("invalid kern")
+        return hb_ot_math_get_glyph_kerning(self._hb_font, glyph, kern, correction_height)
+
+    def get_math_glyph_kernings(self, glyph: int, kern: OTMathKern) -> List[OTMathKernEntry]:
+        if kern >= len(OTMathKern):
+            raise ValueError("invalid kern")
+        cdef unsigned int count = STATIC_ARRAY_SIZE
+        cdef hb_ot_math_kern_entry_t kerns_array[STATIC_ARRAY_SIZE]
+        cdef list kerns = []
+        cdef unsigned int i
+        cdef unsigned int start_offset = 0
+        while count == STATIC_ARRAY_SIZE:
+            hb_ot_math_get_glyph_kernings(self._hb_font, glyph, kern, start_offset,
+                &count, kerns_array)
+            for i in range(count):
+                kerns.append(OTMathKernEntry(kerns_array[i].max_correction_height, kerns_array[i].kern_value))
+            start_offset += count
+        return kerns
+
+    def get_math_glyph_variants(self, glyph: int, direction: str) -> List[OTMathGlyphVariant]:
+        cdef bytes packed = direction.encode()
+        cdef char* cstr = packed
+        cdef hb_direction_t hb_direction = hb_direction_from_string(cstr, -1)
+        cdef unsigned int count = STATIC_ARRAY_SIZE
+        cdef hb_ot_math_glyph_variant_t variants_array[STATIC_ARRAY_SIZE]
+        cdef list variants = []
+        cdef unsigned int i
+        cdef unsigned int start_offset = 0
+        while count == STATIC_ARRAY_SIZE:
+            hb_ot_math_get_glyph_variants(self._hb_font, glyph, hb_direction, start_offset,
+                &count, variants_array)
+            for i in range(count):
+                variants.append(OTMathGlyphVariant(variants_array[i].glyph, variants_array[i].advance))
+            start_offset += count
+        return variants
+
+    def get_math_glyph_assembly(self, glyph: int, direction: str) -> Tuple[List[OTMathGlyphPart], int]:
+        cdef bytes packed = direction.encode()
+        cdef char* cstr = packed
+        cdef hb_direction_t hb_direction = hb_direction_from_string(cstr, -1)
+        cdef unsigned int count = STATIC_ARRAY_SIZE
+        cdef hb_ot_math_glyph_part_t assembly_array[STATIC_ARRAY_SIZE]
+        cdef list assembly = []
+        cdef unsigned int i
+        cdef unsigned int start_offset = 0
+        cdef hb_position_t italics_correction = 0
+        while count == STATIC_ARRAY_SIZE:
+            hb_ot_math_get_glyph_assembly(self._hb_font,
+                glyph, hb_direction, start_offset,
+                &count, assembly_array, &italics_correction)
+            for i in range(count):
+                assembly.append(
+                    OTMathGlyphPart(assembly_array[i].glyph, assembly_array[i].start_connector_length,
+                        assembly_array[i].end_connector_length, assembly_array[i].full_advance,
+                        OTMathGlyphPartFlags(assembly_array[i].flags)))
+            start_offset += count
+        return assembly, italics_correction
+
+    # metrics
+    def get_metric_position(self, tag: OTMetricsTag) -> int:
+        cdef hb_position_t position
+        if hb_ot_metrics_get_position(self._hb_font, tag, &position):
+            return position
+        return None
+
+    def get_metric_position_with_fallback(font, tag: OTMetricsTag) -> int:
+        cdef hb_position_t position
+        hb_ot_metrics_get_position_with_fallback(font._hb_font, tag, &position)
+        return position
+
+    def get_metric_variation(self, tag: OTMetricsTag) -> float:
+        return hb_ot_metrics_get_variation(self._hb_font, tag)
+
+    def get_metric_x_variation(self, tag: OTMetricsTag) -> int:
+        return hb_ot_metrics_get_x_variation(self._hb_font, tag)
+
+    def get_metric_y_variation(self, tag: OTMetricsTag) -> int:
+        return hb_ot_metrics_get_y_variation(self._hb_font, tag)
+
+    # color
+    def get_glyph_color_png(self, glyph: int) -> Blob:
+        cdef hb_blob_t* blob
+        blob = hb_ot_color_glyph_reference_png(self._hb_font, glyph)
+        return Blob.from_ptr(blob)
+
+    #layout
+    def get_layout_baseline(self,
+                           baseline_tag: str,
+                           direction: str,
+                           script_tag: str,
+                           language_tag: str) -> int:
+        cdef hb_ot_layout_baseline_tag_t hb_baseline_tag
+        cdef hb_direction_t hb_direction
+        cdef hb_tag_t hb_script_tag
+        cdef hb_tag_t hb_language_tag
+        cdef hb_position_t hb_position
+        cdef hb_bool_t success
+        cdef bytes packed
+
+        if baseline_tag == "romn":
+            hb_baseline_tag = HB_OT_LAYOUT_BASELINE_TAG_ROMAN
+        elif baseline_tag == "hang":
+            hb_baseline_tag = HB_OT_LAYOUT_BASELINE_TAG_HANGING
+        elif baseline_tag == "icfb":
+            hb_baseline_tag = HB_OT_LAYOUT_BASELINE_TAG_IDEO_FACE_BOTTOM_OR_LEFT
+        elif baseline_tag == "icft":
+            hb_baseline_tag = HB_OT_LAYOUT_BASELINE_TAG_IDEO_FACE_TOP_OR_RIGHT
+        elif baseline_tag == "ideo":
+            hb_baseline_tag = HB_OT_LAYOUT_BASELINE_TAG_IDEO_EMBOX_BOTTOM_OR_LEFT
+        elif baseline_tag == "idtp":
+            hb_baseline_tag = HB_OT_LAYOUT_BASELINE_TAG_IDEO_EMBOX_TOP_OR_RIGHT
+        elif baseline_tag == "math":
+            hb_baseline_tag = HB_OT_LAYOUT_BASELINE_TAG_MATH
+        else:
+            raise ValueError(f"invalid baseline tag '{baseline_tag}'")
+        packed = direction.encode()
+        hb_direction = hb_direction_from_string(<char*>packed, -1)
+        packed = script_tag.encode()
+        hb_script_tag = hb_tag_from_string(<char*>packed, -1)
+        packed = language_tag.encode()
+        hb_language_tag = hb_tag_from_string(<char*>packed, -1)
+        success = hb_ot_layout_get_baseline(self._hb_font,
+                                            hb_baseline_tag,
+                                            hb_direction,
+                                            hb_script_tag,
+                                            hb_language_tag,
+                                            &hb_position)
+        if success:
+            return hb_position
+        else:
+            return None
+
 
 cdef struct _pen_methods:
     void *moveTo
@@ -1307,167 +1842,65 @@ def ot_tag_to_language(tag: str) -> str:
     return packed.decode()
 
 
+@deprecated("Face.get_lookup_glyph_alternates()")
 def ot_layout_lookup_get_glyph_alternates(
         face: Face, lookup_index : int, glyph : hb_codepoint_t) -> List[int]:
-    cdef list alternates = []
-    cdef unsigned int i
-    cdef unsigned int start_offset = 0
-    cdef unsigned int alternate_count = STATIC_ARRAY_SIZE
-    cdef hb_codepoint_t alternate_glyphs[STATIC_ARRAY_SIZE]
-    while alternate_count == STATIC_ARRAY_SIZE:
-        hb_ot_layout_lookup_get_glyph_alternates(face._hb_face, lookup_index, glyph, start_offset,
-            &alternate_count, alternate_glyphs)
-        for i in range(alternate_count):
-            alternates.append(alternate_glyphs[i])
-        start_offset += alternate_count
-    return alternates
+   return face.get_lookup_glyph_alternates(lookup_index, glyph)
 
 
+@deprecated("Face.get_language_feature_tags()")
 def ot_layout_language_get_feature_tags(
         face: Face, tag: str, script_index: int = 0,
         language_index: int = 0xFFFF) -> List[str]:
-    cdef bytes packed = tag.encode()
-    cdef hb_tag_t hb_tag = hb_tag_from_string(<char*>packed, -1)
-    cdef unsigned int feature_count = STATIC_ARRAY_SIZE
-    cdef hb_tag_t feature_tags[STATIC_ARRAY_SIZE]
-    cdef list tags = []
-    cdef char cstr[5]
-    cdef unsigned int i
-    cdef unsigned int start_offset = 0
-    while feature_count == STATIC_ARRAY_SIZE:
-        hb_ot_layout_language_get_feature_tags(
-            face._hb_face, hb_tag, script_index, language_index, start_offset, &feature_count,
-            feature_tags)
-        for i in range(feature_count):
-            hb_tag_to_string(feature_tags[i], cstr)
-            cstr[4] = b'\0'
-            packed = cstr
-            tags.append(packed.decode())
-        start_offset += feature_count
-    return tags
+    return face.get_language_feature_tags(tag, script_index, language_index)
 
 
+@deprecated("Face.get_script_language_tags()")
 def ot_layout_script_get_language_tags(
         face: Face, tag: str, script_index: int = 0) -> List[str]:
-    cdef bytes packed = tag.encode()
-    cdef hb_tag_t hb_tag = hb_tag_from_string(<char*>packed, -1)
-    cdef unsigned int language_count = STATIC_ARRAY_SIZE
-    cdef hb_tag_t language_tags[STATIC_ARRAY_SIZE]
-    cdef list tags = []
-    cdef char cstr[5]
-    cdef unsigned int i
-    cdef unsigned int start_offset = 0
-    while language_count == STATIC_ARRAY_SIZE:
-        hb_ot_layout_script_get_language_tags(
-            face._hb_face, hb_tag, script_index, start_offset, &language_count, language_tags)
-        for i in range(language_count):
-            hb_tag_to_string(language_tags[i], cstr)
-            cstr[4] = b'\0'
-            packed = cstr
-            tags.append(packed.decode())
-        start_offset += language_count
-    return tags
+    return face.get_script_language_tags(tag, script_index)
 
+@deprecated("Face.get_table_script_tags()")
 def ot_layout_table_get_script_tags(face: Face, tag: str) -> List[str]:
-    cdef bytes packed = tag.encode()
-    cdef hb_tag_t hb_tag = hb_tag_from_string(<char*>packed, -1)
-    cdef unsigned int script_count = STATIC_ARRAY_SIZE
-    cdef hb_tag_t script_tags[STATIC_ARRAY_SIZE]
-    cdef list tags = []
-    cdef char cstr[5]
-    cdef unsigned int i
-    cdef unsigned int start_offset = 0
-    while script_count == STATIC_ARRAY_SIZE:
-        hb_ot_layout_table_get_script_tags(
-            face._hb_face, hb_tag, start_offset, &script_count, script_tags)
-        for i in range(script_count):
-            hb_tag_to_string(script_tags[i], cstr)
-            cstr[4] = b'\0'
-            packed = cstr
-            tags.append(packed.decode())
-        start_offset += script_count
-    return tags
+    return face.get_table_script_tags(tag)
 
+@deprecated("Face.get_layout_baseline()")
 def ot_layout_get_baseline(font: Font,
                            baseline_tag: str,
                            direction: str,
                            script_tag: str,
                            language_tag: str) -> int:
-    cdef hb_ot_layout_baseline_tag_t hb_baseline_tag
-    cdef hb_direction_t hb_direction
-    cdef hb_tag_t hb_script_tag
-    cdef hb_tag_t hb_language_tag
-    cdef hb_position_t hb_position
-    cdef hb_bool_t success
-    cdef bytes packed
+    return font.get_layout_baseline(baseline_tag, direction, script_tag, language_tag)
 
-    if baseline_tag == "romn":
-        hb_baseline_tag = HB_OT_LAYOUT_BASELINE_TAG_ROMAN
-    elif baseline_tag == "hang":
-        hb_baseline_tag = HB_OT_LAYOUT_BASELINE_TAG_HANGING
-    elif baseline_tag == "icfb":
-        hb_baseline_tag = HB_OT_LAYOUT_BASELINE_TAG_IDEO_FACE_BOTTOM_OR_LEFT
-    elif baseline_tag == "icft":
-        hb_baseline_tag = HB_OT_LAYOUT_BASELINE_TAG_IDEO_FACE_TOP_OR_RIGHT
-    elif baseline_tag == "ideo":
-        hb_baseline_tag = HB_OT_LAYOUT_BASELINE_TAG_IDEO_EMBOX_BOTTOM_OR_LEFT
-    elif baseline_tag == "idtp":
-        hb_baseline_tag = HB_OT_LAYOUT_BASELINE_TAG_IDEO_EMBOX_TOP_OR_RIGHT
-    elif baseline_tag == "math":
-        hb_baseline_tag = HB_OT_LAYOUT_BASELINE_TAG_MATH
-    else:
-        raise ValueError(f"invalid baseline tag '{baseline_tag}'")
-    packed = direction.encode()
-    hb_direction = hb_direction_from_string(<char*>packed, -1)
-    packed = script_tag.encode()
-    hb_script_tag = hb_tag_from_string(<char*>packed, -1)
-    packed = language_tag.encode()
-    hb_language_tag = hb_tag_from_string(<char*>packed, -1)
-    success = hb_ot_layout_get_baseline(font._hb_font,
-                                        hb_baseline_tag,
-                                        hb_direction,
-                                        hb_script_tag,
-                                        hb_language_tag,
-                                        &hb_position)
-    if success:
-        return hb_position
-    else:
-        return None
-
+@deprecated("Face.face.has_layout_glyph_classes")
 def ot_layout_has_glyph_classes(face: Face) -> bool:
-    return hb_ot_layout_has_glyph_classes(face._hb_face)
+    return face.has_layout_glyph_classes
 
+@deprecated("Face.has_layout_positioning")
 def ot_layout_has_positioning(face: Face) -> bool:
-    return hb_ot_layout_has_positioning(face._hb_face)
+    return face.has_layout_positioning
 
+@deprecated("Face.has_layout_substitution")
 def ot_layout_has_substitution(face: Face) -> bool:
-    return hb_ot_layout_has_substitution(face._hb_face)
+    return face.has_layout_substitution
 
-class OTLayoutGlyphClass(IntEnum):
-    UNCLASSIFIED = HB_OT_LAYOUT_GLYPH_CLASS_UNCLASSIFIED
-    BASE_GLYPH = HB_OT_LAYOUT_GLYPH_CLASS_BASE_GLYPH
-    LIGATURE = HB_OT_LAYOUT_GLYPH_CLASS_LIGATURE
-    MARK = HB_OT_LAYOUT_GLYPH_CLASS_MARK
-    COMPONENT = HB_OT_LAYOUT_GLYPH_CLASS_COMPONENT
-
+@deprecated("Face.get_layout_glyph_class()")
 def ot_layout_get_glyph_class(face: Face, glyph: int) -> OTLayoutGlyphClass:
-    return OTLayoutGlyphClass(hb_ot_layout_get_glyph_class(face._hb_face, glyph))
+    return face.get_layout_glyph_class(glyph)
 
-
+@deprecated("Face.has_color_palettes")
 def ot_color_has_palettes(face: Face) -> bool:
-    return hb_ot_color_has_palettes(face._hb_face)
+    return face.has_color_palettes
 
+@deprecated("Face.color_palettes")
 def ot_color_palette_get_count(face: Face) -> int:
     return hb_ot_color_palette_get_count(face._hb_face)
 
-class OTColorPaletteFlags(IntFlag):
-    DEFAULT = HB_OT_COLOR_PALETTE_FLAG_DEFAULT
-    USABLE_WITH_LIGHT_BACKGROUND = HB_OT_COLOR_PALETTE_FLAG_USABLE_WITH_LIGHT_BACKGROUND
-    USABLE_WITH_DARK_BACKGROUND = HB_OT_COLOR_PALETTE_FLAG_USABLE_WITH_DARK_BACKGROUND
-
+@deprecated("Face.get_color_palette()")
 def ot_color_palette_get_flags(face: Face, palette_index: int) -> OTColorPaletteFlags:
     return OTColorPaletteFlags(hb_ot_color_palette_get_flags(face._hb_face, palette_index))
 
+@deprecated("Face.get_color_palette()")
 def ot_color_palette_get_colors(face: Face, palette_index: int) -> List[Color]:
     cdef list ret = []
     cdef unsigned int i
@@ -1480,6 +1913,7 @@ def ot_color_palette_get_colors(face: Face, palette_index: int) -> List[Color]:
             ret.append(Color.from_int(colors[i]))
     return ret
 
+@deprecated("Face.get_color_palette()")
 def ot_color_palette_get_name_id(face: Face, palette_index: int) -> int | None:
     cdef hb_ot_name_id_t name_id
     name_id = hb_ot_color_palette_get_name_id(face._hb_face, palette_index)
@@ -1487,278 +1921,116 @@ def ot_color_palette_get_name_id(face: Face, palette_index: int) -> int | None:
         return None
     return name_id
 
+@deprecated("Face.color_palette_color_get_name_id()")
 def ot_color_palette_color_get_name_id(face: Face, color_index: int) -> int | None:
-    cdef hb_ot_name_id_t name_id
-    name_id =  hb_ot_color_palette_color_get_name_id(face._hb_face, color_index)
-    if name_id == HB_OT_NAME_ID_INVALID:
-        return None
-    return name_id
+    return face.color_palette_color_get_name_id(color_index)
 
+@deprecated("Face.has_color_layers")
 def ot_color_has_layers(face: Face) -> bool:
-    return hb_ot_color_has_layers(face._hb_face)
+    return face.has_color_layers
 
-OTColorLayer = namedtuple("OTColorLayer", ["glyph", "color_index"])
-
+@deprecated("Face.get_glyph_color_layers()")
 def ot_color_glyph_get_layers(face: Face, glyph: int) -> List[OTColorLayer]:
-    cdef list ret = []
-    cdef unsigned int i
-    cdef unsigned int start_offset = 0
-    cdef unsigned int layer_count = STATIC_ARRAY_SIZE
-    cdef hb_ot_color_layer_t layers[STATIC_ARRAY_SIZE]
-    while layer_count == STATIC_ARRAY_SIZE:
-        hb_ot_color_glyph_get_layers(face._hb_face, glyph, start_offset, &layer_count, layers)
-        for i in range(layer_count):
-            ret.append(OTColorLayer(layers[i].glyph, layers[i].color_index))
-        start_offset += layer_count
-    return ret
+    return face.get_glyph_color_layers(glyph)
 
+@deprecated("Face.has_color_paint")
 def ot_color_has_paint(face: Face) -> bool:
-    return hb_ot_color_has_paint(face._hb_face)
+    return face.has_color_paint
 
+@deprecated("Face.glyph_has_color_paint()")
 def ot_color_glyph_has_paint(face: Face, glyph: int) -> bool:
-    return hb_ot_color_glyph_has_paint(face._hb_face, glyph)
+    return face.glyph_has_color_paint(glyph)
 
+@deprecated("Face.has_color_svg")
 def ot_color_has_svg(face: Face) -> bool:
-    return hb_ot_color_has_svg(face._hb_face)
+    return face.has_color_svg
 
+@deprecated("Face.get_glyph_color_svg()")
 def ot_color_glyph_get_svg(face: Face, glyph: int) -> Blob:
-    cdef hb_blob_t* blob
-    blob = hb_ot_color_glyph_reference_svg(face._hb_face, glyph)
-    return Blob.from_ptr(blob)
+    return face.get_glyph_color_svg(glyph)
 
+@deprecated("Face.has_color_png")
 def ot_color_has_png(face: Face) -> bool:
-    return hb_ot_color_has_png(face._hb_face)
+    return face.has_color_png
 
+@deprecated("Font.get_glyph_color_png()")
 def ot_color_glyph_get_png(font: Font, glyph: int) -> Blob:
-    cdef hb_blob_t* blob
-    blob = hb_ot_color_glyph_reference_png(font._hb_font, glyph)
-    return Blob.from_ptr(blob)
+    return font.get_glyph_color_png(glyph)
 
 
+@deprecated("Face.has_math_data")
 def ot_math_has_data(face: Face) -> bool:
-    return hb_ot_math_has_data(face._hb_face)
+    return face.has_math_data
 
-class OTMathConstant(IntEnum):
-    SCRIPT_PERCENT_SCALE_DOWN = HB_OT_MATH_CONSTANT_SCRIPT_PERCENT_SCALE_DOWN
-    SCRIPT_SCRIPT_PERCENT_SCALE_DOWN = HB_OT_MATH_CONSTANT_SCRIPT_SCRIPT_PERCENT_SCALE_DOWN
-    DELIMITED_SUB_FORMULA_MIN_HEIGHT = HB_OT_MATH_CONSTANT_DELIMITED_SUB_FORMULA_MIN_HEIGHT
-    DISPLAY_OPERATOR_MIN_HEIGHT = HB_OT_MATH_CONSTANT_DISPLAY_OPERATOR_MIN_HEIGHT
-    MATH_LEADING = HB_OT_MATH_CONSTANT_MATH_LEADING
-    AXIS_HEIGHT = HB_OT_MATH_CONSTANT_AXIS_HEIGHT
-    ACCENT_BASE_HEIGHT = HB_OT_MATH_CONSTANT_ACCENT_BASE_HEIGHT
-    FLATTENED_ACCENT_BASE_HEIGHT = HB_OT_MATH_CONSTANT_FLATTENED_ACCENT_BASE_HEIGHT
-    SUBSCRIPT_SHIFT_DOWN = HB_OT_MATH_CONSTANT_SUBSCRIPT_SHIFT_DOWN
-    SUBSCRIPT_TOP_MAX = HB_OT_MATH_CONSTANT_SUBSCRIPT_TOP_MAX
-    SUBSCRIPT_BASELINE_DROP_MIN = HB_OT_MATH_CONSTANT_SUBSCRIPT_BASELINE_DROP_MIN
-    SUPERSCRIPT_SHIFT_UP = HB_OT_MATH_CONSTANT_SUPERSCRIPT_SHIFT_UP
-    SUPERSCRIPT_SHIFT_UP_CRAMPED = HB_OT_MATH_CONSTANT_SUPERSCRIPT_SHIFT_UP_CRAMPED
-    SUPERSCRIPT_BOTTOM_MIN = HB_OT_MATH_CONSTANT_SUPERSCRIPT_BOTTOM_MIN
-    SUPERSCRIPT_BASELINE_DROP_MAX = HB_OT_MATH_CONSTANT_SUPERSCRIPT_BASELINE_DROP_MAX
-    SUB_SUPERSCRIPT_GAP_MIN = HB_OT_MATH_CONSTANT_SUB_SUPERSCRIPT_GAP_MIN
-    SUPERSCRIPT_BOTTOM_MAX_WITH_SUBSCRIPT = HB_OT_MATH_CONSTANT_SUPERSCRIPT_BOTTOM_MAX_WITH_SUBSCRIPT
-    SPACE_AFTER_SCRIPT = HB_OT_MATH_CONSTANT_SPACE_AFTER_SCRIPT
-    UPPER_LIMIT_GAP_MIN = HB_OT_MATH_CONSTANT_UPPER_LIMIT_GAP_MIN
-    UPPER_LIMIT_BASELINE_RISE_MIN = HB_OT_MATH_CONSTANT_UPPER_LIMIT_BASELINE_RISE_MIN
-    LOWER_LIMIT_GAP_MIN = HB_OT_MATH_CONSTANT_LOWER_LIMIT_GAP_MIN
-    LOWER_LIMIT_BASELINE_DROP_MIN = HB_OT_MATH_CONSTANT_LOWER_LIMIT_BASELINE_DROP_MIN
-    STACK_TOP_SHIFT_UP = HB_OT_MATH_CONSTANT_STACK_TOP_SHIFT_UP
-    STACK_TOP_DISPLAY_STYLE_SHIFT_UP = HB_OT_MATH_CONSTANT_STACK_TOP_DISPLAY_STYLE_SHIFT_UP
-    STACK_BOTTOM_SHIFT_DOWN = HB_OT_MATH_CONSTANT_STACK_BOTTOM_SHIFT_DOWN
-    STACK_BOTTOM_DISPLAY_STYLE_SHIFT_DOWN = HB_OT_MATH_CONSTANT_STACK_BOTTOM_DISPLAY_STYLE_SHIFT_DOWN
-    STACK_GAP_MIN = HB_OT_MATH_CONSTANT_STACK_GAP_MIN
-    STACK_DISPLAY_STYLE_GAP_MIN = HB_OT_MATH_CONSTANT_STACK_DISPLAY_STYLE_GAP_MIN
-    STRETCH_STACK_TOP_SHIFT_UP = HB_OT_MATH_CONSTANT_STRETCH_STACK_TOP_SHIFT_UP
-    STRETCH_STACK_BOTTOM_SHIFT_DOWN = HB_OT_MATH_CONSTANT_STRETCH_STACK_BOTTOM_SHIFT_DOWN
-    STRETCH_STACK_GAP_ABOVE_MIN = HB_OT_MATH_CONSTANT_STRETCH_STACK_GAP_ABOVE_MIN
-    STRETCH_STACK_GAP_BELOW_MIN = HB_OT_MATH_CONSTANT_STRETCH_STACK_GAP_BELOW_MIN
-    FRACTION_NUMERATOR_SHIFT_UP = HB_OT_MATH_CONSTANT_FRACTION_NUMERATOR_SHIFT_UP
-    FRACTION_NUMERATOR_DISPLAY_STYLE_SHIFT_UP = HB_OT_MATH_CONSTANT_FRACTION_NUMERATOR_DISPLAY_STYLE_SHIFT_UP
-    FRACTION_DENOMINATOR_SHIFT_DOWN = HB_OT_MATH_CONSTANT_FRACTION_DENOMINATOR_SHIFT_DOWN
-    FRACTION_DENOMINATOR_DISPLAY_STYLE_SHIFT_DOWN = HB_OT_MATH_CONSTANT_FRACTION_DENOMINATOR_DISPLAY_STYLE_SHIFT_DOWN
-    FRACTION_NUMERATOR_GAP_MIN = HB_OT_MATH_CONSTANT_FRACTION_NUMERATOR_GAP_MIN
-    FRACTION_NUM_DISPLAY_STYLE_GAP_MIN = HB_OT_MATH_CONSTANT_FRACTION_NUM_DISPLAY_STYLE_GAP_MIN
-    FRACTION_RULE_THICKNESS = HB_OT_MATH_CONSTANT_FRACTION_RULE_THICKNESS
-    FRACTION_DENOMINATOR_GAP_MIN = HB_OT_MATH_CONSTANT_FRACTION_DENOMINATOR_GAP_MIN
-    FRACTION_DENOM_DISPLAY_STYLE_GAP_MIN = HB_OT_MATH_CONSTANT_FRACTION_DENOM_DISPLAY_STYLE_GAP_MIN
-    SKEWED_FRACTION_HORIZONTAL_GAP = HB_OT_MATH_CONSTANT_SKEWED_FRACTION_HORIZONTAL_GAP
-    SKEWED_FRACTION_VERTICAL_GAP = HB_OT_MATH_CONSTANT_SKEWED_FRACTION_VERTICAL_GAP
-    OVERBAR_VERTICAL_GAP = HB_OT_MATH_CONSTANT_OVERBAR_VERTICAL_GAP
-    OVERBAR_RULE_THICKNESS = HB_OT_MATH_CONSTANT_OVERBAR_RULE_THICKNESS
-    OVERBAR_EXTRA_ASCENDER = HB_OT_MATH_CONSTANT_OVERBAR_EXTRA_ASCENDER
-    UNDERBAR_VERTICAL_GAP = HB_OT_MATH_CONSTANT_UNDERBAR_VERTICAL_GAP
-    UNDERBAR_RULE_THICKNESS = HB_OT_MATH_CONSTANT_UNDERBAR_RULE_THICKNESS
-    UNDERBAR_EXTRA_DESCENDER = HB_OT_MATH_CONSTANT_UNDERBAR_EXTRA_DESCENDER
-    RADICAL_VERTICAL_GAP = HB_OT_MATH_CONSTANT_RADICAL_VERTICAL_GAP
-    RADICAL_DISPLAY_STYLE_VERTICAL_GAP = HB_OT_MATH_CONSTANT_RADICAL_DISPLAY_STYLE_VERTICAL_GAP
-    RADICAL_RULE_THICKNESS = HB_OT_MATH_CONSTANT_RADICAL_RULE_THICKNESS
-    RADICAL_EXTRA_ASCENDER = HB_OT_MATH_CONSTANT_RADICAL_EXTRA_ASCENDER
-    RADICAL_KERN_BEFORE_DEGREE = HB_OT_MATH_CONSTANT_RADICAL_KERN_BEFORE_DEGREE
-    RADICAL_KERN_AFTER_DEGREE = HB_OT_MATH_CONSTANT_RADICAL_KERN_AFTER_DEGREE
-    RADICAL_DEGREE_BOTTOM_RAISE_PERCENT = HB_OT_MATH_CONSTANT_RADICAL_DEGREE_BOTTOM_RAISE_PERCENT
-
+@deprecated("Font.get_math_constant()")
 def ot_math_get_constant(font: Font, constant: OTMathConstant) -> int:
-    if constant >= len(OTMathConstant):
-        raise ValueError("invalid constant")
-    return hb_ot_math_get_constant(font._hb_font, constant)
+    return font.get_math_constant(constant)
 
+@deprecated("Font.get_math_glyph_italics_correction()")
 def ot_math_get_glyph_italics_correction(font: Font, glyph: int) -> int:
-    return hb_ot_math_get_glyph_italics_correction(font._hb_font, glyph)
+    return font.get_math_glyph_italics_correction(glyph)
 
+@deprecated("Font.get_math_glyph_top_accent_attachment()")
 def ot_math_get_glyph_top_accent_attachment(font: Font, glyph: int) -> int:
-    return hb_ot_math_get_glyph_top_accent_attachment(font._hb_font, glyph)
+    return font.get_math_glyph_top_accent_attachment(glyph)
 
+@deprecated("Face.is_glyph_extended_math_shape()")
 def ot_math_is_glyph_extended_shape(face: Face, glyph: int) -> bool:
-    return hb_ot_math_is_glyph_extended_shape(face._hb_face, glyph)
+    return face.is_glyph_extended_math_shape(glyph)
 
+@deprecated("Font.get_math_min_connector_overlap()")
 def ot_math_get_min_connector_overlap(font: Font, direction: str) -> int:
-    cdef bytes packed = direction.encode()
-    cdef char* cstr = packed
-    cdef hb_direction_t hb_direction = hb_direction_from_string(cstr, -1)
-    return hb_ot_math_get_min_connector_overlap(font._hb_font, hb_direction)
+    return font.get_math_min_connector_overlap(direction)
 
-class OTMathKern(IntEnum):
-    TOP_RIGHT = HB_OT_MATH_KERN_TOP_RIGHT
-    TOP_LEFT = HB_OT_MATH_KERN_TOP_LEFT
-    BOTTOM_RIGHT = HB_OT_MATH_KERN_BOTTOM_RIGHT
-    BOTTOM_LEFT = HB_OT_MATH_KERN_BOTTOM_LEFT
-
+@deprecated("Font.get_math_glyph_kerning()")
 def ot_math_get_glyph_kerning(font: Font,
                               glyph: int,
                               kern: OTMathKern,
                               int correction_height) -> int:
-    if kern >= len(OTMathKern):
-        raise ValueError("invalid kern")
-    return hb_ot_math_get_glyph_kerning(font._hb_font, glyph, kern, correction_height)
+    return font.get_math_glyph_kerning(glyph, kern, correction_height)
 
-OTMathKernEntry = namedtuple("OTMathKernEntry", ["max_correction_height", "kern_value"])
-
+@deprecated("Font.get_math_glyph_kernings()")
 def ot_math_get_glyph_kernings(font: Font,
                                glyph: int,
                                kern: OTMathKern) -> List[OTMathKernEntry]:
-    if kern >= len(OTMathKern):
-        raise ValueError("invalid kern")
-    cdef unsigned int count = STATIC_ARRAY_SIZE
-    cdef hb_ot_math_kern_entry_t kerns_array[STATIC_ARRAY_SIZE]
-    cdef list kerns = []
-    cdef unsigned int i
-    cdef unsigned int start_offset = 0
-    while count == STATIC_ARRAY_SIZE:
-        hb_ot_math_get_glyph_kernings(font._hb_font, glyph, kern, start_offset,
-            &count, kerns_array)
-        for i in range(count):
-            kerns.append(OTMathKernEntry(kerns_array[i].max_correction_height, kerns_array[i].kern_value))
-        start_offset += count
-    return kerns
+    return font.get_math_glyph_kernings(glyph, kern)
 
-OTMathGlyphVariant = namedtuple("OTMathGlyphVariant", ["glyph", "advance"])
-
+@deprecated("Font.get_math_glyph_variants()")
 def ot_math_get_glyph_variants(font: Font, glyph: int, direction: str) -> List[OTMathGlyphVariant]:
-    cdef bytes packed = direction.encode()
-    cdef char* cstr = packed
-    cdef hb_direction_t hb_direction = hb_direction_from_string(cstr, -1)
-    cdef unsigned int count = STATIC_ARRAY_SIZE
-    cdef hb_ot_math_glyph_variant_t variants_array[STATIC_ARRAY_SIZE]
-    cdef list variants = []
-    cdef unsigned int i
-    cdef unsigned int start_offset = 0
-    while count == STATIC_ARRAY_SIZE:
-        hb_ot_math_get_glyph_variants(font._hb_font, glyph, hb_direction, start_offset,
-            &count, variants_array)
-        for i in range(count):
-            variants.append(OTMathGlyphVariant(variants_array[i].glyph, variants_array[i].advance))
-        start_offset += count
-    return variants
+    return font.get_math_glyph_variants(glyph, direction)
 
-class OTMathGlyphPartFlags(IntFlag):
-    EXTENDER = HB_OT_MATH_GLYPH_PART_FLAG_EXTENDER
-
-OTMathGlyphPart = namedtuple(
-    "OTMathGlyphPart",
-    ["glyph", "start_connector_length", "end_connector_length", "full_advance", "flags"]
-)
-
+@deprecated("Font.get_math_glyph_assembly()")
 def ot_math_get_glyph_assembly(font: Font,
                                glyph: int,
                                direction: str) -> Tuple[List[OTMathGlyphPart], int]:
-    cdef bytes packed = direction.encode()
-    cdef char* cstr = packed
-    cdef hb_direction_t hb_direction = hb_direction_from_string(cstr, -1)
-    cdef unsigned int count = STATIC_ARRAY_SIZE
-    cdef hb_ot_math_glyph_part_t assembly_array[STATIC_ARRAY_SIZE]
-    cdef list assembly = []
-    cdef unsigned int i
-    cdef unsigned int start_offset = 0
-    cdef hb_position_t italics_correction = 0
-    while count == STATIC_ARRAY_SIZE:
-        hb_ot_math_get_glyph_assembly(font._hb_font,
-            glyph, hb_direction, start_offset,
-            &count, assembly_array, &italics_correction)
-        for i in range(count):
-            assembly.append(
-                OTMathGlyphPart(assembly_array[i].glyph, assembly_array[i].start_connector_length,
-                    assembly_array[i].end_connector_length, assembly_array[i].full_advance,
-                    OTMathGlyphPartFlags(assembly_array[i].flags)))
-        start_offset += count
-    return assembly, italics_correction
+    return font.get_math_glyph_assembly(glyph, direction)
 
 
-class OTMetricsTag(IntEnum):
-    HORIZONTAL_ASCENDER = HB_OT_METRICS_TAG_HORIZONTAL_ASCENDER
-    HORIZONTAL_DESCENDER = HB_OT_METRICS_TAG_HORIZONTAL_DESCENDER
-    HORIZONTAL_LINE_GAP = HB_OT_METRICS_TAG_HORIZONTAL_LINE_GAP
-    HORIZONTAL_CLIPPING_ASCENT = HB_OT_METRICS_TAG_HORIZONTAL_CLIPPING_ASCENT
-    HORIZONTAL_CLIPPING_DESCENT = HB_OT_METRICS_TAG_HORIZONTAL_CLIPPING_DESCENT
-    VERTICAL_ASCENDER = HB_OT_METRICS_TAG_VERTICAL_ASCENDER
-    VERTICAL_DESCENDER = HB_OT_METRICS_TAG_VERTICAL_DESCENDER
-    VERTICAL_LINE_GAP = HB_OT_METRICS_TAG_VERTICAL_LINE_GAP
-    HORIZONTAL_CARET_RISE = HB_OT_METRICS_TAG_HORIZONTAL_CARET_RISE
-    HORIZONTAL_CARET_RUN = HB_OT_METRICS_TAG_HORIZONTAL_CARET_RUN
-    HORIZONTAL_CARET_OFFSET = HB_OT_METRICS_TAG_HORIZONTAL_CARET_OFFSET
-    VERTICAL_CARET_RISE = HB_OT_METRICS_TAG_VERTICAL_CARET_RISE
-    VERTICAL_CARET_RUN = HB_OT_METRICS_TAG_VERTICAL_CARET_RUN
-    VERTICAL_CARET_OFFSET = HB_OT_METRICS_TAG_VERTICAL_CARET_OFFSET
-    X_HEIGHT = HB_OT_METRICS_TAG_X_HEIGHT
-    CAP_HEIGHT = HB_OT_METRICS_TAG_CAP_HEIGHT
-    SUBSCRIPT_EM_X_SIZE = HB_OT_METRICS_TAG_SUBSCRIPT_EM_X_SIZE
-    SUBSCRIPT_EM_Y_SIZE = HB_OT_METRICS_TAG_SUBSCRIPT_EM_Y_SIZE
-    SUBSCRIPT_EM_X_OFFSET = HB_OT_METRICS_TAG_SUBSCRIPT_EM_X_OFFSET
-    SUBSCRIPT_EM_Y_OFFSET = HB_OT_METRICS_TAG_SUBSCRIPT_EM_Y_OFFSET
-    SUPERSCRIPT_EM_X_SIZE = HB_OT_METRICS_TAG_SUPERSCRIPT_EM_X_SIZE
-    SUPERSCRIPT_EM_Y_SIZE = HB_OT_METRICS_TAG_SUPERSCRIPT_EM_Y_SIZE
-    SUPERSCRIPT_EM_X_OFFSET = HB_OT_METRICS_TAG_SUPERSCRIPT_EM_X_OFFSET
-    SUPERSCRIPT_EM_Y_OFFSET = HB_OT_METRICS_TAG_SUPERSCRIPT_EM_Y_OFFSET
-    STRIKEOUT_SIZE = HB_OT_METRICS_TAG_STRIKEOUT_SIZE
-    STRIKEOUT_OFFSET = HB_OT_METRICS_TAG_STRIKEOUT_OFFSET
-    UNDERLINE_SIZE = HB_OT_METRICS_TAG_UNDERLINE_SIZE
-    UNDERLINE_OFFSET = HB_OT_METRICS_TAG_UNDERLINE_OFFSET
-
+@deprecated("Font.get_metric_position()")
 def ot_metrics_get_position(font: Font,
                             tag: OTMetricsTag) -> int:
-    cdef hb_position_t hb_position
-    cdef hb_bool_t success
-    if hb_ot_metrics_get_position(font._hb_font, tag, &hb_position):
-        return hb_position
-    return None
+    return font.get_metric_position(tag)
 
+@deprecated("Font.get_metric_position_with_fallback()")
 def ot_metrics_get_position_with_fallback(font: Font,
                                           tag: OTMetricsTag) -> int:
-    cdef hb_position_t hb_position
-    hb_ot_metrics_get_position_with_fallback(font._hb_font,
-                                                       tag,
-                                                       &hb_position)
-    return hb_position
+    return font.get_metric_position_with_fallback(tag)
 
+@deprecated("Font.get_metric_variation()")
 def ot_metrics_get_variation(font: Font,
                              tag: OTMetricsTag) -> float:
-    return hb_ot_metrics_get_variation(font._hb_font, tag)
+    return font.get_metric_variation(tag)
 
+@deprecated("Font.get_metric_x_variation()")
 def ot_metrics_get_x_variation(font: Font,
                                tag: OTMetricsTag) -> int:
-    return hb_ot_metrics_get_x_variation(font._hb_font, tag)
+    return font.get_metric_x_variation(tag)
 
+@deprecated("Font.get_metric_y_variation()")
 def ot_metrics_get_y_variation(font: Font,
                                tag: OTMetricsTag) -> int:
-    return hb_ot_metrics_get_y_variation(font._hb_font, tag)
+    return font.get_metric_y_variation(tag)
+
 
 def ot_font_set_funcs(Font font):
     hb_ot_font_set_funcs(font._hb_font)
@@ -1794,21 +2066,10 @@ class PaintCompositeMode(IntEnum):
     HSL_COLOR = HB_PAINT_COMPOSITE_MODE_HSL_COLOR
     HSL_LUMINOSITY = HB_PAINT_COMPOSITE_MODE_HSL_LUMINOSITY
 
-
-class Color(namedtuple("Color", ["red", "green", "blue", "alpha"])):
-    def to_int(self) -> int:
-        return HB_COLOR(self.blue, self.green, self.red, self.alpha)
-
-    @staticmethod
-    def from_int(value: int) -> Color:
-        r = hb_color_get_red(value)
-        g = hb_color_get_green(value)
-        b = hb_color_get_blue(value)
-        a = hb_color_get_alpha(value)
-        return Color(r, g, b, a)
-
-
-ColorStop = namedtuple("ColorStop", ["offset", "is_foreground", "color"])
+class ColorStop(NamedTuple):
+    offset: float
+    is_foreground: bool
+    color: Color
 
 
 class PaintExtend(IntEnum):
@@ -2263,31 +2524,19 @@ cdef class DrawFuncs:
     cdef object _cubic_to_func
     cdef object _quadratic_to_func
     cdef object _close_path_func
-    cdef int _warned
 
     def __cinit__(self):
         self._hb_drawfuncs = hb_draw_funcs_create()
-        self._warned = False
 
     def __dealloc__(self):
         hb_draw_funcs_destroy(self._hb_drawfuncs)
 
+    @deprecated("Font.draw_glyph()")
     def get_glyph_shape(self, font: Font, gid: int):
-        if not self._warned:
-            warnings.warn(
-                "get_glyph_shape() is deprecated, use Font.draw_glyph() instead",
-                DeprecationWarning,
-            )
-            self._warned = True
         font.draw_glyph(gid, self)
 
+    @deprecated("Font.draw_glyph()")
     def draw_glyph(self, font: Font, gid: int, draw_data: object = None):
-        if not self._warned:
-            warnings.warn(
-                "draw_glyph() is deprecated, use Font.draw_glyph() instead",
-                DeprecationWarning,
-            )
-            self._warned = True
         font.draw_glyph(gid, self, draw_data)
 
     def set_move_to_func(self,
