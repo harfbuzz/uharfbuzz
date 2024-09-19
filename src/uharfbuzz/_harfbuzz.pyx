@@ -2006,32 +2006,6 @@ def ot_math_get_glyph_assembly(font: Font,
     return font.get_math_glyph_assembly(glyph, direction)
 
 
-@deprecated("Font.get_metric_position()")
-def ot_metrics_get_position(font: Font,
-                            tag: OTMetricsTag) -> int:
-    return font.get_metric_position(tag)
-
-@deprecated("Font.get_metric_position_with_fallback()")
-def ot_metrics_get_position_with_fallback(font: Font,
-                                          tag: OTMetricsTag) -> int:
-    return font.get_metric_position_with_fallback(tag)
-
-@deprecated("Font.get_metric_variation()")
-def ot_metrics_get_variation(font: Font,
-                             tag: OTMetricsTag) -> float:
-    return font.get_metric_variation(tag)
-
-@deprecated("Font.get_metric_x_variation()")
-def ot_metrics_get_x_variation(font: Font,
-                               tag: OTMetricsTag) -> int:
-    return font.get_metric_x_variation(tag)
-
-@deprecated("Font.get_metric_y_variation()")
-def ot_metrics_get_y_variation(font: Font,
-                               tag: OTMetricsTag) -> int:
-    return font.get_metric_y_variation(tag)
-
-
 def ot_font_set_funcs(Font font):
     hb_ot_font_set_funcs(font._hb_font)
 
