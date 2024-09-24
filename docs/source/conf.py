@@ -9,7 +9,7 @@
 
 project = "uharfbuzz"
 copyright = "2024, Adrien Tétar"
-author = "Adrien Tétar"
+author = "HarfBuzz Contributors"
 
 # -- General configuration ---------------------------------------------------
 # https://www.sphinx-doc.org/en/master/usage/configuration.html#general-configuration
