@@ -121,7 +121,7 @@ def _configure_extensions_with_vendored_libs() -> List[Extension]:
         include_dirs=["harfbuzz/src"],
         sources=[
             "harfbuzz/src/harfbuzz-subset.cc",
-            "harfbuzz/src/hb-coretext.cc",
+            "harfbuzz/src/hb-coretext-shape.cc",
             "harfbuzz/src/hb-directwrite.cc",
             "harfbuzz/src/hb-uniscribe.cc",
             "src/uharfbuzz/_harfbuzz.pyx",
