@@ -12,7 +12,7 @@ build:
 
 # Build documentation in the "docs/" directory with Sphinx
 sphinx:
-  configuration: docs/conf.py
+  configuration: docs/source/conf.py
   # Fail on all warnings to avoid broken references
   # TODO: Enable after README and repack_with_tag() warnings are corrected
   # fail_on_warning: true
