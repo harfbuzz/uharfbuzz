@@ -351,8 +351,6 @@ cdef class Buffer:
 
     def add_str(self, text: str,
                 item_offset: int = 0, item_length: int = -1) -> None:
-        # ensure unicode string is in the "canonical" representation
-        assert PyUnicode_IS_READY(text)
 
         cdef Py_ssize_t length = PyUnicode_GET_LENGTH(text)
         cdef int kind = PyUnicode_KIND(text)
