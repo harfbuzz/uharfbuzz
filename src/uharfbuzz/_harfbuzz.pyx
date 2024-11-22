@@ -870,7 +870,7 @@ cdef class Face:
             start_offset += language_count
         return tags
 
-    def get_table_script_tags(face: Face, tag: str) -> List[str]:
+    def get_table_script_tags(self, tag: str) -> List[str]:
         cdef bytes packed = tag.encode()
         cdef hb_tag_t hb_tag = hb_tag_from_string(<char*>packed, -1)
         cdef unsigned int script_count = STATIC_ARRAY_SIZE
@@ -881,7 +881,7 @@ cdef class Face:
         cdef unsigned int start_offset = 0
         while script_count == STATIC_ARRAY_SIZE:
             hb_ot_layout_table_get_script_tags(
-                face._hb_face,
+                self._hb_face,
                 hb_tag,
                 start_offset,
                 &script_count,
