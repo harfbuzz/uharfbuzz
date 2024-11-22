@@ -7,28 +7,17 @@ from .charfbuzz cimport *
 from libc.stdlib cimport free, malloc, calloc
 from libc.string cimport const_char
 from cpython.pycapsule cimport PyCapsule_GetPointer, PyCapsule_IsValid
+from cpython.unicode cimport (
+    PyUnicode_1BYTE_DATA, PyUnicode_2BYTE_DATA, PyUnicode_4BYTE_DATA,
+    PyUnicode_1BYTE_KIND, PyUnicode_2BYTE_KIND, PyUnicode_4BYTE_KIND,
+    PyUnicode_KIND, PyUnicode_GET_LENGTH
+)
 from typing import Callable, Dict, List, Sequence, Tuple, Union, NamedTuple
 from pathlib import Path
 from functools import wraps
 
 
 DEF STATIC_ARRAY_SIZE = 128
-
-
-cdef extern from "Python.h":
-    # PEP 393
-    bint PyUnicode_IS_READY(object u)
-    Py_ssize_t PyUnicode_GET_LENGTH(object u)
-    int PyUnicode_KIND(object u)
-    void* PyUnicode_DATA(object u)
-    ctypedef uint8_t Py_UCS1
-    ctypedef uint16_t Py_UCS2
-    Py_UCS1 PyUnicode_1BYTE_DATA(object u)
-    Py_UCS2 PyUnicode_2BYTE_DATA(object u)
-    Py_UCS4 PyUnicode_4BYTE_DATA(object u)
-    int PyUnicode_1BYTE_KIND
-    int PyUnicode_2BYTE_KIND
-    int PyUnicode_4BYTE_KIND
 
 
 cdef int msgcallback(hb_buffer_t *buffer, hb_font_t *font, const char* message, void* userdata) noexcept:
