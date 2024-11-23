@@ -273,7 +273,8 @@ class TestFace:
 
     def test_named_instances(self, mutatorsans):
         face = mutatorsans.face
-        assert face.named_instances == [
+        named_instances = face.named_instances
+        assert named_instances == [
             (258, 259, [0.0, 0.0]),
             (260, 261, [0.0, 1000.0]),
             (262, 263, [1000.0, 0.0]),
@@ -285,6 +286,17 @@ class TestFace:
             (274, 65535, [93.052001953125, 658.5969848632812]),
             (275, 276, [328.0, 500.0]),
         ]
+
+        assert face.get_name(named_instances[0].subfamily_name_id) == "LightCondensed"
+        assert (
+            face.get_name(named_instances[0].postscript_name_id)
+            == "MutatorMathTest-LightCondensed"
+        )
+        assert face.get_name(named_instances[-1].subfamily_name_id) == "Medium_Wide_I"
+        assert (
+            face.get_name(named_instances[-1].postscript_name_id)
+            == "MutatorMathTest-Medium_Narrow_I"
+        )
 
     def test_has_math_data(self, blankfont, mathfont):
         assert blankfont.face.has_math_data == False
@@ -672,6 +684,106 @@ class TestFace:
 
     def test_has_no_layout_substitution(self, mathfont):
         assert mathfont.face.has_layout_substitution == False
+
+    @pytest.mark.parametrize(
+        "name_id, language, expected",
+        [
+            (hb.OTNameIdPredefined.FULL_NAME, None, "Adobe Blank"),
+            (hb.OTNameIdPredefined.FULL_NAME, "ar", None),
+            (hb.OTNameIdPredefined.INVALID, "en", None),
+            (hb.OTNameIdPredefined.INVALID, None, None),
+            (hb.OTNameIdPredefined.DESCRIPTION, None, None),
+        ],
+    )
+    def test_get_name(self, blankfont, name_id, language, expected):
+        assert blankfont.face.get_name(name_id, language) == expected
+
+    def test_list_names(self, blankfont):
+        face = blankfont.face
+        names = face.list_names()
+        assert names == [
+            (hb.OTNameIdPredefined.COPYRIGHT, "en"),
+            (hb.OTNameIdPredefined.FONT_FAMILY, "en"),
+            (hb.OTNameIdPredefined.FONT_SUBFAMILY, "en"),
+            (hb.OTNameIdPredefined.UNIQUE_ID, "en"),
+            (hb.OTNameIdPredefined.FULL_NAME, "en"),
+            (hb.OTNameIdPredefined.VERSION_STRING, "en"),
+            (hb.OTNameIdPredefined.POSTSCRIPT_NAME, "en"),
+        ]
+
+        assert [face.get_name(*name) for name in names] == [
+            "Copyright © 2013, 2015 Adobe Systems Incorporated "
+            "(http://www.adobe.com/).",
+            "Adobe Blank",
+            "Regular",
+            "1.045;ADBO;AdobeBlank;ADOBE",
+            "Adobe Blank",
+            "Version 1.045;PS 1.045;hotconv 1.0.82;makeotf.lib2.5.63406",
+            "AdobeBlank",
+        ]
+
+    def test_list_names_with_user_names(self, mutatorsans):
+        face = mutatorsans.face
+        names = face.list_names()
+        assert names == [
+            (hb.OTNameIdPredefined.COPYRIGHT, "en"),
+            (hb.OTNameIdPredefined.FONT_SUBFAMILY, "en"),
+            (hb.OTNameIdPredefined.UNIQUE_ID, "en"),
+            (hb.OTNameIdPredefined.FULL_NAME, "en"),
+            (hb.OTNameIdPredefined.VERSION_STRING, "en"),
+            (hb.OTNameIdPredefined.POSTSCRIPT_NAME, "en"),
+            (256, "en"),
+            (257, "en"),
+            (258, "en"),
+            (259, "en"),
+            (260, "en"),
+            (261, "en"),
+            (262, "en"),
+            (263, "en"),
+            (264, "en"),
+            (265, "en"),
+            (266, "en"),
+            (267, "en"),
+            (268, "en"),
+            (269, "en"),
+            (270, "en"),
+            (271, "en"),
+            (272, "en"),
+            (273, "en"),
+            (274, "en"),
+            (275, "en"),
+            (276, "en"),
+        ]
+
+        assert [face.get_name(*name) for name in names] == [
+            "License same as MutatorMath. BSD 3-clause. [test-token: C]",
+            "Regular",
+            "1.002;LTTR;MutatorMathTest-LightCondensed",
+            "MutatorMathTest LightCondensed",
+            "Version 1.002",
+            "MutatorMathTest-LightCondensed",
+            "Width",
+            "Weight",
+            "LightCondensed",
+            "MutatorMathTest-LightCondensed",
+            "BoldCondensed",
+            "MutatorMathTest-BoldCondensed",
+            "LightWide",
+            "MutatorMathTest-LightWide",
+            "BoldWide",
+            "MutatorMathTest-BoldWide",
+            "Medium_Narrow_I",
+            "MutatorMathTest-Medium_Narrow_I",
+            "Two",
+            "MutatorMathTest-Two",
+            "One",
+            "MutatorMathTest-One",
+            "width_794.52_weight_775.61",
+            "MutatorSans-width_794.52_weight_775.61",
+            "width_93.05_weight_658.60",
+            "Medium_Wide_I",
+            "MutatorMathTest-Medium_Narrow_I",
+        ]
 
 
 class TestFont:

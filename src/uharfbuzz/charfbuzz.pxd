@@ -984,6 +984,32 @@ cdef extern from "hb-ot.h":
         HB_OT_NAME_ID_VARIATIONS_PS_PREFIX
         HB_OT_NAME_ID_INVALID
 
+    ctypedef struct hb_ot_name_entry_t:
+        hb_ot_name_id_t name_id
+        hb_language_t language
+
+    const hb_ot_name_entry_t *hb_ot_name_list_names(
+        hb_face_t *face,
+        unsigned int *num_entries)  # OUT. May be NULL.
+    unsigned int hb_ot_name_get_utf16(
+        hb_face_t *face,
+        hb_ot_name_id_t name_id,
+        hb_language_t language,
+        unsigned int *text_size,  # IN/OUT. May be NULL.
+        uint16_t *text)  # OUT.
+    unsigned int hb_ot_name_get_utf32(
+        hb_face_t *face,
+        hb_ot_name_id_t name_id,
+        hb_language_t language,
+        unsigned int *text_size,  # IN/OUT. May be NULL.
+        uint32_t *text)  # OUT.
+    unsigned int hb_ot_name_get_utf8(
+        hb_face_t *face,
+        hb_ot_name_id_t name_id,
+        hb_language_t language,
+        unsigned int *text_size,  # IN/OUT. May be NULL.
+        char *text)  # OUT.
+
     # hb-ot-color.h
     hb_bool_t hb_ot_color_has_palettes(hb_face_t *face)
     unsigned int hb_ot_color_palette_get_count(hb_face_t *face)
