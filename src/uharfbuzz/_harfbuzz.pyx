@@ -10,7 +10,7 @@ from cpython.pycapsule cimport PyCapsule_GetPointer, PyCapsule_IsValid
 from cpython.unicode cimport (
     PyUnicode_1BYTE_DATA, PyUnicode_2BYTE_DATA, PyUnicode_4BYTE_DATA,
     PyUnicode_1BYTE_KIND, PyUnicode_2BYTE_KIND, PyUnicode_4BYTE_KIND,
-    PyUnicode_KIND, PyUnicode_GET_LENGTH
+    PyUnicode_KIND, PyUnicode_GET_LENGTH, PyUnicode_FromKindAndData
 )
 from typing import Callable, Dict, List, Sequence, Tuple, Union, NamedTuple
 from pathlib import Path
@@ -517,6 +517,40 @@ cdef hb_blob_t* _reference_table_func(
         table, len(table), HB_MEMORY_MODE_READONLY, NULL, NULL)
 
 
+class OTNameIdPredefined(IntEnum):
+    COPYRIGHT = HB_OT_NAME_ID_COPYRIGHT
+    FONT_FAMILY = HB_OT_NAME_ID_FONT_FAMILY
+    FONT_SUBFAMILY = HB_OT_NAME_ID_FONT_SUBFAMILY
+    UNIQUE_ID = HB_OT_NAME_ID_UNIQUE_ID
+    FULL_NAME = HB_OT_NAME_ID_FULL_NAME
+    VERSION_STRING = HB_OT_NAME_ID_VERSION_STRING
+    POSTSCRIPT_NAME = HB_OT_NAME_ID_POSTSCRIPT_NAME
+    TRADEMARK = HB_OT_NAME_ID_TRADEMARK
+    MANUFACTURER = HB_OT_NAME_ID_MANUFACTURER
+    DESIGNER = HB_OT_NAME_ID_DESIGNER
+    DESCRIPTION = HB_OT_NAME_ID_DESCRIPTION
+    VENDOR_URL = HB_OT_NAME_ID_VENDOR_URL
+    DESIGNER_URL = HB_OT_NAME_ID_DESIGNER_URL
+    LICENSE = HB_OT_NAME_ID_LICENSE
+    LICENSE_URL = HB_OT_NAME_ID_LICENSE_URL
+    TYPOGRAPHIC_FAMILY = HB_OT_NAME_ID_TYPOGRAPHIC_FAMILY
+    TYPOGRAPHIC_SUBFAMILY = HB_OT_NAME_ID_TYPOGRAPHIC_SUBFAMILY
+    MAC_FULL_NAME = HB_OT_NAME_ID_MAC_FULL_NAME
+    SAMPLE_TEXT = HB_OT_NAME_ID_SAMPLE_TEXT
+    CID_FINDFONT_NAME = HB_OT_NAME_ID_CID_FINDFONT_NAME
+    WWS_FAMILY = HB_OT_NAME_ID_WWS_FAMILY
+    WWS_SUBFAMILY = HB_OT_NAME_ID_WWS_SUBFAMILY
+    LIGHT_BACKGROUND = HB_OT_NAME_ID_LIGHT_BACKGROUND
+    DARK_BACKGROUND = HB_OT_NAME_ID_DARK_BACKGROUND
+    VARIATIONS_PS_PREFIX = HB_OT_NAME_ID_VARIATIONS_PS_PREFIX
+    INVALID = HB_OT_NAME_ID_INVALID
+
+
+class OTNameEntry(NamedTuple):
+    name_id: OTNameIdPredefined | int
+    language: str | None
+
+
 cdef class Face:
     cdef hb_face_t* _hb_face
     cdef object _reference_table_func
@@ -880,6 +914,50 @@ cdef class Face:
                 tags.append(packed.decode())
             start_offset += script_count
         return tags
+
+    def list_names(self) -> List[OTNameEntry]:
+        cdef list ret = []
+        cdef unsigned int num_entries
+        cdef const hb_ot_name_entry_t* entries
+        cdef unsigned int i
+        cdef const_char *cstr
+        cdef bytes packed
+
+        entries = hb_ot_name_list_names(self._hb_face, &num_entries)
+        for i in range(num_entries):
+            cstr = hb_language_to_string(entries[i].language)
+            if cstr is NULL:
+                language = None
+            else:
+                packed = cstr
+                language = packed.decode()
+            if entries[i].name_id in iter(OTNameIdPredefined):
+                name_id = OTNameIdPredefined(entries[i].name_id)
+            else:
+                name_id = entries[i].name_id
+            ret.append(OTNameEntry(name_id=name_id, language=language))
+        return ret
+
+    def get_name(self, name_id: OTNameIdPredefined | int, language: str | None = None) -> str | None:
+        cdef bytes packed
+        cdef hb_language_t lang
+        cdef uint32_t *text
+        cdef unsigned int length
+
+        if language is None:
+            lang = <hb_language_t>0  # HB_LANGUAGE_INVALID
+        else:
+            packed = language.encode()
+            lang = hb_language_from_string(<char*>packed, -1)
+
+        length = hb_ot_name_get_utf32(self._hb_face, name_id, lang, NULL, NULL)
+        if length:
+            length += 1  # for the null terminator
+            text = <uint32_t*>malloc(length * sizeof(uint32_t))
+            hb_ot_name_get_utf32(self._hb_face, name_id, lang, &length, text)
+            return PyUnicode_FromKindAndData(PyUnicode_4BYTE_KIND, text, length)
+        return None
+
 
 class GlyphExtents(NamedTuple):
     x_bearing: int
