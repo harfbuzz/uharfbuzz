@@ -226,6 +226,7 @@ cdef extern from "hb.h":
     hb_face_t* hb_face_create_for_tables(
         hb_reference_table_func_t reference_table_func,
         void* user_data, hb_destroy_func_t destroy)
+    unsigned int hb_face_count(hb_blob_t* blob)
     unsigned int hb_face_get_index(const hb_face_t* face)
     void hb_face_set_index(hb_face_t* face, unsigned int index)
     unsigned int hb_face_get_upem(hb_face_t* face)
