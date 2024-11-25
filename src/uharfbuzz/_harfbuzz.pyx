@@ -601,6 +601,10 @@ cdef class Face:
         return inst
 
     @property
+    def count(self) -> int:
+        return hb_face_count(self._blob._hb_blob)
+
+    @property
     def index(self) -> int:
         return hb_face_get_index(self._hb_face)
 

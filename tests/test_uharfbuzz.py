@@ -231,6 +231,7 @@ class TestFace:
     def test_properties(self, blankfont):
         face = blankfont.face
 
+        assert face.count > 0
         assert face.index == 0
         assert face.upem == 1000
         assert face.glyph_count == 9
