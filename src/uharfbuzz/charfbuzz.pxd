@@ -891,6 +891,15 @@ cdef extern from "hb.h":
     hb_bool_t hb_set_previous_range(const hb_set_t* set, hb_codepoint_t* first, hb_codepoint_t* last)
     unsigned int hb_set_next_many(const hb_set_t* set, hb_codepoint_t codepoint, hb_codepoint_t* out, unsigned int size)
 
+    # hb-style.h
+    ctypedef enum hb_style_tag_t:
+        HB_STYLE_TAG_ITALIC
+        HB_STYLE_TAG_OPTICAL_SIZE
+        HB_STYLE_TAG_SLANT_ANGLE
+        HB_STYLE_TAG_SLANT_RATIO
+        HB_STYLE_TAG_WIDTH
+        HB_STYLE_TAG_WEIGHT
+    float hb_style_get_value(hb_font_t *font, hb_style_tag_t style_tag)
 
 cdef extern from "hb-ot.h":
     # hb-ot-layout.h

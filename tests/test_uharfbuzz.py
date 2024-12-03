@@ -904,6 +904,15 @@ class TestFont:
         value = blankfont.get_layout_baseline(baseline_tag, direction, script_tag, "")
         assert value == expected_value
 
+    def test_get_style_value(
+        self, blankfont
+    ):
+        assert blankfont.get_style_value(hb.StyleTag.ITALIC) == 0.0
+        assert blankfont.get_style_value(hb.StyleTag.OPTICAL_SIZE) == 12.0
+        assert blankfont.get_style_value(hb.StyleTag.SLANT_ANGLE) == 0.0
+        assert blankfont.get_style_value(hb.StyleTag.SLANT_RATIO) == -0.0
+        assert blankfont.get_style_value(hb.StyleTag.WIDTH) == 100.0
+        assert blankfont.get_style_value(hb.StyleTag.WEIGHT) == 400.0
 
 class TestShape:
     @pytest.mark.parametrize(
