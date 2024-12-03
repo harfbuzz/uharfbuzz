@@ -1094,6 +1094,13 @@ class OTMetricsTag(IntEnum):
     UNDERLINE_SIZE = HB_OT_METRICS_TAG_UNDERLINE_SIZE
     UNDERLINE_OFFSET = HB_OT_METRICS_TAG_UNDERLINE_OFFSET
 
+class StyleTag(IntEnum):
+    ITALIC = HB_STYLE_TAG_ITALIC
+    OPTICAL_SIZE = HB_STYLE_TAG_OPTICAL_SIZE
+    SLANT_ANGLE = HB_STYLE_TAG_SLANT_ANGLE
+    SLANT_RATIO = HB_STYLE_TAG_SLANT_RATIO
+    WIDTH = HB_STYLE_TAG_WIDTH
+    WEIGHT = HB_STYLE_TAG_WEIGHT
 
 cdef class Font:
     cdef hb_font_t* _hb_font
@@ -1574,6 +1581,9 @@ cdef class Font:
         else:
             return None
 
+    # style
+    def get_style_value(self, tag: StyleTag) -> float:
+        return hb_style_get_value(self._hb_font, tag)
 
 cdef struct _pen_methods:
     void *moveTo
