@@ -3,7 +3,7 @@ from pathlib import Path
 import sys
 import platform
 import pytest
-
+import struct
 
 TESTDATA = Path(__file__).parent / "data"
 ADOBE_BLANK_TTF_PATH = TESTDATA / "AdobeBlank.subset.ttf"
@@ -786,6 +786,177 @@ class TestFace:
             "MutatorMathTest-Medium_Narrow_I",
         ]
 
+    def test_get_table_blob(self, blankfont):
+        head_format = {
+            # (offset, length, type)
+            "majorVersion": (0, 2, "H"),  # uint16
+            "minorVersion": (2, 2, "H"),  # uint16
+            "fontRevision": (4, 4, "f"),  # Fixed (float)
+            "checksumAdjustment": (8, 4, "I"),  # uint32
+            "magicNumber": (12, 4, "I"),  # uint32
+            "flags": (16, 2, "H"),  # uint16
+            "unitsPerEm": (18, 2, "H"),  # uint16
+            "created": (20, 8, "Q"),  # LONGDATETIME (8 bytes, signed long long)
+            "modified": (28, 8, "Q"),  # LONGDATETIME (8 bytes, signed long long)
+            "xMin": (36, 2, "h"),  # int16
+            "yMin": (38, 2, "h"),  # int16
+            "xMax": (40, 2, "h"),  # int16
+            "yMax": (42, 2, "h"),  # int16
+            "macStyle": (44, 2, "H"),  # uint16
+            "lowestRecPPEM": (46, 2, "H"),  # uint16
+            "fontDirectionHint": (48, 2, "h"),  # int16
+            "indexToLocFormat": (50, 2, "h"),  # int16
+            "glyphDataFormat": (52, 2, "h"),  # int16
+        }
+        os2_format = {
+            # (offset, length, type) V5
+            "version": (0, 2, "H"),  # uint16
+            "xAvgCharWidth": (2, 2, "h"),  # int16
+            "usWeightClass": (4, 2, "H"),  # uint16
+            "usWidthClass": (6, 2, "H"),  # uint16
+            "fsType": (8, 2, "H"),  # uint16
+            "ySubscriptXSize": (10, 2, "h"),  # int16
+            "ySubscriptYSize": (12, 2, "h"),  # int16
+            "ySubscriptXOffset": (14, 2, "h"),  # int16
+            "ySubscriptYOffset": (16, 2, "h"),  # int16
+            "ySuperscriptXSize": (18, 2, "h"),  # int16
+            "ySuperscriptYSize": (20, 2, "h"),  # int16
+            "ySuperscriptXOffset": (22, 2, "h"),  # int16
+            "ySuperscriptYOffset": (24, 2, "h"),  # int16
+            "yStrikeoutSize": (26, 2, "h"),  # int16
+            "yStrikeoutPosition": (28, 2, "h"),  # int16
+            "sFamilyClass": (30, 2, "h"),  # int16
+            "panose": (32, 10, "10B"),  # PANOSE (10 bytes, binary data)
+            "ulUnicodeRange1": (42, 4, "I"),  # uint32
+            "ulUnicodeRange2": (46, 4, "I"),  # uint32
+            "ulUnicodeRange3": (50, 4, "I"),  # uint32
+            "ulUnicodeRange4": (54, 4, "I"),  # uint32
+            "achVendID": (58, 4, "4s"),  # String of 4 characters
+            "fsSelection": (62, 2, "H"),  # uint16
+            "usFirstCharIndex": (64, 2, "H"),  # uint16
+            "usLastCharIndex": (66, 2, "H"),  # uint16
+            "sTypoAscender": (68, 2, "h"),  # int16
+            "sTypoDescender": (70, 2, "h"),  # int16
+            "sTypoLineGap": (72, 2, "h"),  # int16
+            "usWinAscent": (74, 2, "H"),  # uint16
+            "usWinDescent": (76, 2, "H"),  # uint16
+            "ulCodePageRange1": (78, 4, "I"),  # uint32
+            "ulCodePageRange2": (82, 4, "I"),  # uint32
+            "sxHeight": (86, 2, "h"),  # int16
+            "sCapHeight": (88, 2, "h"),  # int16
+            "usDefaultChar": (90, 2, "H"),  # uint16
+            "usBreakChar": (92, 2, "H"),  # uint16
+            "usMaxContext": (94, 2, "H"),  # uint16
+            "usLowerOpticalPointSize": (96, 2, "H"),  # uint16
+            "usUpperOpticalPointSize": (98, 2, "H")  # uint16
+        }
+        table_mapper = {
+            "OS/2": os2_format,
+            "head": head_format,
+        }
+
+        def parse_table(table_bytes, table_name: str, tag_filter=None):
+            data = {}
+            table_format = table_mapper.get(table_name)
+            if not table_format:
+                raise ValueError(f"undefined table: {table_name}")
+
+            byte_parsers = {
+                "H": lambda bytes_data: int.from_bytes(bytes_data, byteorder='big'),
+                "h": lambda bytes_data: int.from_bytes(bytes_data, byteorder='big', signed=True),
+                "I": lambda bytes_data: int.from_bytes(bytes_data, byteorder='big'),
+                "4s": lambda bytes_data: bytes_data.decode('utf-8').strip('\x00'),
+                "10B": lambda bytes_data: tuple(bytes_data),
+                "f": lambda bytes_data: struct.unpack('>f', bytes_data)[0],
+                "Q": lambda bytes_data: struct.unpack('>q', bytes_data)[0],
+            }
+            if tag_filter:
+                tag_filter = set(tag_filter)
+                table_format = {k: v for k, v in table_format.items() if k in tag_filter}
+            for tag, (offset, length, fmt) in table_format.items():
+                byte_slice = table_bytes[offset:offset + length]
+                if fmt == 'f':
+                    raw_value = int.from_bytes(byte_slice, byteorder='big')
+                    value = raw_value / 65536.0
+                else:
+                    value = byte_parsers.get(fmt, lambda bytes_data: struct.unpack(fmt, bytes_data))(byte_slice)
+                data[tag] = value
+            return data
+
+        face = blankfont.face
+        if "OS/2" in face.table_tags:
+            blob = face.get_table_blob("OS/2")
+
+            table_data_filter = parse_table(blob.data, "OS/2", ["usWeightClass", "fsSelection"])
+            assert table_data_filter["usWeightClass"] == 400
+            assert table_data_filter["fsSelection"] == 64
+
+            table_data = parse_table(blob.data, "OS/2")
+            assert table_data == {'version': 3,
+                                  'xAvgCharWidth': 1000,
+                                  'usWeightClass': 400,
+                                  'usWidthClass': 5,
+                                  'fsType': 0,
+                                  'ySubscriptXSize': 650,
+                                  'ySubscriptYSize': 600,
+                                  'ySubscriptXOffset': 0,
+                                  'ySubscriptYOffset': 75,
+                                  'ySuperscriptXSize': 650,
+                                  'ySuperscriptYSize': 600,
+                                  'ySuperscriptXOffset': 0,
+                                  'ySuperscriptYOffset': 350,
+                                  'yStrikeoutSize': 50,
+                                  'yStrikeoutPosition': 220,
+                                  'sFamilyClass': 0,
+                                  'panose': (0, 0, 0, 0, 0, 0, 0, 0, 0, 0),
+                                  'ulUnicodeRange1': 515,
+                                  'ulUnicodeRange2': 33554432,
+                                  'ulUnicodeRange3': 0,
+                                  'ulUnicodeRange4': 0,
+                                  'achVendID': 'ADBO',
+                                  'fsSelection': 64,
+                                  'usFirstCharIndex': 97,
+                                  'usLastCharIndex': 65535,
+                                  'sTypoAscender': 880,
+                                  'sTypoDescender': -120,
+                                  'sTypoLineGap': 0,
+                                  'usWinAscent': 880,
+                                  'usWinDescent': 120,
+                                  'ulCodePageRange1': 1613693439,
+                                  'ulCodePageRange2': 0,
+                                  'sxHeight': 0,
+                                  'sCapHeight': 0,
+                                  'usDefaultChar': 0,
+                                  'usBreakChar': 32,
+                                  'usMaxContext': 3,
+                                  'usLowerOpticalPointSize': 0,
+                                  'usUpperOpticalPointSize': 0}
+
+        if "head" in face.table_tags:
+            blob = face.get_table_blob("head")
+
+            table_data_filter = parse_table(blob.data, "head", ["macStyle"])
+            assert table_data_filter["macStyle"] == 0
+
+            table_data = parse_table(blob.data, "head")
+            assert table_data == {'majorVersion': 1,
+                                  'minorVersion': 0,
+                                  'fontRevision': 1.0449981689453125,
+                                  'checksumAdjustment': 3927942351,
+                                  'magicNumber': 1594834165,
+                                  'flags': 3,
+                                  'unitsPerEm': 1000,
+                                  'created': 3511436787,
+                                  'modified': 3668103491,
+                                  'xMin': 0,
+                                  'yMin': 0,
+                                  'xMax': 0,
+                                  'yMax': 0,
+                                  'macStyle': 0,
+                                  'lowestRecPPEM': 3,
+                                  'fontDirectionHint': 2,
+                                  'indexToLocFormat': 0,
+                                  'glyphDataFormat': 0}
 
 class TestFont:
     def test_get_glyph_extents(self, opensans):
