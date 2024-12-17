@@ -786,6 +786,14 @@ class TestFace:
             "MutatorMathTest-Medium_Narrow_I",
         ]
 
+    def test_reference_table(self, blankfont):
+        face = blankfont.face
+        if "OS/2" in face.table_tags:
+            blob = face.reference_table("OS/2")
+            assert len(blob.data) == 96
+        if "head" in face.table_tags:
+            blob = face.reference_table("head")
+            assert len(blob.data) == 54
 
 class TestFont:
     def test_get_glyph_extents(self, opensans):
