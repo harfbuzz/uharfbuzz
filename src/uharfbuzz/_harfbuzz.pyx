@@ -635,6 +635,14 @@ cdef class Face:
             raise MemoryError()
         return Blob.from_ptr(blob)
 
+    def reference_table(self, tag: str) -> Blob:
+        cdef bytes packed = tag.encode()
+        cdef hb_tag_t hb_tag = hb_tag_from_string(<char*>packed, -1)
+        cdef hb_blob_t* blob = hb_face_reference_table(self._hb_face, hb_tag)
+        if blob is NULL:
+            raise MemoryError()
+        return Blob.from_ptr(blob)
+
     @property
     def table_tags(self) -> List[str]:
         cdef unsigned int tag_count = STATIC_ARRAY_SIZE
