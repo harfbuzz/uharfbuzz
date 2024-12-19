@@ -786,7 +786,7 @@ class TestFace:
             "MutatorMathTest-Medium_Narrow_I",
         ]
 
-    def test_get_table_blob(self, blankfont):
+    def test_reference_table(self, blankfont):
         head_format = {
             # (offset, length, type)
             "majorVersion": (0, 2, "H"),  # uint16
@@ -885,7 +885,7 @@ class TestFace:
 
         face = blankfont.face
         if "OS/2" in face.table_tags:
-            blob = face.get_table_blob("OS/2")
+            blob = face.reference_table("OS/2")
 
             table_data_filter = parse_table(blob.data, "OS/2", ["usWeightClass", "fsSelection"])
             assert table_data_filter["usWeightClass"] == 400
@@ -933,7 +933,7 @@ class TestFace:
                                   'usUpperOpticalPointSize': 0}
 
         if "head" in face.table_tags:
-            blob = face.get_table_blob("head")
+            blob = face.reference_table("head")
 
             table_data_filter = parse_table(blob.data, "head", ["macStyle"])
             assert table_data_filter["macStyle"] == 0
