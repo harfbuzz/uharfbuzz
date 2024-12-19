@@ -241,6 +241,7 @@ cdef extern from "hb.h":
         hb_bool_t replace)
     void hb_face_destroy(hb_face_t* face)
     hb_blob_t* hb_face_reference_blob(hb_face_t *face)
+    hb_blob_t* hb_face_reference_table(hb_face_t *face,hb_tag_t tag)
     hb_face_t* hb_face_reference(hb_face_t *face)
     hb_face_t* hb_face_get_empty()
     unsigned int hb_face_get_table_tags(
