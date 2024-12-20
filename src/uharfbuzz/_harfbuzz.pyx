@@ -429,6 +429,9 @@ cdef class Blob:
     def data(self) -> bytes:
         return self._data
 
+    @property
+    def length(self) -> int:
+        return hb_blob_get_length(self._hb_blob)
 
 class OTVarAxisFlags(IntFlag):
     HIDDEN = HB_OT_VAR_AXIS_FLAG_HIDDEN

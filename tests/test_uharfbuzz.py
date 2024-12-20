@@ -226,6 +226,9 @@ class TestBlob:
         with pytest.raises(hb.HarfBuzzError, match="Failed to open: DOES-NOT-EXIST"):
             blob = hb.Blob.from_file_path("DOES-NOT-EXIST")
 
+    def test_length(self, blankfont):
+        face = blankfont.face
+        assert face.blob.length == 1892
 
 class TestFace:
     def test_properties(self, blankfont):
