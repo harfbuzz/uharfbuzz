@@ -383,15 +383,12 @@ cdef class Buffer:
 
 cdef class Blob:
     cdef hb_blob_t* _hb_blob
-    cdef object _data
 
     def __cinit__(self, bytes data = None):
         if data is not None:
-            self._data = data
             self._hb_blob = hb_blob_create(
-                data, len(data), HB_MEMORY_MODE_READONLY, NULL, NULL)
+                data, len(data), HB_MEMORY_MODE_DUPLICATE, NULL, NULL)
         else:
-            self._data = bytes()
             self._hb_blob = hb_blob_get_empty()
 
     @staticmethod
@@ -400,9 +397,6 @@ cdef class Blob:
 
         cdef Blob wrapper = Blob.__new__(Blob)
         wrapper._hb_blob = hb_blob
-        cdef unsigned int blob_length
-        cdef const_char* blob_data = hb_blob_get_data(hb_blob, &blob_length)
-        wrapper._data = blob_data[:blob_length]
         return wrapper
 
     @classmethod
@@ -417,17 +411,19 @@ cdef class Blob:
 
     def __dealloc__(self):
         hb_blob_destroy(self._hb_blob)
-        self._data = None
 
     def __len__(self) -> int:
-        return len(self._data)
+        return hb_blob_get_length(self._hb_blob)
 
     def __bool__(self) -> bool:
-        return bool(self._data)
+        return len(self) > 0
 
     @property
     def data(self) -> bytes:
-        return self._data
+        """Return the blob's data as bytes."""
+        cdef unsigned int blob_length
+        cdef const_char* blob_data = hb_blob_get_data(self._hb_blob, &blob_length)
+        return blob_data[:blob_length]
 
 
 class OTVarAxisFlags(IntFlag):
