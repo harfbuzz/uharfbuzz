@@ -421,6 +421,8 @@ cdef class Blob:
     @property
     def data(self) -> bytes:
         """Return the blob's data as bytes."""
+        if not self:
+            return b""
         cdef unsigned int blob_length
         cdef const_char* blob_data = hb_blob_get_data(self._hb_blob, &blob_length)
         return blob_data[:blob_length]
