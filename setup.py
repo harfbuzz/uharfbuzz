@@ -35,26 +35,6 @@ def _configure_extensions_with_system_libs() -> List[Extension]:
     libraries = []
     library_dirs = []
 
-    # There is no way (or, at least, no reliable one) to check whether `harfbuzz` has been built with experimental API support.
-    #
-    # meson-generated CMake[1] and pkg-config[2] files don't include harfbuzz define macros, neither separately nor as `-D` defines in `cflags`.
-    #
-    # `config.h`[3] and `hb-config.hh`[4] are generated at buildtime but treated as internal headers. That is, they are only used to compile harfbuzz,
-    # but are never installed nor exposed to the library consumers in other ways. Some configuration parameters (e.g., either harfbuzz has been built
-    # with `directwrite` support) are exposed via `hb-features.h`[5, 6] header, but not the one associated with experimental API.
-    #
-    # One solution here could be, patch `harfbuzz` to expose so, but the quickest and "cheapest" fix is just force-turn the experimental API in headers.
-    # If native `harfbuzz` is built without experimental API support, `uharfbuzz` will fail to build with undefined symbols errors.
-    #
-    # References:
-    # 1. https://github.com/harfbuzz/harfbuzz/blob/9.0.0/src/harfbuzz-config.cmake.in
-    # 2. https://github.com/harfbuzz/harfbuzz/blob/9.0.0/src/harfbuzz.pc.in
-    # 3. https://github.com/harfbuzz/harfbuzz/blob/9.0.0/meson.build#L461
-    # 4. https://github.com/harfbuzz/harfbuzz/blob/main/src/hb-config.hh
-    # 5. https://github.com/harfbuzz/harfbuzz/blob/9.0.0/src/hb-features.h.in
-    # 6. https://github.com/harfbuzz/harfbuzz/pull/3847
-    define_macros.append(("HB_EXPERIMENTAL_API", "1"))
-
     harfbuzz_components = ["harfbuzz-subset"]
     for harfbuzz_component in harfbuzz_components:
         harfbuzz_component_configuration = pkgconfig.parse(harfbuzz_component)
@@ -94,7 +74,7 @@ def _configure_extensions_with_system_libs() -> List[Extension]:
     return [extension, extension_test]
 
 def _configure_extensions_with_vendored_libs() -> List[Extension]:
-    define_macros = [("HB_NO_MT", "1"), ("HB_EXPERIMENTAL_API", "1")]
+    define_macros = [("HB_NO_MT", "1")]
     if use_cython_linetrace:
         define_macros.append(("CYTHON_TRACE_NOGIL", "1"))
 
