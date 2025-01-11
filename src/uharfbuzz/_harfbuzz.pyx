@@ -2780,22 +2780,35 @@ cdef class HBObject:
             l[i].width = links[i][1]
             l[i].objidx = links[i][2]
 
-class RepackerError(Exception):
+class SerializerError(Exception):
+    pass
+
+class RepackerError(SerializerError):
     pass
 
 
-def repack(subtables: List[bytes],
-           graphnodes: List[Tuple[List[Tuple[int, int, int]],
-                            List[Tuple[int, int, int]]
-                            ]]) -> bytes:
-    return repack_with_tag("", subtables, graphnodes)
+@deprecated("serialize()")
+def repack(subtables, graphnodes):
+    return serialize(subtables, graphnodes)
 
 
-def repack_with_tag(tag: str,
-                    subtables: List[bytes],
-                    graphnodes: List[Tuple[List[Tuple[int, int, int]],
+@deprecated("serialize_with_tag()")
+def repack_with_tag(tag, subtables, graphnodes):
+    return serialize_with_tag(tag, subtables, graphnodes)
+
+
+def serialize(subtables: List[bytes],
+              graphnodes: List[Tuple[List[Tuple[int, int, int]],
                                      List[Tuple[int, int, int]]
                                      ]]) -> bytes:
+    return serialize_with_tag("", subtables, graphnodes)
+
+
+def serialize_with_tag(tag: str,
+                       subtables: List[bytes],
+                       graphnodes: List[Tuple[List[Tuple[int, int, int]],
+                                        List[Tuple[int, int, int]]
+                                        ]]) -> bytes:
 
     """The whole table is represented as a Graph
        and the input graphnodes is a flat list of subtables
