@@ -1300,22 +1300,22 @@ cdef extern from "hb-ot.h":
         const float *design_coords, # IN
         int *normalized_coords) # OUT
 
-cdef extern from "hb-subset-repacker.h":
-    ctypedef struct hb_link_t:
+cdef extern from "hb-subset-serialize.h":
+    ctypedef struct hb_subset_serialize_link_t:
         unsigned int width
         unsigned int position
         unsigned int objidx
-    ctypedef struct hb_object_t:
+    ctypedef struct hb_subset_serialize_object_t:
         char *head
         char *tail
         unsigned int num_real_links
-        hb_link_t *real_links
+        hb_subset_serialize_link_t *real_links
         unsigned int num_virtual_links
-        hb_link_t *virtual_links
+        hb_subset_serialize_link_t *virtual_links
 
-    hb_blob_t* hb_subset_repack_or_fail(
+    hb_blob_t* hb_subset_serialize_or_fail(
         hb_tag_t table_tag,
-        hb_object_t* hb_objects,
+        hb_subset_serialize_object_t* hb_objects,
         unsigned int num_hb_objs)
 
 cdef extern from "hb-subset.h":
