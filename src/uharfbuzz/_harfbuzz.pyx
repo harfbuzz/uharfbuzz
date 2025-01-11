@@ -2723,11 +2723,11 @@ cdef class DrawFuncs:
             self._hb_drawfuncs, func_p, user_data_p, NULL)
 
 cdef class HBObject:
-    cdef hb_object_t* _hb_obj_list
+    cdef hb_subset_serialize_object_t* _hb_obj_list
     cdef unsigned int _num
 
     def __cinit__(self, num_nodes):
-        self._hb_obj_list = <hb_object_t*>calloc(num_nodes, sizeof(hb_object_t))
+        self._hb_obj_list = <hb_subset_serialize_object_t*>calloc(num_nodes, sizeof(hb_subset_serialize_object_t))
         if self._hb_obj_list == NULL:
             raise MemoryError()
         self._num = num_nodes
@@ -2748,13 +2748,13 @@ cdef class HBObject:
         self._hb_obj_list[idx].head = head
         self._hb_obj_list[idx].tail = tail
 
-    cdef hb_link_t* create_links(self, unsigned int idx,
-                                 unsigned int link_num,
-                                 bint is_real_link):
+    cdef hb_subset_serialize_link_t* create_links(self, unsigned int idx,
+                                                  unsigned int link_num,
+                                                  bint is_real_link):
         if link_num == 0:
             return NULL
 
-        cdef hb_link_t* p = <hb_link_t*>calloc(link_num, sizeof(hb_link_t))
+        cdef hb_subset_serialize_link_t* p = <hb_subset_serialize_link_t*>calloc(link_num, sizeof(hb_subset_serialize_link_t))
         if p == NULL:
             raise MemoryError()
 
@@ -2769,7 +2769,7 @@ cdef class HBObject:
     cdef update_links(self, unsigned int idx, bint is_real_link,
                       links: List[Tuple[int, int, int]]):
         cdef unsigned int num_links = len(links)
-        cdef hb_link_t* l = NULL
+        cdef hb_subset_serialize_link_t* l = NULL
         if is_real_link:
             l = self._hb_obj_list[idx].real_links
         else:
@@ -2843,7 +2843,7 @@ def repack_with_tag(tag: str,
         bytes table_bytes = b''.join(subtables)
         char* table_data = table_bytes
         unsigned int head = 0, tail = 0
-        hb_link_t* p = NULL
+        hb_subset_serialize_link_t* p = NULL
         HBObject obj_list = HBObject(num_nodes)
     for i in range(num_nodes):
         tail += len(subtables[i])
@@ -2862,7 +2862,7 @@ def repack_with_tag(tag: str,
 
     cdef bytes tag_packed = tag.encode()
     cdef char* cstr = tag_packed
-    cdef hb_blob_t* packed_blob = hb_subset_repack_or_fail(hb_tag_from_string(cstr, -1),
+    cdef hb_blob_t* packed_blob = hb_subset_serialize_or_fail(hb_tag_from_string(cstr, -1),
 							   obj_list._hb_obj_list,
 							   num_nodes)
     if packed_blob == NULL:
