@@ -55,8 +55,6 @@ USE_SYSTEM_LIBS=1 pip install uharfbuzz --no-binary :uharfbuzz:
 harfbuzz installation is found using `pkg-config`, so you must have harfbuzz's `.pc` files in your system.
 If you've built it from sources, meson installs them automatically. Otherwise, you may want to install harfbuzz development package, like `harfbuzz-devel` on Fedora-derived distros.
 
-Note: you **must** build HarfBuzz with experimental API support enabled.
-
 ### How to make a release
 
 Use `git tag -a` to make a new annotated tag, or `git tag -s` for a GPG-signed annotated tag, if you prefer.
