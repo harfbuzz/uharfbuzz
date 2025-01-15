@@ -1,6 +1,6 @@
 [![Githun CI Status](https://github.com/harfbuzz/uharfbuzz/workflows/Build%20+%20Deploy/badge.svg)](https://github.com/harfbuzz/uharfbuzz/actions?query=workflow%3A%22Build+%2B+Deploy%22)
 [![PyPI](https://img.shields.io/pypi/v/uharfbuzz.svg)](https://pypi.org/project/uharfbuzz)
-[![Documentation Status](https://readthedocs.org/projects/uharfbuzz/badge/?version=latest)](https://uharfbuzz.readthedocs.io/en/latest/?badge=latest)
+[![Documentation Status](https://readthedocs.org/projects/uharfbuzz/badge/?version=stable)](https://uharfbuzz.readthedocs.io)
 
 ## uharfbuzz
 
