@@ -1811,3 +1811,8 @@ def test_subset(blankfont):
             assert len(reverse) == 5
             cmap = plan.unicode_to_old_glyph_mapping
             assert cmap[ord("b")] == 2
+
+
+def test_deprecated():
+    with pytest.deprecated_call():
+        hb.ot_color_glyph_get_layers(hb.Face(), 0)

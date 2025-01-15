@@ -46,7 +46,7 @@ def deprecated(replacement=None):
             if replacement:
                 message += f", use {replacement} instead"
             if message not in WARNED:
-                warnings.warn(message, DeprecationWarning, stacklevel=2)
+                warnings.warn(message, DeprecationWarning)
                 WARNED.add(message)
             return func(*args, **kwargs)
 
