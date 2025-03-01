@@ -10,6 +10,9 @@ requires = [
 ]
 build-backend = "setuptools.build_meta"
 
+[tool.setuptools_scm]
+version_file = "src/uharfbuzz/_version.py"
+
 [tool.cibuildwheel]
 # Skip unsupported Python versions, and only build for 64-bit on Linux
 skip = ["cp36-*", "cp37-*", "*-manylinux_i686", "*-musllinux_i686"]
