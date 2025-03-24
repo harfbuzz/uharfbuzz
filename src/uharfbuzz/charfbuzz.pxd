@@ -139,6 +139,7 @@ cdef extern from "hb.h":
         HB_BUFFER_CLUSTER_LEVEL_MONOTONE_GRAPHEMES
         HB_BUFFER_CLUSTER_LEVEL_MONOTONE_CHARACTERS
         HB_BUFFER_CLUSTER_LEVEL_CHARACTERS
+        HB_BUFFER_CLUSTER_LEVEL_GRAPHEMES
         HB_BUFFER_CLUSTER_LEVEL_DEFAULT
 
     ctypedef enum hb_buffer_flags_t:
@@ -470,13 +471,13 @@ cdef extern from "hb.h":
        float path_start_y
        float current_x
        float current_y
+       float slant_xy
        hb_var_num_t reserved1
        hb_var_num_t reserved2
        hb_var_num_t reserved3
        hb_var_num_t reserved4
        hb_var_num_t reserved5
        hb_var_num_t reserved6
-       hb_var_num_t reserved7
 
     ctypedef struct hb_draw_funcs_t:
         pass

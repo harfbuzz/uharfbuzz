@@ -636,7 +636,7 @@ class TestFace:
 
     def test_glyph_has_color_paint(self, colorv1font):
         assert colorv1font.face.glyph_has_color_paint(1) == False
-        assert colorv1font.face.glyph_has_color_paint(7) == True
+        assert colorv1font.face.glyph_has_color_paint(9) == True
 
     def test_glyph_has_no_color_paint(self, blankfont):
         assert blankfont.face.glyph_has_color_paint(1) == False
