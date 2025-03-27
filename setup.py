@@ -9,6 +9,7 @@ import pkgconfig
 from Cython.Build import cythonize
 from setuptools import Extension, setup
 
+
 def bool_from_environ(key: str):
     value = os.environ.get(key)
     if not value:
@@ -17,7 +18,10 @@ def bool_from_environ(key: str):
         return True
     if value == "0":
         return False
-    raise ValueError(f"Environment variable {key} has invalid value {value}. Please set it to 1, 0 or an empty string")
+    raise ValueError(
+        f"Environment variable {key} has invalid value {value}. Please set it to 1, 0 or an empty string"
+    )
+
 
 here = os.path.abspath(os.path.dirname(__file__))
 
@@ -28,6 +32,7 @@ with open(os.path.join(here, "README.md"), encoding="utf-8") as f:
 use_system_libraries = bool_from_environ("USE_SYSTEM_LIBS")
 use_cython_linetrace = bool_from_environ("CYTHON_LINETRACE")
 use_cython_annotate = bool_from_environ("CYTHON_ANNOTATE")
+
 
 def _configure_extensions_with_system_libs() -> List[Extension]:
     include_dirs = []
@@ -55,7 +60,7 @@ def _configure_extensions_with_system_libs() -> List[Extension]:
         ],
         language="c++",
         libraries=libraries,
-        library_dirs=library_dirs
+        library_dirs=library_dirs,
     )
 
     extension_test = Extension(
@@ -68,10 +73,11 @@ def _configure_extensions_with_system_libs() -> List[Extension]:
         ],
         language="c++",
         libraries=libraries,
-        library_dirs=library_dirs
+        library_dirs=library_dirs,
     )
 
     return [extension, extension_test]
+
 
 def _configure_extensions_with_vendored_libs() -> List[Extension]:
     # We build with HB_EXPERIMENTAL_API to enable experimental HarfBuzz features
@@ -135,11 +141,13 @@ def _configure_extensions_with_vendored_libs() -> List[Extension]:
 
     return [extension, extension_test]
 
+
 def configure_extensions() -> List[Extension]:
     if use_system_libraries:
         return _configure_extensions_with_system_libs()
     else:
         return _configure_extensions_with_vendored_libs()
+
 
 setup(
     name="uharfbuzz",
