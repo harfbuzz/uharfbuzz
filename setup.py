@@ -74,7 +74,10 @@ def _configure_extensions_with_system_libs() -> List[Extension]:
     return [extension, extension_test]
 
 def _configure_extensions_with_vendored_libs() -> List[Extension]:
-    define_macros = [("HB_NO_MT", "1")]
+    # We build with HB_EXPERIMENTAL_API to enable experimental HarfBuzz features
+    # like VARC table support, but we must not use any experimental APIs as it
+    # will break linking with system HarfBuzz that is built without these APIs.
+    define_macros = [("HB_NO_MT", "1"), ("HB_EXPERIMENTAL_API", "1")]
     if use_cython_linetrace:
         define_macros.append(("CYTHON_TRACE_NOGIL", "1"))
 
