@@ -11,6 +11,7 @@ requires = [
 build-backend = "setuptools.build_meta"
 
 [tool.cibuildwheel]
+enable = ["pypy"]
 test-requires = "pytest"
 test-command = "pytest {project}/tests"
 
