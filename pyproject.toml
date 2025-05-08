@@ -11,9 +11,6 @@ requires = [
 build-backend = "setuptools.build_meta"
 
 [tool.cibuildwheel]
-# Skip unsupported Python versions
-skip = ["cp36-*", "cp37-*"]
-
 test-requires = "pytest"
 test-command = "pytest {project}/tests"
 

@@ -163,7 +163,7 @@ setup(
     packages=["uharfbuzz"],
     zip_safe=False,
     setup_requires=["setuptools_scm"],
-    python_requires=">=3.5",
+    python_requires=">=3.8",
     ext_modules=cythonize(
         configure_extensions(),
         annotate=use_cython_annotate,
