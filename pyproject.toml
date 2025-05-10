@@ -16,35 +16,14 @@ skip = ["pp38-*"]
 enable = ["pypy"]
 test-requires = "pytest"
 test-command = "pytest {project}/tests"
+environment = { CFLAGS = "-g0" }
 
 [tool.cibuildwheel.macos]
 archs = ["x86_64", "universal2", "arm64"]
-before-all = "brew install ccache"
-before-test = "ccache --show-stats"
-
-[tool.cibuildwheel.macos.environment]
-CC = "/opt/homebrew/opt/ccache/libexec/cc"
 
 [tool.cibuildwheel.linux]
 archs = ["native"]
-before-all = [
-    "yum install -y ccache",
-    "ln -s $(which ccache) /usr/lib64/ccache/gcc",
-]
-before-test = "ccache --show-stats"
-environment = {CC = "/usr/lib64/ccache/gcc", CFLAGS = "-g0"}
 
-[[tool.cibuildwheel.overrides]]
-select = "*-musllinux*"
-before-all = "apk add ccache"
-environment = {CC = "/usr/lib/ccache/bin/gcc"}
-
-# Installing ccache fails on manylinux aarch64 images
-[[tool.cibuildwheel.overrides]]
-select = "*-manylinux_aarch64"
-before-all = ""
-before-test = ""
-environment = {CFLAGS = "-g0"}
 
 [tool.black]
 extend-exclude = "harfbuzz"
