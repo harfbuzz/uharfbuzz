@@ -833,7 +833,7 @@ class TestFont:
 
     def test_get_var_coords_normalized(self, mutatorsans):
         coords = mutatorsans.get_var_coords_normalized()
-        assert coords == []
+        assert coords == [0, 0]
         mutatorsans.set_variations({"wght": 500})
         coords = mutatorsans.get_var_coords_normalized()
         assert coords == [0, 0.5]
@@ -850,10 +850,9 @@ class TestFont:
         coords = mutatorsans.get_var_coords_normalized()
         assert expected_coords == coords
 
-        expected_coords = [0.5]
-        mutatorsans.set_var_coords_normalized(expected_coords)
+        mutatorsans.set_var_coords_normalized([0.5])
         coords = mutatorsans.get_var_coords_normalized()
-        assert expected_coords == coords
+        assert [0.5, 0] == coords
 
         with pytest.raises(TypeError):
             mutatorsans.set_var_coords_normalized(["a"])
