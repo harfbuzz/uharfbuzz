@@ -41,6 +41,8 @@ jobs:
     needs: build
     runs-on: ubuntu-latest
     if: contains(github.ref, 'refs/tags/')
+    env:
+      GH_TOKEN: ${{ github.token }}
     steps:
     - uses: actions/checkout@v4
       with:
