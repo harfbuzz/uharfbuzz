@@ -84,13 +84,18 @@ jobs:
     - name: Create GitHub release
       id: create_release
       run: |
+          notes="--notes-file \"${{ runner.temp }}/release_body.md\""
+          # If the notes file is empty, use --generate-notes instead
+          if ! grep -q "[^[:space:]]" "${{ runner.temp }}/release_body.md"; then
+            notes="--generate-notes"
+          fi
           prerelease=""
           if [ "$IS_PRERELEASE" = true ]; then
             prerelease="--prerelease"
           fi
           gh release create ${{ github.ref }} \
                             --title "${{ env.RELEASE_NAME }}" \
-                            --notes-file "${{ runner.temp }}/release_body.md" \
+                            $notes \
                             $prerelease
     - name: Build and publish
       env:
