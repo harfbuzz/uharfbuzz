@@ -16,7 +16,6 @@ skip = ["pp38-*"]
 enable = ["pypy"]
 test-requires = "pytest"
 test-command = "pytest {project}/tests"
-environment = { CFLAGS = "-g0" }
 
 [tool.cibuildwheel.macos]
 archs = ["x86_64", "universal2", "arm64"]
