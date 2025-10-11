@@ -48,6 +48,7 @@ jobs:
       url: https://pypi.org/p/uharfbuzz
     permissions:
       id-token: write # IMPORTANT: mandatory for trusted publishing
+      contents: write # Needed to create GH release
 
     steps:
     - uses: actions/checkout@v4
