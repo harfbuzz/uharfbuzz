@@ -92,6 +92,7 @@ def _configure_extensions_with_vendored_libs() -> List[Extension]:
     libraries = []
     if platform.system() != "Windows":
         extra_compile_args.append("-std=c++11")
+        extra_compile_args.append("-g0")
         define_macros.append(("HAVE_MMAP", "1"))
         define_macros.append(("HAVE_UNISTD_H", "1"))
         define_macros.append(("HAVE_SYS_MMAN_H", "1"))
