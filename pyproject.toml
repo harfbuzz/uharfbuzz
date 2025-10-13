@@ -12,7 +12,9 @@ build-backend = "setuptools.build_meta"
 
 [tool.cibuildwheel]
 # Skip building PyPy 3.8 wheels, the build currently fails
-skip = ["pp38-*"]
+# Also skip wheels for free-threaded CPython 3.14 (e.g. 'cp314t') until we
+# actually support them. We currently aren't thread-safe as we define HB_NO_MT=1.
+skip = ["pp38-*", "cp3??t-*"]
 enable = ["pypy"]
 test-requires = "pytest"
 test-command = "pytest {project}/tests"
