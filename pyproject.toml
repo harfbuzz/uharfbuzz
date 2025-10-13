@@ -10,6 +10,8 @@ requires = [
 ]
 build-backend = "setuptools.build_meta"
 
+[tool.setuptools_scm]
+
 [tool.cibuildwheel]
 # Skip building PyPy 3.8 wheels, the build currently fails
 # Also skip wheels for free-threaded CPython 3.14 (e.g. 'cp314t') until we
