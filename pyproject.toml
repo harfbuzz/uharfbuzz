@@ -5,7 +5,7 @@ requires = [
     "setuptools >= 36.4; platform_python_implementation != 'PyPy'",
     "wheel",
     "setuptools_scm >= 2.1",
-    "cython >= 0.28.1",
+    "cython >= 3.1",
     "pkgconfig"
 ]
 build-backend = "setuptools.build_meta"
