@@ -1798,3 +1798,26 @@ def test_subset(blankfont):
 def test_deprecated():
     with pytest.deprecated_call():
         hb.ot_color_glyph_get_layers(hb.Face(), 0)
+
+def test_override_name_table(blankfont):
+    str1 = "Roboto Test"
+    str1_3 = "Roboto Test unicode platform"
+    str2 = "Bold"
+    str6 = "Roboto-Bold"
+    str12 = "Non ascii test Ü"
+    str16 = "Roboto-test-inserting"
+
+    inp = hb.SubsetInput()
+    assert inp.override_name_table(1, 1, 0, 0, str1)
+    assert inp.override_name_table(1, 3, 1, 0x409, str1_3)
+    assert inp.override_name_table(hb.OTNameIdPredefined.FULL_NAME, 3, 1, 0x409, str1_3)
+    assert inp.override_name_table(2, 1, 0, 0, str2[:4])
+    assert inp.override_name_table(6, 1, 0, 0, str6)
+    assert inp.override_name_table(12, 1, 0, 0, str12) == 0
+    assert inp.override_name_table(14, 1, 0, 0, None)
+    assert inp.override_name_table(16, 1, 0, 0, str16)
+
+    face = hb.subset(blankfont.face, inp)
+
+    assert face.get_name(1) == str1_3
+    assert face.get_name(hb.OTNameIdPredefined.FULL_NAME) == str1_3

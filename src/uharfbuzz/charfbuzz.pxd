@@ -1369,3 +1369,4 @@ cdef extern from "hb-subset.h":
     hb_subset_plan_t* hb_subset_plan_reference(hb_subset_plan_t* plan)
     hb_bool_t hb_subset_plan_set_user_data(hb_subset_plan_t* plan, hb_user_data_key_t* key, void* data, hb_destroy_func_t destroy, hb_bool_t replace)
     void* hb_subset_plan_get_user_data(const hb_subset_plan_t* plan, hb_user_data_key_t* key)
+    hb_bool_t hb_subset_input_override_name_table(hb_subset_input_t* input, hb_ot_name_id_t name_id, unsigned platform_id, unsigned encoding_id, unsigned language_id, const char* name_str, int str_len)

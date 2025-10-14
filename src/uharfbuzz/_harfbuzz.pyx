@@ -10,7 +10,8 @@ from cpython.pycapsule cimport PyCapsule_GetPointer, PyCapsule_IsValid
 from cpython.unicode cimport (
     PyUnicode_1BYTE_DATA, PyUnicode_2BYTE_DATA, PyUnicode_4BYTE_DATA,
     PyUnicode_1BYTE_KIND, PyUnicode_2BYTE_KIND, PyUnicode_4BYTE_KIND,
-    PyUnicode_KIND, PyUnicode_GET_LENGTH, PyUnicode_FromKindAndData
+    PyUnicode_KIND, PyUnicode_GET_LENGTH, PyUnicode_FromKindAndData,
+    PyUnicode_AsUTF8AndSize
 )
 from typing import Callable, Dict, List, Sequence, Tuple, Union, NamedTuple
 from pathlib import Path
@@ -2953,6 +2954,20 @@ cdef class SubsetInput:
         hb_tag = hb_tag_from_string(tag.encode("ascii"), -1)
         return hb_subset_input_pin_axis_location(
             self._hb_input, face._hb_face, hb_tag, value
+        )
+
+    def override_name_table(self, name_id: OTNameIdPredefined | int, platform_id: int, encoding_id: int, language_id: int, name_str: str | None) -> bool:
+        cdef const char* c_name
+        cdef Py_ssize_t str_len
+        if name_str is None:
+            c_name = NULL
+            str_len = -1
+        else:
+            c_name = PyUnicode_AsUTF8AndSize(name_str, &str_len)
+            if c_name == NULL:
+                raise MemoryError()
+        return hb_subset_input_override_name_table(
+            self._hb_input, name_id, platform_id, encoding_id, language_id, c_name, str_len
         )
 
     @property
