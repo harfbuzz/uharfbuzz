@@ -19,7 +19,7 @@ test-requires = "pytest"
 test-command = "pytest {project}/tests"
 
 [tool.cibuildwheel.macos]
-archs = ["x86_64", "universal2", "arm64"]
+archs = ["universal2"]
 
 [tool.cibuildwheel.linux]
 archs = ["native"]
