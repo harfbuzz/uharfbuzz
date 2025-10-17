@@ -24,6 +24,13 @@ archs = ["x86_64", "universal2", "arm64"]
 [tool.cibuildwheel.linux]
 archs = ["native"]
 
+# Run abi3audit after the default repair commands to scan for abi3 violations
+# https://github.com/pypa/abi3audit
+[[tool.cibuildwheel.overrides]]
+select = "cp*"  # Only CPython, not PyPy
+inherit.repair-wheel-command = "append"
+repair-wheel-command = "pipx run abi3audit --strict --report {wheel}"
+
 # Disable Limited API for PyPy as the build currently fails, see:
 # https://github.com/harfbuzz/uharfbuzz/issues/262#issuecomment-3415144557
 # https://cibuildwheel.pypa.io/en/stable/configuration/#overrides
