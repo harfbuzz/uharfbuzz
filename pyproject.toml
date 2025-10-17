@@ -24,10 +24,10 @@ archs = ["x86_64", "universal2", "arm64"]
 [tool.cibuildwheel.linux]
 archs = ["native"]
 
-# CPython abi3 wheels only need universal2 on macOS
+# CPython abi3 wheels only need universal2 on macOS, skip the single-arch builds
 [[tool.cibuildwheel.overrides]]
-select = "cp*-macosx*"
-macos.archs = ["universal2"]
+select = "cp*-macosx_{x86_64,arm64}"
+skip = true
 
 # Run abi3audit after the default repair commands to scan for abi3 violations
 # https://github.com/pypa/abi3audit
