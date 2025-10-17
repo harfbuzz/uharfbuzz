@@ -36,8 +36,8 @@ use_cython_annotate = bool_from_environ("CYTHON_ANNOTATE")
 # Set USE_PY_LIMITED_API=0 to turn it off.
 # https://docs.python.org/3.14/c-api/stable.html#limited-c-api
 use_py_limited_api = bool_from_environ("USE_PY_LIMITED_API", default=True)
-# NOTE: this must be kept in sync with python_requires='>=3.8' below
-limited_api_min_version = "0x03080000"
+# NOTE: this must be kept in sync with python_requires='>=3.9' below
+limited_api_min_version = "0x03090000"
 
 
 def _configure_extensions_with_system_libs() -> List[Extension]:
@@ -180,11 +180,11 @@ setup(
     packages=["uharfbuzz"],
     zip_safe=False,
     setup_requires=["setuptools_scm"],
-    python_requires=">=3.8",
+    python_requires=">=3.9",
     ext_modules=cythonize(
         configure_extensions(),
         annotate=use_cython_annotate,
         compiler_directives={"linetrace": use_cython_linetrace},
     ),
-    options={"bdist_wheel": {"py_limited_api": "cp38"}} if use_py_limited_api else {},
+    options={"bdist_wheel": {"py_limited_api": "cp39"}} if use_py_limited_api else {},
 )
