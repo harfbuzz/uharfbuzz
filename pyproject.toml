@@ -19,10 +19,15 @@ test-requires = "pytest"
 test-command = "pytest {project}/tests"
 
 [tool.cibuildwheel.macos]
-archs = ["universal2"]
+archs = ["x86_64", "universal2", "arm64"]
 
 [tool.cibuildwheel.linux]
 archs = ["native"]
+
+# CPython abi3 wheels only need universal2 on macOS
+[[tool.cibuildwheel.overrides]]
+select = "cp*-macosx*"
+macos.archs = ["universal2"]
 
 # Run abi3audit after the default repair commands to scan for abi3 violations
 # https://github.com/pypa/abi3audit
