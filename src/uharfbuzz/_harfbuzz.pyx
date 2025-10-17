@@ -16,7 +16,6 @@ from functools import wraps
 # Declare Limited API types and functions (Python 3.3+)
 cdef extern from "Python.h":
     ctypedef uint32_t Py_UCS4
-    object PyUnicode_DecodeUTF32(const char *s, Py_ssize_t size, const char *errors, int *byteorder)
 
 
 DEF STATIC_ARRAY_SIZE = 128
@@ -943,7 +942,7 @@ cdef class Face:
     def get_name(self, name_id: OTNameIdPredefined | int, language: str | None = None) -> str | None:
         cdef bytes packed
         cdef hb_language_t lang
-        cdef uint32_t *text
+        cdef char *text
         cdef unsigned int length
 
         if language is None:
@@ -952,15 +951,15 @@ cdef class Face:
             packed = language.encode()
             lang = hb_language_from_string(<char*>packed, -1)
 
-        length = hb_ot_name_get_utf32(self._hb_face, name_id, lang, NULL, NULL)
+        length = hb_ot_name_get_utf8(self._hb_face, name_id, lang, NULL, NULL)
         if length:
             length += 1  # for the null terminator
-            text = <uint32_t*>malloc(length * sizeof(uint32_t))
+            text = <char*>malloc(length * sizeof(char))
             if text == NULL:
                 raise MemoryError()
             try:
-                hb_ot_name_get_utf32(self._hb_face, name_id, lang, &length, text)
-                result = PyUnicode_DecodeUTF32(<char*>text, length * sizeof(uint32_t), NULL, NULL)
+                hb_ot_name_get_utf8(self._hb_face, name_id, lang, &length, text)
+                result = text[:length].decode("utf-8")
                 return result
             finally:
                 free(text)
