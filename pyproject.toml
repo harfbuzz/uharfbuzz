@@ -26,6 +26,13 @@ archs = ["x86_64", "universal2", "arm64"]
 [tool.cibuildwheel.linux]
 archs = ["native"]
 
+# Disable Limited API for PyPy as the build currently fails, see:
+# https://github.com/harfbuzz/uharfbuzz/issues/262#issuecomment-3415144557
+# https://cibuildwheel.pypa.io/en/stable/configuration/#overrides
+[[tool.cibuildwheel.overrides]]
+select = "pp*"
+environment = { USE_PY_LIMITED_API = "0" }
+
 
 [tool.black]
 extend-exclude = "harfbuzz"
