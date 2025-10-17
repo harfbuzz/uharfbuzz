@@ -10,10 +10,10 @@ from Cython.Build import cythonize
 from setuptools import Extension, setup
 
 
-def bool_from_environ(key: str):
+def bool_from_environ(key: str, default: bool = False):
     value = os.environ.get(key)
     if not value:
-        return False
+        return default
     if value == "1":
         return True
     if value == "0":
@@ -32,6 +32,12 @@ with open(os.path.join(here, "README.md"), encoding="utf-8") as f:
 use_system_libraries = bool_from_environ("USE_SYSTEM_LIBS")
 use_cython_linetrace = bool_from_environ("CYTHON_LINETRACE")
 use_cython_annotate = bool_from_environ("CYTHON_ANNOTATE")
+# Python Limited API for stable ABI support is enabled by default.
+# Set USE_PY_LIMITED_API=0 to turn it off.
+# https://docs.python.org/3.14/c-api/stable.html#limited-c-api
+use_py_limited_api = bool_from_environ("USE_PY_LIMITED_API", default=True)
+# NOTE: this must be kept in sync with python_requires='>=3.10' below
+limited_api_min_version = "0x030A0000"
 
 
 def _configure_extensions_with_system_libs() -> List[Extension]:
@@ -51,6 +57,9 @@ def _configure_extensions_with_system_libs() -> List[Extension]:
     if use_cython_linetrace:
         define_macros.append(("CYTHON_TRACE_NOGIL", "1"))
 
+    if use_py_limited_api:
+        define_macros.append(("Py_LIMITED_API", limited_api_min_version))
+
     extension = Extension(
         "uharfbuzz._harfbuzz",
         define_macros=define_macros,
@@ -61,6 +70,7 @@ def _configure_extensions_with_system_libs() -> List[Extension]:
         language="c++",
         libraries=libraries,
         library_dirs=library_dirs,
+        py_limited_api=use_py_limited_api,
     )
 
     extension_test = Extension(
@@ -74,6 +84,7 @@ def _configure_extensions_with_system_libs() -> List[Extension]:
         language="c++",
         libraries=libraries,
         library_dirs=library_dirs,
+        py_limited_api=use_py_limited_api,
     )
 
     return [extension, extension_test]
@@ -86,6 +97,9 @@ def _configure_extensions_with_vendored_libs() -> List[Extension]:
     define_macros = [("HB_NO_MT", "1"), ("HB_EXPERIMENTAL_API", "1")]
     if use_cython_linetrace:
         define_macros.append(("CYTHON_TRACE_NOGIL", "1"))
+
+    if use_py_limited_api:
+        define_macros.append(("Py_LIMITED_API", limited_api_min_version))
 
     extra_compile_args = []
     extra_link_args = []
@@ -124,6 +138,7 @@ def _configure_extensions_with_vendored_libs() -> List[Extension]:
         libraries=libraries,
         extra_compile_args=extra_compile_args,
         extra_link_args=extra_link_args,
+        py_limited_api=use_py_limited_api,
     )
 
     extension_test = Extension(
@@ -138,6 +153,7 @@ def _configure_extensions_with_vendored_libs() -> List[Extension]:
         libraries=libraries,
         extra_compile_args=extra_compile_args,
         extra_link_args=extra_link_args,
+        py_limited_api=use_py_limited_api,
     )
 
     return [extension, extension_test]
@@ -164,10 +180,11 @@ setup(
     packages=["uharfbuzz"],
     zip_safe=False,
     setup_requires=["setuptools_scm"],
-    python_requires=">=3.8",
+    python_requires=">=3.10",
     ext_modules=cythonize(
         configure_extensions(),
         annotate=use_cython_annotate,
         compiler_directives={"linetrace": use_cython_linetrace},
     ),
+    options={"bdist_wheel": {"py_limited_api": "cp310"}} if use_py_limited_api else {},
 )

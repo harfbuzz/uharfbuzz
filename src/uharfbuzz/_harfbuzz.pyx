@@ -7,14 +7,15 @@ from .charfbuzz cimport *
 from libc.stdlib cimport free, malloc, calloc
 from libc.string cimport const_char
 from cpython.pycapsule cimport PyCapsule_GetPointer, PyCapsule_IsValid
-from cpython.unicode cimport (
-    PyUnicode_1BYTE_DATA, PyUnicode_2BYTE_DATA, PyUnicode_4BYTE_DATA,
-    PyUnicode_1BYTE_KIND, PyUnicode_2BYTE_KIND, PyUnicode_4BYTE_KIND,
-    PyUnicode_KIND, PyUnicode_GET_LENGTH, PyUnicode_FromKindAndData
-)
+from cpython.unicode cimport PyUnicode_GetLength, PyUnicode_AsUCS4Copy
+from cpython.mem cimport PyMem_Free
 from typing import Callable, Dict, List, Sequence, Tuple, Union, NamedTuple
 from pathlib import Path
 from functools import wraps
+
+# Declare Limited API types and functions (Python 3.3+)
+cdef extern from "Python.h":
+    ctypedef uint32_t Py_UCS4
 
 
 DEF STATIC_ARRAY_SIZE = 128
@@ -341,38 +342,27 @@ cdef class Buffer:
 
     def add_str(self, text: str,
                 item_offset: int = 0, item_length: int = -1) -> None:
+        cdef Py_UCS4* ucs4_buffer
+        cdef Py_ssize_t text_length
 
-        cdef Py_ssize_t length = PyUnicode_GET_LENGTH(text)
-        cdef int kind = PyUnicode_KIND(text)
-
-        if kind == PyUnicode_1BYTE_KIND:
-            hb_buffer_add_latin1(
-                self._hb_buffer,
-                <uint8_t*>PyUnicode_1BYTE_DATA(text),
-                length,
-                item_offset,
-                item_length,
-            )
-        elif kind == PyUnicode_2BYTE_KIND:
-            hb_buffer_add_utf16(
-                self._hb_buffer,
-                <uint16_t*>PyUnicode_2BYTE_DATA(text),
-                length,
-                item_offset,
-                item_length,
-            )
-        elif kind == PyUnicode_4BYTE_KIND:
+        ucs4_buffer = PyUnicode_AsUCS4Copy(text)
+        if ucs4_buffer == NULL:
+            raise MemoryError()
+        try:
+            text_length = PyUnicode_GetLength(text)
+            if text_length == -1:
+                raise ValueError("Invalid Unicode string")
             hb_buffer_add_utf32(
                 self._hb_buffer,
-                <uint32_t*>PyUnicode_4BYTE_DATA(text),
-                length,
+                <uint32_t*>ucs4_buffer,
+                text_length,
                 item_offset,
-                item_length,
+                item_length
             )
-        else:
-            raise AssertionError(kind)
-        if not hb_buffer_allocation_successful(self._hb_buffer):
-            raise MemoryError()
+            if not hb_buffer_allocation_successful(self._hb_buffer):
+                raise MemoryError()
+        finally:
+            PyMem_Free(ucs4_buffer)
 
     def guess_segment_properties(self) -> None:
         hb_buffer_guess_segment_properties(self._hb_buffer)
@@ -952,7 +942,7 @@ cdef class Face:
     def get_name(self, name_id: OTNameIdPredefined | int, language: str | None = None) -> str | None:
         cdef bytes packed
         cdef hb_language_t lang
-        cdef uint32_t *text
+        cdef char *text
         cdef unsigned int length
 
         if language is None:
@@ -961,12 +951,18 @@ cdef class Face:
             packed = language.encode()
             lang = hb_language_from_string(<char*>packed, -1)
 
-        length = hb_ot_name_get_utf32(self._hb_face, name_id, lang, NULL, NULL)
+        length = hb_ot_name_get_utf8(self._hb_face, name_id, lang, NULL, NULL)
         if length:
             length += 1  # for the null terminator
-            text = <uint32_t*>malloc(length * sizeof(uint32_t))
-            hb_ot_name_get_utf32(self._hb_face, name_id, lang, &length, text)
-            return PyUnicode_FromKindAndData(PyUnicode_4BYTE_KIND, text, length)
+            text = <char*>malloc(length * sizeof(char))
+            if text == NULL:
+                raise MemoryError()
+            try:
+                hb_ot_name_get_utf8(self._hb_face, name_id, lang, &length, text)
+                result = text[:length].decode("utf-8")
+                return result
+            finally:
+                free(text)
         return None
 
 

@@ -1,11 +1,9 @@
 [build-system]
 requires = [
-    # pin setuptools on pypy to workaround this bug: https://github.com/pypa/distutils/issues/283
-    "setuptools >= 36.4, < 72.2; platform_python_implementation == 'PyPy'",
-    "setuptools >= 36.4; platform_python_implementation != 'PyPy'",
+    "setuptools >= 36.4",
     "wheel",
     "setuptools_scm >= 2.1",
-    "cython >= 0.28.1",
+    "cython >= 3.1",
     "pkgconfig"
 ]
 build-backend = "setuptools.build_meta"
@@ -13,10 +11,10 @@ build-backend = "setuptools.build_meta"
 [tool.setuptools_scm]
 
 [tool.cibuildwheel]
-# Skip building PyPy 3.8 wheels, the build currently fails
 # Also skip wheels for free-threaded CPython 3.14 (e.g. 'cp314t') until we
 # actually support them. We currently aren't thread-safe as we define HB_NO_MT=1.
-skip = ["pp38-*", "cp3??t-*"]
+# CPython abi3 wheels only need universal2 on macOS, skip the single-arch builds.
+skip = ["cp38-*", "cp39-*", "cp3??t-*", "cp*-macosx_x86_64", "cp*-macosx_arm64"]
 enable = ["pypy"]
 test-requires = "pytest"
 test-command = "pytest {project}/tests"
@@ -26,6 +24,21 @@ archs = ["x86_64", "universal2", "arm64"]
 
 [tool.cibuildwheel.linux]
 archs = ["native"]
+
+# Run abi3audit after the default repair commands to scan for abi3 violations
+# https://github.com/pypa/abi3audit
+# Only on Unix platforms (Linux/macOS) since Windows has no default repair command
+[[tool.cibuildwheel.overrides]]
+select = "cp*-{linux,macosx}*"
+inherit.repair-wheel-command = "append"
+repair-wheel-command = "pipx run abi3audit --strict --report {wheel}"
+
+# Disable Limited API for PyPy as the build currently fails, see:
+# https://github.com/harfbuzz/uharfbuzz/issues/262#issuecomment-3415144557
+# https://cibuildwheel.pypa.io/en/stable/configuration/#overrides
+[[tool.cibuildwheel.overrides]]
+select = "pp*"
+environment = { USE_PY_LIMITED_API = "0" }
 
 
 [tool.black]

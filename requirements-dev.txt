@@ -1,4 +1,4 @@
-cython>=0.29.1
+cython>=3.1
 
 # we need wheel >= 0.31.0 to support Markdown long_description
 wheel>=0.31
