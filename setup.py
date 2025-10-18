@@ -5,7 +5,6 @@ import platform
 from io import open
 from typing import List
 
-import pkgconfig
 from Cython.Build import cythonize
 from setuptools import Extension, setup
 
@@ -41,6 +40,8 @@ limited_api_min_version = "0x030A0000"
 
 
 def _configure_extensions_with_system_libs() -> List[Extension]:
+    import pkgconfig
+
     include_dirs = []
     define_macros = []
     libraries = []
