@@ -220,6 +220,79 @@ class TestBuffer:
         buf.reset()
         assert buf.flags == hb.BufferFlags.DEFAULT
 
+    @pytest.mark.parametrize(
+        "glyphs,format,flags,expected",
+        [
+            (
+                False,
+                hb.BufferSerializeFormat.TEXT,
+                hb.BufferSerializeFlags.DEFAULT,
+                "<U+0061=0|U+0062=1|U+0063=2|U+0064=3|U+0065=4>",
+            ),
+            (
+                False,
+                hb.BufferSerializeFormat.TEXT,
+                hb.BufferSerializeFlags.NO_CLUSTERS,
+                "<U+0061|U+0062|U+0063|U+0064|U+0065>",
+            ),
+            (
+                True,
+                hb.BufferSerializeFormat.TEXT,
+                hb.BufferSerializeFlags.DEFAULT,
+                "[a=0+0|b=1+0|c=2+0|d=3+0|e=4+0]",
+            ),
+            (
+                True,
+                hb.BufferSerializeFormat.TEXT,
+                hb.BufferSerializeFlags.DEFAULT
+                | hb.BufferSerializeFlags.NO_CLUSTERS
+                | hb.BufferSerializeFlags.NO_POSITIONS,
+                "[a|b|c|d|e]",
+            ),
+            (
+                False,
+                hb.BufferSerializeFormat.JSON,
+                hb.BufferSerializeFlags.DEFAULT,
+                '[{"u":97,"cl":0},{"u":98,"cl":1},{"u":99,"cl":2},'
+                '{"u":100,"cl":3},{"u":101,"cl":4}]',
+            ),
+            (
+                False,
+                hb.BufferSerializeFormat.JSON,
+                hb.BufferSerializeFlags.NO_CLUSTERS,
+                '[{"u":97},{"u":98},{"u":99},{"u":100},{"u":101}]',
+            ),
+            (
+                True,
+                hb.BufferSerializeFormat.JSON,
+                hb.BufferSerializeFlags.DEFAULT,
+                '[{"g":"a","cl":0,"dx":0,"dy":0,"ax":0,"ay":0},'
+                '{"g":"b","cl":1,"dx":0,"dy":0,"ax":0,"ay":0},'
+                '{"g":"c","cl":2,"dx":0,"dy":0,"ax":0,"ay":0},'
+                '{"g":"d","cl":3,"dx":0,"dy":0,"ax":0,"ay":0},'
+                '{"g":"e","cl":4,"dx":0,"dy":0,"ax":0,"ay":0}]',
+            ),
+            (
+                True,
+                hb.BufferSerializeFormat.JSON,
+                hb.BufferSerializeFlags.DEFAULT
+                | hb.BufferSerializeFlags.NO_CLUSTERS
+                | hb.BufferSerializeFlags.NO_POSITIONS,
+                '[{"g":"a"},{"g":"b"},{"g":"c"},{"g":"d"},{"g":"e"}]',
+            ),
+        ],
+    )
+    def test_serialize(self, glyphs, format, flags, expected):
+        font = hb.Font(hb.Face(ADOBE_BLANK_TTF_PATH.read_bytes()))
+
+        buf = hb.Buffer()
+        buf.add_str("abcde")
+        buf.guess_segment_properties()
+        if glyphs:
+            hb.shape(font, buf)
+
+        assert buf.serialize(font, format=format, flags=flags) == expected
+
 
 class TestBlob:
     def test_from_file_path_fail(self):

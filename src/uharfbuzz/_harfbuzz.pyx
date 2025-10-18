@@ -142,6 +142,21 @@ class BufferContentType(IntEnum):
     UNICODE = HB_BUFFER_CONTENT_TYPE_UNICODE
     GLYPHS = HB_BUFFER_CONTENT_TYPE_GLYPHS
 
+class BufferSerializeFormat(IntEnum):
+    TEXT = HB_BUFFER_SERIALIZE_FORMAT_TEXT
+    JSON = HB_BUFFER_SERIALIZE_FORMAT_JSON
+    INVALID = HB_BUFFER_SERIALIZE_FORMAT_INVALID
+
+class BufferSerializeFlags(IntFlag):
+    DEFAULT = HB_BUFFER_SERIALIZE_FLAG_DEFAULT
+    NO_CLUSTERS = HB_BUFFER_SERIALIZE_FLAG_NO_CLUSTERS
+    NO_POSITIONS = HB_BUFFER_SERIALIZE_FLAG_NO_POSITIONS
+    NO_GLYPH_NAMES = HB_BUFFER_SERIALIZE_FLAG_NO_GLYPH_NAMES
+    GLYPH_EXTENTS = HB_BUFFER_SERIALIZE_FLAG_GLYPH_EXTENTS
+    GLYPH_FLAGS = HB_BUFFER_SERIALIZE_FLAG_GLYPH_FLAGS
+    NO_ADVANCES = HB_BUFFER_SERIALIZE_FLAG_NO_ADVANCES
+    DEFINED = HB_BUFFER_SERIALIZE_FLAG_DEFINED
+
 cdef class Buffer:
     cdef hb_buffer_t* _hb_buffer
     cdef object _message_callback
@@ -370,6 +385,34 @@ cdef class Buffer:
     def set_message_func(self, callback) -> None:
         self._message_callback = callback
         hb_buffer_set_message_func(self._hb_buffer, msgcallback, <void*>callback, NULL)
+
+    def serialize(self,
+                  font: Font,
+                  format: BufferSerializeFormat = BufferSerializeFormat.TEXT,
+                  flags: BufferSerializeFlags = BufferSerializeFlags.DEFAULT) -> str:
+        cdef unsigned int num_glyphs = hb_buffer_get_length(self._hb_buffer)
+        cdef unsigned int start = 0
+        cdef char cstr[STATIC_ARRAY_SIZE]
+        cdef unsigned int consumed
+        cdef bytes packed = b""
+
+        while start < num_glyphs:
+            start += hb_buffer_serialize(
+                self._hb_buffer,
+                start,
+                num_glyphs,
+                cstr,
+                STATIC_ARRAY_SIZE,
+                &consumed,
+                font._hb_font,
+                format,
+                flags
+            )
+            if consumed == 0:
+                break
+            packed += cstr[:consumed]
+
+        return packed.decode()
 
 
 cdef class Blob:
