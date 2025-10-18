@@ -155,6 +155,21 @@ cdef extern from "hb.h":
 
         HB_BUFFER_FLAG_DEFINED
 
+    ctypedef enum hb_buffer_serialize_format_t:
+        HB_BUFFER_SERIALIZE_FORMAT_TEXT
+        HB_BUFFER_SERIALIZE_FORMAT_JSON
+        HB_BUFFER_SERIALIZE_FORMAT_INVALID
+
+    ctypedef enum hb_buffer_serialize_flags_t:
+        HB_BUFFER_SERIALIZE_FLAG_DEFAULT
+        HB_BUFFER_SERIALIZE_FLAG_NO_CLUSTERS
+        HB_BUFFER_SERIALIZE_FLAG_NO_POSITIONS
+        HB_BUFFER_SERIALIZE_FLAG_NO_GLYPH_NAMES
+        HB_BUFFER_SERIALIZE_FLAG_GLYPH_EXTENTS
+        HB_BUFFER_SERIALIZE_FLAG_GLYPH_FLAGS
+        HB_BUFFER_SERIALIZE_FLAG_NO_ADVANCES
+        HB_BUFFER_SERIALIZE_FLAG_DEFINED
+
     hb_buffer_t* hb_buffer_create()
     hb_bool_t hb_buffer_allocation_successful(hb_buffer_t* buffer)
     void hb_buffer_reset(hb_buffer_t *buffer)
@@ -215,6 +230,15 @@ cdef extern from "hb.h":
     hb_codepoint_t hb_buffer_get_invisible_glyph(const hb_buffer_t *buffer)
     void hb_buffer_set_not_found_glyph(hb_buffer_t *buffer, hb_codepoint_t  not_found)
     hb_codepoint_t hb_buffer_get_not_found_glyph(const hb_buffer_t *buffer)
+    unsigned int hb_buffer_serialize(hb_buffer_t *buffer,
+        unsigned int start,
+        unsigned int end,
+        char *buf,
+        unsigned int buf_size,
+        unsigned int *buf_consumed,
+        hb_font_t *font,
+        hb_buffer_serialize_format_t format,
+        hb_buffer_serialize_flags_t flags)
 
 
     # hb-face.h
