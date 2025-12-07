@@ -6,6 +6,7 @@ from enum import IntEnum, IntFlag
 from .charfbuzz cimport *
 from libc.stdlib cimport free, malloc, calloc
 from libc.string cimport const_char
+from libc.math cimport isnan, NAN
 from cpython.pycapsule cimport PyCapsule_GetPointer, PyCapsule_IsValid
 from cpython.unicode cimport PyUnicode_GetLength, PyUnicode_AsUCS4Copy
 from cpython.mem cimport PyMem_Free
@@ -2983,6 +2984,9 @@ cdef class SubsetInput:
     def keep_everything(self):
         hb_subset_input_keep_everything(self._hb_input)
 
+    def pin_all_axes_to_default(self, face: Face) -> bool:
+        return hb_subset_input_pin_all_axes_to_default(self._hb_input, face._hb_face)
+
     def pin_axis_to_default(self, face: Face, tag: str) -> bool:
         hb_tag = hb_tag_from_string(tag.encode("ascii"), -1)
         return hb_subset_input_pin_axis_to_default(
@@ -2994,6 +2998,31 @@ cdef class SubsetInput:
         return hb_subset_input_pin_axis_location(
             self._hb_input, face._hb_face, hb_tag, value
         )
+
+    def set_axis_range(self,
+                       face: Face,
+                       tag: str,
+                       min_value: float | None = None,
+                       max_value: float | None = None,
+                       def_value: float | None = None) -> bool:
+        cdef hb_tag_t hb_tag = hb_tag_from_string(tag.encode("ascii"), -1)
+        min_value = NAN if min_value is None else min_value
+        max_value = NAN if max_value is None else max_value
+        def_value = NAN if def_value is None else def_value
+        return hb_subset_input_set_axis_range(
+            self._hb_input, face._hb_face, hb_tag, min_value, max_value, def_value
+        )
+
+    def get_axis_range(self, tag: str) -> Tuple[float | None, float | None | float | None] | None:
+        cdef hb_tag_t hb_tag = hb_tag_from_string(tag.encode("ascii"), -1)
+        cdef float axis_min_value, axis_max_value, axis_def_value
+        if hb_subset_input_get_axis_range(self._hb_input, hb_tag,
+            &axis_min_value, &axis_max_value, &axis_def_value):
+            min_value = None if isnan(axis_min_value) else axis_min_value
+            max_value = None if isnan(axis_max_value) else axis_max_value
+            def_value = None if isnan(axis_def_value) else axis_def_value
+            return min_value, max_value, def_value
+        return None
 
     @property
     def unicode_set(self) -> Set[int]:

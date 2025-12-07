@@ -1380,8 +1380,24 @@ cdef extern from "hb-subset.h":
     hb_set_t* hb_subset_input_set(hb_subset_input_t* input, hb_subset_sets_t set_type)
     hb_subset_flags_t hb_subset_input_get_flags(hb_subset_input_t* input)
     void hb_subset_input_set_flags(hb_subset_input_t* input, unsigned value)
+    hb_bool_t hb_subset_input_pin_all_axes_to_default(
+        hb_subset_input_t *input,
+        hb_face_t *face)
     hb_bool_t hb_subset_input_pin_axis_to_default(hb_subset_input_t* input, hb_face_t* face, hb_tag_t axis_tag)
     hb_bool_t hb_subset_input_pin_axis_location(hb_subset_input_t* input, hb_face_t* face, hb_tag_t axis_tag, float axis_value)
+    hb_bool_t hb_subset_input_get_axis_range(
+        hb_subset_input_t *input,
+        hb_tag_t axis_tag,
+        float *axis_min_value,
+        float *axis_max_value,
+        float *axis_def_value)
+    hb_bool_t hb_subset_input_set_axis_range(
+        hb_subset_input_t *input,
+        hb_face_t *face,
+        hb_tag_t axis_tag,
+        float axis_min_value,
+        float axis_max_value,
+        float axis_def_value)
     hb_face_t* hb_subset_preprocess(hb_face_t* source)
     hb_face_t* hb_subset_or_fail(hb_face_t* source, const hb_subset_input_t* input)
     hb_face_t* hb_subset_plan_execute_or_fail(hb_subset_plan_t* plan)
