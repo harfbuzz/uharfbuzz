@@ -1159,7 +1159,7 @@ class TestCallbacks:
         assert infos == expected
 
     def test_variation_glyph_func(self, blankfont):
-        string = "a\uFE00"
+        string = "a\ufe00"
         expected = [ord("a") + 0xFE00]
         buf = hb.Buffer()
         buf.add_str(string)
@@ -1651,6 +1651,68 @@ class TestOTColor:
             assert hb.ot_color_palette_get_name_id(blankfont.face, 0) is None
 
 
+class TestSubsetInput:
+
+    @pytest.mark.parametrize(
+        "use_subset_plan",
+        [False, True],
+    )
+    def test_subset(self, blankfont, use_subset_plan):
+        assert blankfont.get_nominal_glyph(ord("a")) == 1
+        assert blankfont.get_nominal_glyph(ord("b")) == 2
+        assert blankfont.get_nominal_glyph(ord("c")) == 3
+        assert blankfont.get_nominal_glyph(ord("d")) == 4
+        assert blankfont.get_nominal_glyph(ord("e")) == 5
+
+        inp = hb.SubsetInput()
+        inp.sets(hb.SubsetInputSets.UNICODE).set({ord("b")})
+        s = inp.sets(hb.SubsetInputSets.LAYOUT_FEATURE_TAG)
+        s.clear()
+        s.invert()
+        inp.layout_script_tag_set.invert()
+        inp.unicode_set.update(ord(c) for c in "cd")
+        inp.unicode_set.add(ord("e"))
+
+        if not use_subset_plan:
+            face = hb.subset(blankfont.face, inp)
+        else:
+            plan = hb.SubsetPlan(blankfont.face, inp)
+            face = plan.execute()
+
+        assert face is not None
+        font = hb.Font(face)
+
+        assert font.get_nominal_glyph(ord("a")) is None
+        assert font.get_nominal_glyph(ord("b")) == 1
+        assert font.get_nominal_glyph(ord("c")) == 2
+        assert font.get_nominal_glyph(ord("d")) == 3
+        assert font.get_nominal_glyph(ord("e")) == 4
+
+        blob = face.blob
+        assert blob
+        assert len(blob) > 100
+        face = hb.Face(blob)
+        font = hb.Font(face)
+
+        assert font.get_nominal_glyph(ord("a")) is None
+        assert font.get_nominal_glyph(ord("b")) == 1
+        assert font.get_nominal_glyph(ord("c")) == 2
+        assert font.get_nominal_glyph(ord("d")) == 3
+        assert font.get_nominal_glyph(ord("e")) == 4
+
+        if use_subset_plan:
+            mapping = plan.old_to_new_glyph_mapping
+            reverse = plan.new_to_old_glyph_mapping
+            assert 1 not in mapping
+            assert mapping[2] == 1
+            assert mapping[3] == 2
+            assert reverse[mapping[2]] == 2
+            assert reverse[mapping[3]] == 3
+            assert len(reverse) == 5
+            cmap = plan.unicode_to_old_glyph_mapping
+            assert cmap[ord("b")] == 2
+
+
 def test_harfbuzz_version():
     v = hb.version_string()
     assert isinstance(v, str)
@@ -1809,63 +1871,6 @@ def test_map():
     assert repr(m5) == "Map({1: 2, 3: 4, 10: 11})"
 
     iter(iter(hb.Map({})))
-
-
-def test_subset(blankfont):
-    for planned in (False, True):
-        assert blankfont.get_nominal_glyph(ord("a")) == 1
-        assert blankfont.get_nominal_glyph(ord("b")) == 2
-        assert blankfont.get_nominal_glyph(ord("c")) == 3
-        assert blankfont.get_nominal_glyph(ord("d")) == 4
-        assert blankfont.get_nominal_glyph(ord("e")) == 5
-
-        inp = hb.SubsetInput()
-        inp.sets(hb.SubsetInputSets.UNICODE).set({ord("b")})
-        s = inp.sets(hb.SubsetInputSets.LAYOUT_FEATURE_TAG)
-        s.clear()
-        s.invert()
-        inp.layout_script_tag_set.invert()
-        inp.unicode_set.update(ord(c) for c in "cd")
-        inp.unicode_set.add(ord("e"))
-
-        if not planned:
-            face = hb.subset(blankfont.face, inp)
-        else:
-            plan = hb.SubsetPlan(blankfont.face, inp)
-            face = plan.execute()
-
-        assert face is not None
-        font = hb.Font(face)
-
-        assert font.get_nominal_glyph(ord("a")) is None
-        assert font.get_nominal_glyph(ord("b")) == 1
-        assert font.get_nominal_glyph(ord("c")) == 2
-        assert font.get_nominal_glyph(ord("d")) == 3
-        assert font.get_nominal_glyph(ord("e")) == 4
-
-        blob = face.blob
-        assert blob
-        assert len(blob) > 100
-        face = hb.Face(blob)
-        font = hb.Font(face)
-
-        assert font.get_nominal_glyph(ord("a")) is None
-        assert font.get_nominal_glyph(ord("b")) == 1
-        assert font.get_nominal_glyph(ord("c")) == 2
-        assert font.get_nominal_glyph(ord("d")) == 3
-        assert font.get_nominal_glyph(ord("e")) == 4
-
-        if planned:
-            mapping = plan.old_to_new_glyph_mapping
-            reverse = plan.new_to_old_glyph_mapping
-            assert 1 not in mapping
-            assert mapping[2] == 1
-            assert mapping[3] == 2
-            assert reverse[mapping[2]] == 2
-            assert reverse[mapping[3]] == 3
-            assert len(reverse) == 5
-            cmap = plan.unicode_to_old_glyph_mapping
-            assert cmap[ord("b")] == 2
 
 
 def test_deprecated():
