@@ -1712,6 +1712,46 @@ class TestSubsetInput:
             cmap = plan.unicode_to_old_glyph_mapping
             assert cmap[ord("b")] == 2
 
+    @pytest.mark.parametrize(
+        "axes",
+        [
+            ["wght"],
+            ["wdth"],
+            ["wght", "wdth"],
+        ],
+    )
+    def test_pin_axis_to_default(self, mutatorsans, axes):
+        inp = hb.SubsetInput()
+        inp.keep_everything()
+
+        for axis in axes:
+            inp.pin_axis_to_default(mutatorsans.face, axis)
+
+        face = hb.subset(mutatorsans.face, inp)
+        assert face is not None
+
+        tags = {a.tag for a in face.axis_infos}
+        assert tags.isdisjoint(set(axes))
+
+    @pytest.mark.parametrize(
+        "axis,value",
+        [
+            ["wght", 100],
+            ["wdth", 1000],
+        ],
+    )
+    def test_pin_axis_location(self, mutatorsans, axis, value):
+        inp = hb.SubsetInput()
+        inp.keep_everything()
+
+        inp.pin_axis_location(mutatorsans.face, axis, value)
+
+        face = hb.subset(mutatorsans.face, inp)
+        assert face is not None
+
+        tags = [a.tag for a in face.axis_infos]
+        assert axis not in tags
+
 
 def test_harfbuzz_version():
     v = hb.version_string()
