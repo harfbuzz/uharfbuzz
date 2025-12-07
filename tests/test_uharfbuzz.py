@@ -1752,6 +1752,59 @@ class TestSubsetInput:
         tags = [a.tag for a in face.axis_infos]
         assert axis not in tags
 
+    def test_pin_all_axes_to_default(self, mutatorsans):
+        inp = hb.SubsetInput()
+        inp.keep_everything()
+        inp.pin_all_axes_to_default(mutatorsans.face)
+
+        face = hb.subset(mutatorsans.face, inp)
+
+        assert face is not None
+        assert not face.axis_infos
+
+    @pytest.mark.parametrize(
+        "axis,min_value,max_value,def_value",
+        [
+            ["wght", None, None, None],
+            ["wght", 100.0, 400.0, 200.0],
+            ["wght", None, 300.0, 100],
+            ["wght", None, None, 300],
+            ["wght", 10.0, None, 50.0],
+            ["wght", None, None, 50.0],
+            ["wght", 10.0, None, None],
+            ["wght", 50.0, 500.0, None],
+            ["wght", None, 600.0, None],
+        ],
+    )
+    def test_set_axis_range(self, mutatorsans, axis, min_value, max_value, def_value):
+        inp = hb.SubsetInput()
+        inp.keep_everything()
+
+        if any([min_value, max_value, def_value]):
+            inp.set_axis_range(mutatorsans.face, axis, min_value, max_value, def_value)
+        else:
+            inp.set_axis_range(mutatorsans.face, axis)
+
+        face = hb.subset(mutatorsans.face, inp)
+        assert face is not None
+        assert face.axis_infos
+
+        axis_infos = [a for a in mutatorsans.face.axis_infos if a.tag == axis]
+        assert len(axis_infos) == 1
+        info = axis_infos[0]
+
+        expected_min = info.min_value if min_value is None else min_value
+        expected_max = info.max_value if max_value is None else max_value
+
+        new_axis_infos = [a for a in face.axis_infos if a.tag == axis]
+        assert len(new_axis_infos) == 1
+        new_info = new_axis_infos[0]
+        assert new_info.min_value == expected_min
+        assert new_info.max_value == expected_max
+        if def_value is not None:
+            assert new_info.default_value == def_value
+            assert (expected_min, expected_max, def_value) == inp.get_axis_range(axis)
+
 
 def test_harfbuzz_version():
     v = hb.version_string()
