@@ -1,7 +1,7 @@
 ## uharfbuzz
 
 <div align="center">
-<p><img src="logo.png" alt="uharfbuzz Logo" width="256" align="center"/></p>
+<p><img src="./logo.png" alt="uharfbuzz Logo" width="256" align="center"/></p>
 
 [![Build + Deploy](https://github.com/harfbuzz/uharfbuzz/actions/workflows/ci.yml/badge.svg?branch=main)](https://github.com/harfbuzz/uharfbuzz/actions/workflows/ci.yml)
 [![PyPI](https://img.shields.io/pypi/v/uharfbuzz.svg)](https://pypi.org/project/uharfbuzz)
