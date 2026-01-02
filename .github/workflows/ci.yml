@@ -36,9 +36,35 @@ jobs:
         name: uharfbuzz-${{ matrix.os }}
         path: wheelhouse/*.whl
 
+  build-pyodide:
+    runs-on: ubuntu-latest
+    steps:
+    - uses: actions/checkout@v4
+      with:
+        submodules: recursive
+    - name: Set up Python
+      uses: actions/setup-python@v5
+      with:
+        python-version: "3.x"
+    - name: Install cibuildwheel
+      run: pip install cibuildwheel
+    - name: Build Pyodide wheel
+      run: python -m cibuildwheel --platform pyodide --output-dir wheelhouse
+    - name: Set up Pyodide venv and run tests
+      run: |
+        pip install pyodide-build
+        pyodide venv .pyodide-venv
+        .pyodide-venv/bin/pip install pytest
+        .pyodide-venv/bin/pip install wheelhouse/*.whl
+        .pyodide-venv/bin/python -m pytest tests/ -v
+    - uses: actions/upload-artifact@v4
+      with:
+        name: uharfbuzz-pyodide
+        path: wheelhouse/*.whl
+
   deploy:
     name: Create and populate release
-    needs: build
+    needs: [build, build-pyodide]
     runs-on: ubuntu-latest
     if: contains(github.ref, 'refs/tags/')
     env:
@@ -69,6 +95,11 @@ jobs:
         for wheel_dir in wheelhouse/uharfbuzz*/; do
           mv "${wheel_dir}"/*.whl dist/
         done
+        # Separate Pyodide wheels (PyPI doesn't accept wasm32 wheels yet)
+        # https://github.com/pypi/warehouse/issues/10416
+        # https://discuss.python.org/t/pep-783-emscripten-packaging
+        mkdir -p dist-pyodide/
+        mv dist/*pyodide*.whl dist-pyodide/ 2>/dev/null || true
     - name: Extract release notes from annotated tag message
       id: release_notes
       env:
@@ -106,6 +137,11 @@ jobs:
                             --title "${{ env.RELEASE_NAME }}" \
                             $notes \
                             $prerelease
+    - name: Upload Pyodide wheel to GitHub release
+      run: |
+        if [ -d dist-pyodide ] && [ "$(ls -A dist-pyodide)" ]; then
+          gh release upload ${{ github.ref }} dist-pyodide/*.whl
+        fi
     - name: Build sdist
       run: |
         if [ "$IS_PRERELEASE" == true ]; then
