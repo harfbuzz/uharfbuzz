@@ -2,11 +2,20 @@
 # -*- coding: utf-8 -*-
 import os
 import platform
+import sys
 from io import open
 from typing import List
 
 from Cython.Build import cythonize
 from setuptools import Extension, setup
+
+
+def is_emscripten_build() -> bool:
+    """Detect if we're building for Emscripten/Pyodide."""
+    return (
+        sys.platform == "emscripten"
+        or os.environ.get("_PYTHON_HOST_PLATFORM", "").startswith("emscripten")
+    )
 
 
 def bool_from_environ(key: str, default: bool = False):
@@ -96,50 +105,57 @@ def _configure_extensions_with_vendored_libs() -> List[Extension]:
     # like VARC table support, but we must not use any experimental APIs as it
     # will break linking with system HarfBuzz that is built without these APIs.
     define_macros = [("HB_NO_MT", "1"), ("HB_EXPERIMENTAL_API", "1")]
-    if use_cython_linetrace:
-        define_macros.append(("CYTHON_TRACE_NOGIL", "1"))
-
-    if use_py_limited_api:
-        define_macros.append(("Py_LIMITED_API", limited_api_min_version))
-
     extra_compile_args = []
     extra_link_args = []
     libraries = []
-    if platform.system() != "Windows":
+    sources = ["harfbuzz/src/harfbuzz-subset.cc", "src/uharfbuzz/_harfbuzz.pyx"]
+
+    emscripten = is_emscripten_build()
+
+    if use_cython_linetrace:
+        define_macros.append(("CYTHON_TRACE_NOGIL", "1"))
+
+    limited_api = use_py_limited_api
+    if limited_api:
+        define_macros.append(("Py_LIMITED_API", limited_api_min_version))
+
+    if platform.system() == "Windows" and not emscripten:
+        define_macros.append(("HAVE_DIRECTWRITE", "1"))
+        define_macros.append(("HAVE_UNISCRIBE", "1"))
+        libraries += ["usp10", "gdi32", "user32", "rpcrt4", "dwrite"]
+        sources += [
+            "harfbuzz/src/hb-directwrite.cc",
+            "harfbuzz/src/hb-directwrite-font.cc",
+            "harfbuzz/src/hb-directwrite-shape.cc",
+            "harfbuzz/src/hb-uniscribe.cc",
+        ]
+    else:
         extra_compile_args.append("-std=c++11")
         extra_compile_args.append("-g0")
         define_macros.append(("HAVE_MMAP", "1"))
         define_macros.append(("HAVE_UNISTD_H", "1"))
         define_macros.append(("HAVE_SYS_MMAN_H", "1"))
-    else:
-        define_macros.append(("HAVE_DIRECTWRITE", "1"))
-        define_macros.append(("HAVE_UNISCRIBE", "1"))
-        libraries += ["usp10", "gdi32", "user32", "rpcrt4", "dwrite"]
 
-    if platform.system() == "Darwin":
+    if platform.system() == "Darwin" and not emscripten:
         define_macros.append(("HAVE_CORETEXT", "1"))
         extra_link_args.extend(["-framework", "ApplicationServices"])
+        sources += [
+            "harfbuzz/src/hb-coretext.cc",
+            "harfbuzz/src/hb-coretext-font.cc",
+            "harfbuzz/src/hb-coretext-shape.cc",
+        ]
+
 
     extension = Extension(
         "uharfbuzz._harfbuzz",
         define_macros=define_macros,
         include_dirs=["harfbuzz/src"],
-        sources=[
-            "harfbuzz/src/harfbuzz-subset.cc",
-            "harfbuzz/src/hb-coretext.cc",
-            "harfbuzz/src/hb-coretext-font.cc",
-            "harfbuzz/src/hb-coretext-shape.cc",
-            "harfbuzz/src/hb-directwrite.cc",
-            "harfbuzz/src/hb-directwrite-font.cc",
-            "harfbuzz/src/hb-directwrite-shape.cc",
-            "harfbuzz/src/hb-uniscribe.cc",
-            "src/uharfbuzz/_harfbuzz.pyx",
-        ],
+        sources=sources,
         language="c++",
         libraries=libraries,
         extra_compile_args=extra_compile_args,
         extra_link_args=extra_link_args,
-        py_limited_api=use_py_limited_api,
+        py_limited_api=limited_api,
     )
 
     extension_test = Extension(
@@ -154,7 +170,7 @@ def _configure_extensions_with_vendored_libs() -> List[Extension]:
         libraries=libraries,
         extra_compile_args=extra_compile_args,
         extra_link_args=extra_link_args,
-        py_limited_api=use_py_limited_api,
+        py_limited_api=limited_api,
     )
 
     return [extension, extension_test]
