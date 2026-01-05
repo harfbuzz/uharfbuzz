@@ -45,19 +45,12 @@ jobs:
     - name: Set up Python
       uses: actions/setup-python@v5
       with:
-        # Pyodide requires Python 3.13 (latest not yet supported)
+        # Must match Pyodide's Python version (0.28.x uses 3.13)
         python-version: "3.13"
     - name: Install cibuildwheel
       run: pip install cibuildwheel
-    - name: Build Pyodide wheel
+    - name: Build and test Pyodide wheel
       run: python -m cibuildwheel --platform pyodide --output-dir wheelhouse
-    - name: Set up Pyodide venv and run tests
-      run: |
-        pip install pyodide-build
-        pyodide venv .pyodide-venv
-        .pyodide-venv/bin/pip install pytest
-        .pyodide-venv/bin/pip install wheelhouse/*.whl
-        .pyodide-venv/bin/python -m pytest tests/ -v
     - uses: actions/upload-artifact@v4
       with:
         name: uharfbuzz-pyodide
