@@ -1767,8 +1767,8 @@ class TestSubsetInput:
         [
             ["wght", None, None, None],
             ["wght", 100.0, 400.0, 200.0],
-            ["wght", None, 300.0, 100],
-            ["wght", None, None, 300],
+            ["wght", None, 300.0, 100.0],
+            ["wght", None, None, 300.0],
             ["wght", 10.0, None, 50.0],
             ["wght", None, None, 50.0],
             ["wght", 10.0, None, None],
