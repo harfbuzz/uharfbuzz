@@ -1258,6 +1258,8 @@ class TestCallbacks:
         pos = [g.x_advance for g in buf.glyph_positions]
         assert pos == [0, 0, 0, 100, 0]
         expected_messages = [
+            "start decompose",
+            "end decompose",
             "start table GSUB script tag 'DFLT'",
             "start lookup 0 feature 'calt'",
             "end lookup 0 feature 'calt'",
@@ -1270,6 +1272,8 @@ class TestCallbacks:
         assert messages == expected_messages
         gids_trace = [[g.codepoint for g in infos] for infos in infos_trace]
         assert gids_trace == [
+            [101, 100, 99, 98, 97],
+            [101, 100, 99, 98, 97],
             [5, 4, 3, 2, 1],
             [5, 4, 3, 2, 1],
             [5, 4, 1, 2, 1],
@@ -1304,7 +1308,7 @@ class TestCallbacks:
             messages.append(msg)
             infos_trace.append(buf.glyph_infos)
             positions_trace.append(buf.glyph_positions)
-            return False
+            return False if "decompose" not in msg else True
 
         buf.set_message_func(message)
         hb.shape(blankfont, buf)
@@ -1313,12 +1317,19 @@ class TestCallbacks:
         pos = [g.x_advance for g in buf.glyph_positions]
         assert pos == [0, 0, 0, 0, 0]
         expected_messages = [
+            "start decompose",
+            "end decompose",
             "start table GSUB script tag 'DFLT'",
             "start table GPOS script tag 'DFLT'",
         ]
         assert messages == expected_messages
         gids_trace = [[g.codepoint for g in infos] for infos in infos_trace]
-        assert gids_trace == [[5, 4, 3, 2, 1], [5, 4, 3, 2, 1]]
+        assert gids_trace == [
+            [101, 100, 99, 98, 97],
+            [101, 100, 99, 98, 97],
+            [5, 4, 3, 2, 1],
+            [5, 4, 3, 2, 1],
+        ]
         advances_trace = [[g.x_advance for g in pos] for pos in positions_trace if pos]
         assert advances_trace == [[0, 0, 0, 0, 0]]
 
