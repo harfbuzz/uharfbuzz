@@ -12,10 +12,9 @@ from setuptools import Extension, setup
 
 def is_emscripten_build() -> bool:
     """Detect if we're building for Emscripten/Pyodide."""
-    return (
-        sys.platform == "emscripten"
-        or os.environ.get("_PYTHON_HOST_PLATFORM", "").startswith("emscripten")
-    )
+    return sys.platform == "emscripten" or os.environ.get(
+        "_PYTHON_HOST_PLATFORM", ""
+    ).startswith("emscripten")
 
 
 def bool_from_environ(key: str, default: bool = False):
@@ -104,11 +103,15 @@ def _configure_extensions_with_vendored_libs() -> List[Extension]:
     # We build with HB_EXPERIMENTAL_API to enable experimental HarfBuzz features
     # like VARC table support, but we must not use any experimental APIs as it
     # will break linking with system HarfBuzz that is built without these APIs.
-    define_macros = [("HB_NO_MT", "1"), ("HB_EXPERIMENTAL_API", "1")]
+    define_macros = [
+        ("HB_NO_MT", "1"),
+        ("HB_EXPERIMENTAL_API", "1"),
+        ("HB_HAS_SUBSET", "1"),
+    ]
     extra_compile_args = []
     extra_link_args = []
     libraries = []
-    sources = ["harfbuzz/src/harfbuzz-subset.cc", "src/uharfbuzz/_harfbuzz.pyx"]
+    sources = ["harfbuzz/src/harfbuzz-world.cc", "src/uharfbuzz/_harfbuzz.pyx"]
 
     emscripten = is_emscripten_build()
 
@@ -122,13 +125,9 @@ def _configure_extensions_with_vendored_libs() -> List[Extension]:
     if platform.system() == "Windows" and not emscripten:
         define_macros.append(("HAVE_DIRECTWRITE", "1"))
         define_macros.append(("HAVE_UNISCRIBE", "1"))
+        define_macros.append(("HB_HAS_DIRECTWRITE", "1"))
+        define_macros.append(("HB_HAS_UNISCRIBE", "1"))
         libraries += ["usp10", "gdi32", "user32", "rpcrt4", "dwrite"]
-        sources += [
-            "harfbuzz/src/hb-directwrite.cc",
-            "harfbuzz/src/hb-directwrite-font.cc",
-            "harfbuzz/src/hb-directwrite-shape.cc",
-            "harfbuzz/src/hb-uniscribe.cc",
-        ]
     else:
         extra_compile_args.append("-std=c++11")
         extra_compile_args.append("-g0")
@@ -138,13 +137,8 @@ def _configure_extensions_with_vendored_libs() -> List[Extension]:
 
     if platform.system() == "Darwin" and not emscripten:
         define_macros.append(("HAVE_CORETEXT", "1"))
+        define_macros.append(("HB_HAS_CORETEXT", "1"))
         extra_link_args.extend(["-framework", "ApplicationServices"])
-        sources += [
-            "harfbuzz/src/hb-coretext.cc",
-            "harfbuzz/src/hb-coretext-font.cc",
-            "harfbuzz/src/hb-coretext-shape.cc",
-        ]
-
 
     extension = Extension(
         "uharfbuzz._harfbuzz",
