@@ -10,7 +10,7 @@ cdef class Blob:
 
     @staticmethod
     cdef Blob from_ptr(hb_blob_t* hb_blob):
-        """Create Blob from a pointer taking ownership of a it."""
+        """Create Blob from a pointer, taking ownership of it."""
 
         cdef Blob wrapper = Blob.__new__(Blob)
         wrapper._hb_blob = hb_blob

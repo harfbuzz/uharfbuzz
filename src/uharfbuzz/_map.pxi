@@ -15,7 +15,7 @@ cdef class Map:
 
     @staticmethod
     cdef Map from_ptr(hb_map_t* hb_map):
-        """Create Map from a pointer taking ownership of a it."""
+        """Create Map from a pointer, taking ownership of it."""
 
         cdef Map wrapper = Map.__new__(Map)
         wrapper._hb_map = hb_map

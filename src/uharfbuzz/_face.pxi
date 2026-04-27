@@ -141,7 +141,7 @@ cdef class Face:
 
     @staticmethod
     cdef Face from_ptr(hb_face_t* hb_face):
-        """Create Face from a pointer taking ownership of a it."""
+        """Create Face from a pointer, taking ownership of it."""
 
         cdef Face wrapper = Face.__new__(Face)
         wrapper._hb_face = hb_face

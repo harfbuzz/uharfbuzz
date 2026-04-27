@@ -15,7 +15,7 @@ cdef class Set:
 
     @staticmethod
     cdef Set from_ptr(hb_set_t* hb_set):
-        """Create Set from a pointer taking ownership of a it."""
+        """Create Set from a pointer, taking ownership of it."""
 
         cdef Set wrapper = Set.__new__(Set)
         wrapper._hb_set = hb_set

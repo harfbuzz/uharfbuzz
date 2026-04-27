@@ -167,7 +167,7 @@ cdef class Font:
 
     @staticmethod
     cdef Font from_ptr(hb_font_t* hb_font):
-        """Create Font from a pointer taking ownership of a it."""
+        """Create Font from a pointer, taking ownership of it."""
 
         cdef Font wrapper = Font.__new__(Font)
         wrapper._hb_font = hb_font
