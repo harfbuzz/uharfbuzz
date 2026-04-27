@@ -3,7 +3,10 @@ cdef class Map:
 
     INVALID_VALUE = HB_MAP_VALUE_INVALID
 
-    def __cinit__(self, init = dict()):
+    def __cinit__(self, *args, **kwargs):
+        self._hb_map = NULL
+
+    def __init__(self, init = dict()):
         self._hb_map = hb_map_create()
         if not hb_map_allocation_successful(self._hb_map):
             raise MemoryError()

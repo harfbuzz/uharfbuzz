@@ -3,7 +3,10 @@ cdef class Set:
 
     INVALID_VALUE = HB_SET_VALUE_INVALID
 
-    def __cinit__(self, init = set()):
+    def __cinit__(self, *args, **kwargs):
+        self._hb_set = NULL
+
+    def __init__(self, init = set()):
         self._hb_set = hb_set_create()
         if not hb_set_allocation_successful(self._hb_set):
             raise MemoryError()
