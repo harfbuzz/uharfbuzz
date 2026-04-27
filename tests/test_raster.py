@@ -115,3 +115,17 @@ class TestRasterPaint:
         paint = hb.RasterPaint()
         assert paint.set_custom_palette_color(0, hb.Color(255, 0, 0, 255))
         paint.clear_custom_palette_colors()
+
+    def test_paint_glyph_or_fail(self, font):
+        # OpenSans glyphs are monochrome
+        gid = 1
+        paint = hb.RasterPaint()
+        paint.scale_factor = (1.0, 1.0)
+        paint.set_glyph_extents(font.get_glyph_extents(gid))
+        # _or_fail variant signals "no color paint data" via False
+        assert not paint.paint_glyph_or_fail(font, gid)
+        # plain variant falls back to outline drawing
+        paint.paint_glyph(font, gid)
+        image = paint.render()
+        assert image is not None
+        assert image.format is hb.RasterFormat.BGRA32

@@ -139,7 +139,10 @@ cdef class RasterDraw:
         c_extents.height = extents.height
         return hb_raster_draw_set_glyph_extents(self._hb_raster_draw, &c_extents)
 
-    def draw_glyph(self, font: Font, glyph: int) -> bool:
+    def draw_glyph(self, font: Font, glyph: int):
+        hb_raster_draw_glyph(self._hb_raster_draw, font._hb_font, glyph)
+
+    def draw_glyph_or_fail(self, font: Font, glyph: int) -> bool:
         return hb_raster_draw_glyph_or_fail(self._hb_raster_draw, font._hb_font, glyph)
 
     def render(self) -> RasterImage | None:
@@ -250,7 +253,10 @@ cdef class RasterPaint:
     def clear_custom_palette_colors(self):
         hb_raster_paint_clear_custom_palette_colors(self._hb_raster_paint)
 
-    def paint_glyph(self, font: Font, glyph: int) -> bool:
+    def paint_glyph(self, font: Font, glyph: int):
+        hb_raster_paint_glyph(self._hb_raster_paint, font._hb_font, glyph)
+
+    def paint_glyph_or_fail(self, font: Font, glyph: int) -> bool:
         return hb_raster_paint_glyph_or_fail(self._hb_raster_paint, font._hb_font, glyph)
 
     def render(self) -> RasterImage | None:
