@@ -68,6 +68,7 @@ include "_face.pxi"
 include "_draw.pxi"
 include "_paint.pxi"
 include "_font.pxi"
+include "_raster.pxi"
 include "_serialize.pxi"
 include "_subset.pxi"
 

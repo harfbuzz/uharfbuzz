@@ -1409,3 +1409,117 @@ cdef extern from "hb-subset.h":
     hb_subset_plan_t* hb_subset_plan_reference(hb_subset_plan_t* plan)
     hb_bool_t hb_subset_plan_set_user_data(hb_subset_plan_t* plan, hb_user_data_key_t* key, void* data, hb_destroy_func_t destroy, hb_bool_t replace)
     void* hb_subset_plan_get_user_data(const hb_subset_plan_t* plan, hb_user_data_key_t* key)
+
+
+cdef extern from "hb-raster.h":
+
+    ctypedef enum hb_raster_format_t:
+        HB_RASTER_FORMAT_A8
+        HB_RASTER_FORMAT_BGRA32
+
+    ctypedef struct hb_raster_extents_t:
+        int x_origin
+        int y_origin
+        unsigned int width
+        unsigned int height
+        unsigned int stride
+
+    ctypedef struct hb_raster_image_t:
+        pass
+    ctypedef struct hb_raster_draw_t:
+        pass
+    ctypedef struct hb_raster_paint_t:
+        pass
+
+    # Image
+    hb_raster_image_t* hb_raster_image_create_or_fail()
+    hb_raster_image_t* hb_raster_image_reference(hb_raster_image_t* image)
+    void hb_raster_image_destroy(hb_raster_image_t* image)
+    hb_bool_t hb_raster_image_configure(
+        hb_raster_image_t* image,
+        hb_raster_format_t format,
+        const hb_raster_extents_t* extents)
+    void hb_raster_image_clear(hb_raster_image_t* image)
+    const uint8_t* hb_raster_image_get_buffer(const hb_raster_image_t* image)
+    void hb_raster_image_get_extents(
+        const hb_raster_image_t* image,
+        hb_raster_extents_t* extents)
+    hb_raster_format_t hb_raster_image_get_format(const hb_raster_image_t* image)
+    hb_bool_t hb_raster_image_deserialize_from_png_or_fail(
+        hb_raster_image_t* image,
+        hb_blob_t* png)
+    hb_blob_t* hb_raster_image_serialize_to_png_or_fail(const hb_raster_image_t* image)
+
+    # Draw
+    hb_raster_draw_t* hb_raster_draw_create_or_fail()
+    hb_raster_draw_t* hb_raster_draw_reference(hb_raster_draw_t* draw)
+    void hb_raster_draw_destroy(hb_raster_draw_t* draw)
+    void hb_raster_draw_set_transform(
+        hb_raster_draw_t* draw,
+        float xx, float yx, float xy, float yy, float dx, float dy)
+    void hb_raster_draw_get_transform(
+        const hb_raster_draw_t* draw,
+        float* xx, float* yx, float* xy, float* yy, float* dx, float* dy)
+    void hb_raster_draw_set_scale_factor(
+        hb_raster_draw_t* draw, float x_scale_factor, float y_scale_factor)
+    void hb_raster_draw_get_scale_factor(
+        const hb_raster_draw_t* draw, float* x_scale_factor, float* y_scale_factor)
+    void hb_raster_draw_set_extents(
+        hb_raster_draw_t* draw, const hb_raster_extents_t* extents)
+    hb_bool_t hb_raster_draw_get_extents(
+        const hb_raster_draw_t* draw, hb_raster_extents_t* extents)
+    hb_bool_t hb_raster_draw_set_glyph_extents(
+        hb_raster_draw_t* draw, const hb_glyph_extents_t* glyph_extents)
+    hb_draw_funcs_t* hb_raster_draw_get_funcs(const hb_raster_draw_t* draw)
+    void hb_raster_draw_glyph(
+        hb_raster_draw_t* draw, hb_font_t* font, hb_codepoint_t glyph)
+    hb_bool_t hb_raster_draw_glyph_or_fail(
+        hb_raster_draw_t* draw, hb_font_t* font, hb_codepoint_t glyph)
+    hb_raster_image_t* hb_raster_draw_render(hb_raster_draw_t* draw)
+    void hb_raster_draw_clear(hb_raster_draw_t* draw)
+    void hb_raster_draw_reset(hb_raster_draw_t* draw)
+    void hb_raster_draw_recycle_image(
+        hb_raster_draw_t* draw, hb_raster_image_t* image)
+
+    # Paint
+    hb_raster_paint_t* hb_raster_paint_create_or_fail()
+    hb_raster_paint_t* hb_raster_paint_reference(hb_raster_paint_t* paint)
+    void hb_raster_paint_destroy(hb_raster_paint_t* paint)
+    void hb_raster_paint_set_transform(
+        hb_raster_paint_t* paint,
+        float xx, float yx, float xy, float yy, float dx, float dy)
+    void hb_raster_paint_get_transform(
+        const hb_raster_paint_t* paint,
+        float* xx, float* yx, float* xy, float* yy, float* dx, float* dy)
+    void hb_raster_paint_set_scale_factor(
+        hb_raster_paint_t* paint, float x_scale_factor, float y_scale_factor)
+    void hb_raster_paint_get_scale_factor(
+        const hb_raster_paint_t* paint, float* x_scale_factor, float* y_scale_factor)
+    void hb_raster_paint_set_extents(
+        hb_raster_paint_t* paint, const hb_raster_extents_t* extents)
+    hb_bool_t hb_raster_paint_get_extents(
+        const hb_raster_paint_t* paint, hb_raster_extents_t* extents)
+    hb_bool_t hb_raster_paint_set_glyph_extents(
+        hb_raster_paint_t* paint, const hb_glyph_extents_t* glyph_extents)
+    void hb_raster_paint_set_foreground(
+        hb_raster_paint_t* paint, hb_color_t foreground)
+    hb_color_t hb_raster_paint_get_foreground(const hb_raster_paint_t* paint)
+    void hb_raster_paint_set_background(
+        hb_raster_paint_t* paint, hb_color_t background)
+    hb_color_t hb_raster_paint_get_background(const hb_raster_paint_t* paint)
+    void hb_raster_paint_set_palette(
+        hb_raster_paint_t* paint, unsigned int palette)
+    unsigned int hb_raster_paint_get_palette(const hb_raster_paint_t* paint)
+    void hb_raster_paint_clear_custom_palette_colors(hb_raster_paint_t* paint)
+    hb_bool_t hb_raster_paint_set_custom_palette_color(
+        hb_raster_paint_t* paint, unsigned int color_index, hb_color_t color)
+    hb_paint_funcs_t* hb_raster_paint_get_funcs(const hb_raster_paint_t* paint)
+    void hb_raster_paint_glyph(
+        hb_raster_paint_t* paint, hb_font_t* font, hb_codepoint_t glyph)
+    hb_bool_t hb_raster_paint_glyph_or_fail(
+        hb_raster_paint_t* paint, hb_font_t* font, hb_codepoint_t glyph)
+    hb_raster_image_t* hb_raster_paint_render(hb_raster_paint_t* paint)
+    void hb_raster_paint_clear(hb_raster_paint_t* paint)
+    void hb_raster_paint_reset(hb_raster_paint_t* paint)
+    void hb_raster_paint_recycle_image(
+        hb_raster_paint_t* paint, hb_raster_image_t* image)

@@ -107,6 +107,7 @@ def _configure_extensions_with_vendored_libs() -> List[Extension]:
         ("HB_NO_MT", "1"),
         ("HB_EXPERIMENTAL_API", "1"),
         ("HB_HAS_SUBSET", "1"),
+        ("HB_HAS_RASTER", "1"),
     ]
     extra_compile_args = []
     extra_link_args = []
