@@ -124,8 +124,6 @@ def _configure_extensions_with_vendored_libs() -> List[Extension]:
         define_macros.append(("Py_LIMITED_API", limited_api_min_version))
 
     if platform.system() == "Windows" and not emscripten:
-        define_macros.append(("HAVE_DIRECTWRITE", "1"))
-        define_macros.append(("HAVE_UNISCRIBE", "1"))
         define_macros.append(("HB_HAS_DIRECTWRITE", "1"))
         define_macros.append(("HB_HAS_UNISCRIBE", "1"))
         libraries += ["usp10", "gdi32", "user32", "rpcrt4", "dwrite"]
@@ -137,7 +135,6 @@ def _configure_extensions_with_vendored_libs() -> List[Extension]:
         define_macros.append(("HAVE_SYS_MMAN_H", "1"))
 
     if platform.system() == "Darwin" and not emscripten:
-        define_macros.append(("HAVE_CORETEXT", "1"))
         define_macros.append(("HB_HAS_CORETEXT", "1"))
         extra_link_args.extend(["-framework", "ApplicationServices"])
 
