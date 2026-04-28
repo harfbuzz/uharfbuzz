@@ -55,7 +55,7 @@ def _configure_extensions_with_system_libs() -> List[Extension]:
     libraries = []
     library_dirs = []
 
-    harfbuzz_components = ["harfbuzz-subset"]
+    harfbuzz_components = ["harfbuzz-subset", "harfbuzz-raster"]
     for harfbuzz_component in harfbuzz_components:
         harfbuzz_component_configuration = pkgconfig.parse(harfbuzz_component)
         include_dirs += harfbuzz_component_configuration["include_dirs"]
