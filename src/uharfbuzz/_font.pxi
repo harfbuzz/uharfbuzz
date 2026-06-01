@@ -175,7 +175,7 @@ cdef class Font:
         return wrapper
 
     @classmethod
-    @deprecated("Font()")
+    @deprecated("Font()", since="0.10.0")
     def create(cls, face: Face) -> Font:
         cdef Font inst = cls(face)
         return inst
@@ -790,7 +790,7 @@ cdef class FontFuncs:
         hb_font_funcs_destroy(self._hb_ffuncs)
 
     @classmethod
-    @deprecated("FontFuncs()")
+    @deprecated("FontFuncs()", since="0.10.0")
     def create(cls) -> FontFuncs:
         cdef FontFuncs inst = cls()
         return inst

@@ -63,12 +63,12 @@ class RepackerError(SerializerError):
     pass
 
 
-@deprecated("serialize()")
+@deprecated("serialize()", since="0.45.0")
 def repack(subtables, graphnodes):
     return serialize(subtables, graphnodes)
 
 
-@deprecated("serialize_with_tag()")
+@deprecated("serialize_with_tag()", since="0.45.0")
 def repack_with_tag(tag, subtables, graphnodes):
     return serialize_with_tag(tag, subtables, graphnodes)
 

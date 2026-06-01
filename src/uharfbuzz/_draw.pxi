@@ -62,11 +62,11 @@ cdef class DrawFuncs:
     def __dealloc__(self):
         hb_draw_funcs_destroy(self._hb_drawfuncs)
 
-    @deprecated("Font.draw_glyph()")
+    @deprecated("Font.draw_glyph()", since="0.34.0")
     def get_glyph_shape(self, font: Font, gid: int):
         font.draw_glyph(gid, self)
 
-    @deprecated("Font.draw_glyph()")
+    @deprecated("Font.draw_glyph()", since="0.34.0")
     def draw_glyph(self, font: Font, gid: int, draw_data: object = None):
         font.draw_glyph(gid, self, draw_data)
 

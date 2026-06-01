@@ -111,7 +111,7 @@ cdef class Buffer:
         hb_buffer_destroy(self._hb_buffer)
 
     @classmethod
-    @deprecated("Buffer()")
+    @deprecated("Buffer()", since="0.10.0")
     def create(cls) -> Buffer:
         cdef Buffer inst = cls()
         return inst

@@ -38,8 +38,12 @@ def version_string() -> str:
 WARNED = set()
 
 
-def deprecated(replacement=None):
-    """Decorator to raise a warning when a deprecated function is called."""
+def deprecated(replacement=None, since=""):
+    """Decorator to raise a warning when a deprecated function is called.
+
+    Also prepends a Sphinx ``.. deprecated::`` directive to the wrapped
+    function's docstring.
+    """
 
     def decorator(func):
         @wraps(func)
@@ -52,6 +56,13 @@ def deprecated(replacement=None):
                 WARNED.add(message)
             return func(*args, **kwargs)
 
+        notice = f".. deprecated:: {since}".rstrip()
+        if replacement:
+            # Put the replacement note as a separate paragraph so it doesn’t
+            # get stripped away if there is no existing docstring.
+            notice += f"\n\nUse :obj:`{replacement}` instead."
+        existing = wrapper.__doc__ or ""
+        wrapper.__doc__ = f"{notice}\n\n{existing}" if existing else notice
         return wrapper
 
     return decorator
@@ -147,29 +158,29 @@ def ot_tag_to_language(tag: str) -> str:
     return packed.decode()
 
 
-@deprecated("Face.get_lookup_glyph_alternates()")
+@deprecated("Face.get_lookup_glyph_alternates()", since="0.40.0")
 def ot_layout_lookup_get_glyph_alternates(
         face: Face, lookup_index : int, glyph : hb_codepoint_t) -> List[int]:
    return face.get_lookup_glyph_alternates(lookup_index, glyph)
 
 
-@deprecated("Face.get_language_feature_tags()")
+@deprecated("Face.get_language_feature_tags()", since="0.40.0")
 def ot_layout_language_get_feature_tags(
         face: Face, tag: str, script_index: int = 0,
         language_index: int = 0xFFFF) -> List[str]:
     return face.get_language_feature_tags(tag, script_index, language_index)
 
 
-@deprecated("Face.get_script_language_tags()")
+@deprecated("Face.get_script_language_tags()", since="0.40.0")
 def ot_layout_script_get_language_tags(
         face: Face, tag: str, script_index: int = 0) -> List[str]:
     return face.get_script_language_tags(tag, script_index)
 
-@deprecated("Face.get_table_script_tags()")
+@deprecated("Face.get_table_script_tags()", since="0.40.0")
 def ot_layout_table_get_script_tags(face: Face, tag: str) -> List[str]:
     return face.get_table_script_tags(tag)
 
-@deprecated("Face.get_layout_baseline()")
+@deprecated("Face.get_layout_baseline()", since="0.40.0")
 def ot_layout_get_baseline(font: Font,
                            baseline_tag: str,
                            direction: str,
@@ -177,35 +188,35 @@ def ot_layout_get_baseline(font: Font,
                            language_tag: str) -> int:
     return font.get_layout_baseline(baseline_tag, direction, script_tag, language_tag)
 
-@deprecated("Face.face.has_layout_glyph_classes")
+@deprecated("Face.face.has_layout_glyph_classes", since="0.40.0")
 def ot_layout_has_glyph_classes(face: Face) -> bool:
     return face.has_layout_glyph_classes
 
-@deprecated("Face.has_layout_positioning")
+@deprecated("Face.has_layout_positioning", since="0.40.0")
 def ot_layout_has_positioning(face: Face) -> bool:
     return face.has_layout_positioning
 
-@deprecated("Face.has_layout_substitution")
+@deprecated("Face.has_layout_substitution", since="0.40.0")
 def ot_layout_has_substitution(face: Face) -> bool:
     return face.has_layout_substitution
 
-@deprecated("Face.get_layout_glyph_class()")
+@deprecated("Face.get_layout_glyph_class()", since="0.40.0")
 def ot_layout_get_glyph_class(face: Face, glyph: int) -> OTLayoutGlyphClass:
     return face.get_layout_glyph_class(glyph)
 
-@deprecated("Face.has_color_palettes")
+@deprecated("Face.has_color_palettes", since="0.40.0")
 def ot_color_has_palettes(face: Face) -> bool:
     return face.has_color_palettes
 
-@deprecated("Face.color_palettes")
+@deprecated("Face.color_palettes", since="0.40.0")
 def ot_color_palette_get_count(face: Face) -> int:
     return hb_ot_color_palette_get_count(face._hb_face)
 
-@deprecated("Face.get_color_palette()")
+@deprecated("Face.get_color_palette()", since="0.40.0")
 def ot_color_palette_get_flags(face: Face, palette_index: int) -> OTColorPaletteFlags:
     return OTColorPaletteFlags(hb_ot_color_palette_get_flags(face._hb_face, palette_index))
 
-@deprecated("Face.get_color_palette()")
+@deprecated("Face.get_color_palette()", since="0.40.0")
 def ot_color_palette_get_colors(face: Face, palette_index: int) -> List[Color]:
     cdef list ret = []
     cdef unsigned int i
@@ -218,7 +229,7 @@ def ot_color_palette_get_colors(face: Face, palette_index: int) -> List[Color]:
             ret.append(Color.from_int(colors[i]))
     return ret
 
-@deprecated("Face.get_color_palette()")
+@deprecated("Face.get_color_palette()", since="0.40.0")
 def ot_color_palette_get_name_id(face: Face, palette_index: int) -> int | None:
     cdef hb_ot_name_id_t name_id
     name_id = hb_ot_color_palette_get_name_id(face._hb_face, palette_index)
@@ -226,85 +237,85 @@ def ot_color_palette_get_name_id(face: Face, palette_index: int) -> int | None:
         return None
     return name_id
 
-@deprecated("Face.color_palette_color_get_name_id()")
+@deprecated("Face.color_palette_color_get_name_id()", since="0.40.0")
 def ot_color_palette_color_get_name_id(face: Face, color_index: int) -> int | None:
     return face.color_palette_color_get_name_id(color_index)
 
-@deprecated("Face.has_color_layers")
+@deprecated("Face.has_color_layers", since="0.40.0")
 def ot_color_has_layers(face: Face) -> bool:
     return face.has_color_layers
 
-@deprecated("Face.get_glyph_color_layers()")
+@deprecated("Face.get_glyph_color_layers()", since="0.40.0")
 def ot_color_glyph_get_layers(face: Face, glyph: int) -> List[OTColorLayer]:
     return face.get_glyph_color_layers(glyph)
 
-@deprecated("Face.has_color_paint")
+@deprecated("Face.has_color_paint", since="0.40.0")
 def ot_color_has_paint(face: Face) -> bool:
     return face.has_color_paint
 
-@deprecated("Face.glyph_has_color_paint()")
+@deprecated("Face.glyph_has_color_paint()", since="0.40.0")
 def ot_color_glyph_has_paint(face: Face, glyph: int) -> bool:
     return face.glyph_has_color_paint(glyph)
 
-@deprecated("Face.has_color_svg")
+@deprecated("Face.has_color_svg", since="0.40.0")
 def ot_color_has_svg(face: Face) -> bool:
     return face.has_color_svg
 
-@deprecated("Face.get_glyph_color_svg()")
+@deprecated("Face.get_glyph_color_svg()", since="0.40.0")
 def ot_color_glyph_get_svg(face: Face, glyph: int) -> Blob:
     return face.get_glyph_color_svg(glyph)
 
-@deprecated("Face.has_color_png")
+@deprecated("Face.has_color_png", since="0.40.0")
 def ot_color_has_png(face: Face) -> bool:
     return face.has_color_png
 
-@deprecated("Font.get_glyph_color_png()")
+@deprecated("Font.get_glyph_color_png()", since="0.40.0")
 def ot_color_glyph_get_png(font: Font, glyph: int) -> Blob:
     return font.get_glyph_color_png(glyph)
 
 
-@deprecated("Face.has_math_data")
+@deprecated("Face.has_math_data", since="0.40.0")
 def ot_math_has_data(face: Face) -> bool:
     return face.has_math_data
 
-@deprecated("Font.get_math_constant()")
+@deprecated("Font.get_math_constant()", since="0.40.0")
 def ot_math_get_constant(font: Font, constant: OTMathConstant) -> int:
     return font.get_math_constant(constant)
 
-@deprecated("Font.get_math_glyph_italics_correction()")
+@deprecated("Font.get_math_glyph_italics_correction()", since="0.40.0")
 def ot_math_get_glyph_italics_correction(font: Font, glyph: int) -> int:
     return font.get_math_glyph_italics_correction(glyph)
 
-@deprecated("Font.get_math_glyph_top_accent_attachment()")
+@deprecated("Font.get_math_glyph_top_accent_attachment()", since="0.40.0")
 def ot_math_get_glyph_top_accent_attachment(font: Font, glyph: int) -> int:
     return font.get_math_glyph_top_accent_attachment(glyph)
 
-@deprecated("Face.is_glyph_extended_math_shape()")
+@deprecated("Face.is_glyph_extended_math_shape()", since="0.40.0")
 def ot_math_is_glyph_extended_shape(face: Face, glyph: int) -> bool:
     return face.is_glyph_extended_math_shape(glyph)
 
-@deprecated("Font.get_math_min_connector_overlap()")
+@deprecated("Font.get_math_min_connector_overlap()", since="0.40.0")
 def ot_math_get_min_connector_overlap(font: Font, direction: str) -> int:
     return font.get_math_min_connector_overlap(direction)
 
-@deprecated("Font.get_math_glyph_kerning()")
+@deprecated("Font.get_math_glyph_kerning()", since="0.40.0")
 def ot_math_get_glyph_kerning(font: Font,
                               glyph: int,
                               kern: OTMathKern,
                               int correction_height) -> int:
     return font.get_math_glyph_kerning(glyph, kern, correction_height)
 
-@deprecated("Font.get_math_glyph_kernings()")
+@deprecated("Font.get_math_glyph_kernings()", since="0.40.0")
 def ot_math_get_glyph_kernings(font: Font,
                                glyph: int,
                                kern: OTMathKern) -> List[OTMathKernEntry]:
     return font.get_math_glyph_kernings(glyph, kern)
 
-@deprecated("Font.get_math_glyph_variants()")
+@deprecated("Font.get_math_glyph_variants()", since="0.40.0")
 def ot_math_get_glyph_variants(font: Font, glyph: int, direction: str) -> List[OTMathGlyphVariant]:
     return font.get_math_glyph_variants(glyph, direction)
 
-@deprecated("Font.get_math_glyph_assembly()")
+@deprecated("Font.get_math_glyph_assembly()", since="0.40.0")
 def ot_math_get_glyph_assembly(font: Font,
                                glyph: int,
                                direction: str) -> Tuple[List[OTMathGlyphPart], int]:
