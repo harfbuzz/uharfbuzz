@@ -1,4 +1,18 @@
 cdef class Blob:
+    """Binary data containers.
+
+    Blobs wrap a chunk of binary data to handle lifecycle management of data
+    while it is passed between client and HarfBuzz. Blobs are primarily used
+    to create font faces, but also to access font face tables, as well as
+    pass around other binary data.
+
+    :param data: The binary data to wrap. If ``None`` or empty, the empty
+        blob is returned.
+
+    Wraps `hb_blob_t
+    <https://harfbuzz.github.io/harfbuzz-hb-blob.html#hb-blob-t>`_.
+    """
+
     cdef hb_blob_t* _hb_blob
 
     def __cinit__(self, bytes data = None):
@@ -18,6 +32,22 @@ cdef class Blob:
 
     @classmethod
     def from_file_path(cls, filename: Union[str, Path]) -> Blob:
+        """Creates a new blob containing the data from the specified file.
+
+        The filename is passed directly to the system on all platforms, except
+        on Windows, where the filename is interpreted as UTF-8. Only if the
+        filename is not valid UTF-8, it will be interpreted according to the
+        system codepage.
+
+        :param filename: A filename.
+
+        :returns: A new :class:`Blob` with the content of the file.
+
+        :raises HarfBuzzError: If the file cannot be opened or read.
+
+        Wraps `hb_blob_create_from_file_or_fail()
+        <https://harfbuzz.github.io/harfbuzz-hb-blob.html#hb-blob-create-from-file-or-fail>`_.
+        """
         cdef bytes packed = os.fsencode(filename)
         cdef hb_blob_t* blob = hb_blob_create_from_file_or_fail(<char*>packed)
         if blob == NULL:
@@ -37,7 +67,13 @@ cdef class Blob:
 
     @property
     def data(self) -> bytes:
-        """Return the blob's data as bytes."""
+        """Fetches the data from a blob.
+
+        :type: bytes
+
+        Wraps `hb_blob_get_data()
+        <https://harfbuzz.github.io/harfbuzz-hb-blob.html#hb-blob-get-data>`_.
+        """
         if not self:
             return b""
         cdef unsigned int blob_length
