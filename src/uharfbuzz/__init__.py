@@ -11,6 +11,8 @@ __all__ = [
     "BufferClusterLevel",
     "BufferContentType",
     "BufferFlags",
+    "BufferSerializeFlags",
+    "BufferSerializeFormat",
     "Color",
     "ColorLine",
     "ColorStop",
