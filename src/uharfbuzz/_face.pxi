@@ -147,8 +147,8 @@ cdef class Face:
         wrapper._hb_face = hb_face
         return wrapper
 
-    # DEPRECATED: use the normal constructor
     @classmethod
+    @deprecated("Face()")
     def create(cls, blob: bytes, index: int = 0) -> Face:
         cdef Face inst = cls(blob, index)
         return inst

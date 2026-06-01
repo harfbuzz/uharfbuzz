@@ -95,8 +95,9 @@ class TestBuffer:
     def test_init(self):
         buf = hb.Buffer()
 
-    def test_create(self):
-        buf = hb.Buffer.create()
+    def test_create_deprecated(self):
+        with pytest.deprecated_call():
+            hb.Buffer.create()
 
     @pytest.mark.parametrize(
         "string, expected",
@@ -301,6 +302,10 @@ class TestBlob:
 
 
 class TestFace:
+    def test_create_deprecated(self, blankfont):
+        with pytest.deprecated_call():
+            hb.Face.create(blankfont.face.blob.data)
+
     def test_properties(self, blankfont):
         face = blankfont.face
 
@@ -870,6 +875,10 @@ class TestFace:
 
 
 class TestFont:
+    def test_create_deprecated(self, blankfont):
+        with pytest.deprecated_call():
+            hb.Font.create(blankfont.face)
+
     def test_get_glyph_extents(self, opensans):
         # <TTGlyph name="A" xMin="0" yMin="0" xMax="1296" yMax="1468">
         extents = opensans.get_glyph_extents(1)
@@ -1139,6 +1148,12 @@ class TestShape:
         assert glyph_names == expected
 
 
+class TestFontFuncs:
+    def test_create_deprecated(self):
+        with pytest.deprecated_call():
+            hb.FontFuncs.create()
+
+
 class TestCallbacks:
     def test_nominal_glyph_func(self, blankfont):
         string = "abcde"
@@ -1150,7 +1165,7 @@ class TestCallbacks:
         def nominal_glyph_func(font, code_point, data):
             return code_point
 
-        funcs = hb.FontFuncs.create()
+        funcs = hb.FontFuncs()
         funcs.set_nominal_glyph_func(nominal_glyph_func)
         blankfont.funcs = funcs
 
@@ -1168,7 +1183,7 @@ class TestCallbacks:
         def variation_glyph_func(font, unicode, variation_selector, data):
             return unicode + variation_selector
 
-        funcs = hb.FontFuncs.create()
+        funcs = hb.FontFuncs()
         funcs.set_variation_glyph_func(variation_glyph_func)
         blankfont.funcs = funcs
 
@@ -1186,7 +1201,7 @@ class TestCallbacks:
         def h_advance_func(font, gid, data):
             return 456
 
-        funcs = hb.FontFuncs.create()
+        funcs = hb.FontFuncs()
         funcs.set_glyph_h_advance_func(h_advance_func)
         blankfont.funcs = funcs
 
@@ -1208,7 +1223,7 @@ class TestCallbacks:
         def v_origin_func(font, gid, data):
             return (True, 345, 567)
 
-        funcs = hb.FontFuncs.create()
+        funcs = hb.FontFuncs()
         funcs.set_glyph_v_advance_func(v_advance_func)
         funcs.set_glyph_v_origin_func(v_origin_func)
         blankfont.funcs = funcs
@@ -1226,7 +1241,7 @@ class TestCallbacks:
         def font_v_extents_func(font, data):
             return hb.FontExtents(987, -654, 321)
 
-        funcs = hb.FontFuncs.create()
+        funcs = hb.FontFuncs()
         funcs.set_font_h_extents_func(font_h_extents_func)
         funcs.set_font_v_extents_func(font_v_extents_func)
         blankfont.funcs = funcs

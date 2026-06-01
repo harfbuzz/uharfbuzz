@@ -110,8 +110,8 @@ cdef class Buffer:
     def __dealloc__(self):
         hb_buffer_destroy(self._hb_buffer)
 
-    # DEPRECATED: use the normal constructor
     @classmethod
+    @deprecated("Buffer()")
     def create(cls) -> Buffer:
         cdef Buffer inst = cls()
         return inst
