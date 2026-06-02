@@ -306,6 +306,19 @@ class TestFace:
         with pytest.deprecated_call():
             hb.Face.create(blankfont.face.blob.data)
 
+    def test_set_get_table_tags_func(self):
+        expected = ["head", "GSUB", "GPOS"]
+
+        def reference_table(face, tag, user_data):
+            return None
+
+        def get_table_tags(face, user_data):
+            return expected
+
+        face = hb.Face.create_for_tables(reference_table, None)
+        face.set_get_table_tags_func(get_table_tags)
+        assert face.table_tags == expected
+
     def test_properties(self, blankfont):
         face = blankfont.face
 

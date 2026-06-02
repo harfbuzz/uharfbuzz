@@ -274,6 +274,17 @@ cdef extern from "hb.h":
         unsigned int  start_offset,
         unsigned int *table_count,
         hb_tag_t     *table_tags)
+    ctypedef unsigned int (*hb_get_table_tags_func_t) (
+        const hb_face_t *face,
+        unsigned int start_offset,
+        unsigned int *table_count,
+        hb_tag_t *table_tags,
+        void *user_data)
+    void hb_face_set_get_table_tags_func(
+        hb_face_t *face,
+        hb_get_table_tags_func_t func,
+        void *user_data,
+        hb_destroy_func_t destroy)
     void hb_face_collect_unicodes(hb_face_t *face, hb_set_t *out)
     void hb_face_collect_variation_selectors(hb_face_t *face, hb_set_t *out)
     void hb_face_collect_variation_unicodes(hb_face_t *face, hb_codepoint_t variation_selector, hb_set_t *out)

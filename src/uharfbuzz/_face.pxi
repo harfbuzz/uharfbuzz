@@ -85,6 +85,41 @@ cdef hb_blob_t* _reference_table_func(
         table, len(table), HB_MEMORY_MODE_READONLY, NULL, NULL)
 
 
+cdef unsigned int _get_table_tags_func(
+        const hb_face_t* face,
+        unsigned int start_offset,
+        unsigned int* table_count,
+        hb_tag_t* table_tags,
+        void* user_data) noexcept:
+    cdef Face py_face = <object>(hb_face_get_user_data(<hb_face_t*>face, &k))
+    cdef list tags = py_face._get_table_tags_func(py_face, <object>user_data)
+    cdef unsigned int population = len(tags)
+    cdef unsigned int end_offset
+    cdef unsigned int i
+    cdef bytes packed
+
+    if table_count is NULL:
+        return population
+
+    if start_offset >= population:
+        table_count[0] = 0
+        return population
+
+    end_offset = start_offset + table_count[0]
+    if end_offset < start_offset:
+        table_count[0] = 0
+        return population
+    if end_offset > population:
+        end_offset = population
+
+    table_count[0] = end_offset - start_offset
+    for i in range(start_offset, end_offset):
+        packed = tags[i].encode()
+        table_tags[i - start_offset] = hb_tag_from_string(<char*>packed, -1)
+
+    return population
+
+
 class OTNameIdPredefined(IntEnum):
     COPYRIGHT = HB_OT_NAME_ID_COPYRIGHT
     FONT_FAMILY = HB_OT_NAME_ID_FONT_FAMILY
@@ -122,6 +157,7 @@ class OTNameEntry(NamedTuple):
 cdef class Face:
     cdef hb_face_t* _hb_face
     cdef object _reference_table_func
+    cdef object _get_table_tags_func
     cdef Blob _blob
 
     def __cinit__(self, blob: Union[Blob, bytes] = None, int index=0):
@@ -210,6 +246,24 @@ cdef class Face:
         if blob is NULL:
             raise MemoryError()
         return Blob.from_ptr(blob)
+
+    def set_get_table_tags_func(self,
+                                func: Callable[[Face, object], List[str]],
+                                user_data: object = None):
+        """Sets the implementation function for retrieving the table tags
+        of the face.
+
+        :param func: A callback that takes the :class:`Face` and the
+            ``user_data`` and returns the list of table tags as
+            :class:`str`.
+        :param user_data: User data passed to ``func`` on each call.
+
+        Wraps `hb_face_set_get_table_tags_func()
+        <https://harfbuzz.github.io/harfbuzz-hb-face.html#hb-face-set-get-table-tags-func>`_.
+        """
+        self._get_table_tags_func = func
+        hb_face_set_get_table_tags_func(
+            self._hb_face, _get_table_tags_func, <void*>user_data, NULL)
 
     @property
     def table_tags(self) -> List[str]:
