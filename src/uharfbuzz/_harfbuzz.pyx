@@ -30,6 +30,13 @@ cdef int msgcallback(hb_buffer_t *buffer, hb_font_t *font, const char* message, 
 
 
 def version_string() -> str:
+    """Returns library version as a string with three components.
+
+    :returns: Library version string.
+
+    Wraps `hb_version_string()
+    <https://harfbuzz.github.io/harfbuzz-hb-version.html#hb-version-string>`_.
+    """
     cdef const char* cstr = hb_version_string()
     cdef bytes packed = cstr
     return packed.decode()
@@ -89,6 +96,35 @@ include "_generated_docs.pxi"
 def shape(font: Font, buffer: Buffer,
         features: Dict[str,Union[int,bool,Sequence[Tuple[int,int,Union[int,bool]]]]] | None = None,
         shapers: List[str] | None = None):
+    """Shapes ``buffer`` using ``font`` turning its Unicode characters content
+    to positioned glyphs. If ``features`` is not ``None``, it will be used to
+    control the features applied during shaping. If two features have the
+    same tag but overlapping ranges the value of the feature with the higher
+    index takes precedence.
+
+    If ``shapers`` is not ``None``, the specified shapers will be used in the
+    given order, otherwise the default shapers list will be used.
+
+    :param font: A :class:`Font` to use for shaping.
+    :param buffer: A :class:`Buffer` to shape.
+    :param features: A mapping whose keys are feature tags (or feature
+        strings as accepted by ``hb_feature_from_string`` when the value is
+        an ``int``/``bool``), and whose values are either an ``int``/``bool``
+        applied globally, or a sequence of ``(start, end, value)`` triples
+        applying the feature to a specific cluster range.
+    :param shapers: Ordered list of shaper names to try, or ``None`` for the
+        default list.
+
+    :raises RuntimeError: If all shapers failed (only when ``shapers`` is
+        provided).
+    :raises MemoryError: If memory allocation fails.
+
+    Wraps `hb_shape()
+    <https://harfbuzz.github.io/harfbuzz-hb-shape.html#hb-shape>`_
+    or `hb_shape_full()
+    <https://harfbuzz.github.io/harfbuzz-hb-shape.html#hb-shape-full>`_
+    when ``shapers`` is given.
+    """
     cdef unsigned int size
     cdef hb_feature_t* hb_features
     cdef bytes packed
@@ -139,6 +175,15 @@ def shape(font: Font, buffer: Buffer,
 
 
 def ot_tag_to_script(tag: str) -> str:
+    """Converts a script tag to a script.
+
+    :param tag: A script tag.
+
+    :returns: The script corresponding to ``tag``.
+
+    Wraps `hb_ot_tag_to_script()
+    <https://harfbuzz.github.io/harfbuzz-hb-ot-layout.html#hb-ot-tag-to-script>`_.
+    """
     cdef bytes packed = tag.encode()
     cdef hb_tag_t hb_tag = hb_tag_from_string(<char*>packed, -1)
     cdef hb_script_t hb_script = hb_ot_tag_to_script(hb_tag)
@@ -150,6 +195,15 @@ def ot_tag_to_script(tag: str) -> str:
 
 
 def ot_tag_to_language(tag: str) -> str:
+    """Converts a language tag to a language.
+
+    :param tag: A language tag.
+
+    :returns: The language corresponding to ``tag``, or ``None``.
+
+    Wraps `hb_ot_tag_to_language()
+    <https://harfbuzz.github.io/harfbuzz-hb-ot-layout.html#hb-ot-tag-to-language>`_.
+    """
     cdef bytes packed = tag.encode()
     cdef hb_tag_t hb_tag = hb_tag_from_string(<char*>packed, -1)
     cdef hb_language_t hb_language = hb_ot_tag_to_language(hb_tag)
@@ -325,4 +379,11 @@ def ot_math_get_glyph_assembly(font: Font,
 
 
 def ot_font_set_funcs(font: Font):
+    """Sets the font functions to use when working with ``font`` to the
+    HarfBuzz's native implementation. This is the default for fonts newly
+    created.
+
+    Wraps `hb_ot_font_set_funcs()
+    <https://harfbuzz.github.io/harfbuzz-hb-ot-font.html#hb-ot-font-set-funcs>`_.
+    """
     hb_ot_font_set_funcs(font._hb_font)
