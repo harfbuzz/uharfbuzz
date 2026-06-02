@@ -355,7 +355,7 @@ cdef class Font:
         success = hb_font_get_variation_glyph(self._hb_font, unicode, variation_selector, &gid)
         return gid if success else None
 
-    def get_nominal_glyph(self, unicode: int) -> int:
+    def get_nominal_glyph(self, unicode: int) -> int | None:
         cdef hb_codepoint_t gid
         success = hb_font_get_nominal_glyph(self._hb_font, unicode, &gid)
         return gid if success else None
@@ -543,7 +543,7 @@ cdef class Font:
         return assembly, italics_correction
 
     # metrics
-    def get_metric_position(self, tag: OTMetricsTag) -> int:
+    def get_metric_position(self, tag: OTMetricsTag) -> int | None:
         cdef hb_position_t position
         if hb_ot_metrics_get_position(self._hb_font, tag, &position):
             return position
