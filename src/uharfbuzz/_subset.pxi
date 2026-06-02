@@ -80,7 +80,7 @@ cdef class SubsetInput:
             self._hb_input, face._hb_face, hb_tag, min_value, max_value, def_value
         )
 
-    def get_axis_range(self, tag: str) -> Tuple[float | None, float | None | float | None] | None:
+    def get_axis_range(self, tag: str) -> Tuple[float | None, float | None, float | None] | None:
         cdef hb_tag_t hb_tag = hb_tag_from_string(tag.encode("ascii"), -1)
         cdef float axis_min_value, axis_max_value, axis_def_value
         if hb_subset_input_get_axis_range(self._hb_input, hb_tag,
