@@ -1,4 +1,17 @@
 cdef class Map:
+    """Data type for holding integer-to-integer hash maps.
+
+    .. attribute:: INVALID_VALUE
+
+       Unset map value.
+
+       Wraps `HB_MAP_VALUE_INVALID
+       <https://harfbuzz.github.io/harfbuzz-hb-map.html#HB-MAP-VALUE-INVALID:CAPS>`_.
+
+    Wraps `hb_map_t
+    <https://harfbuzz.github.io/harfbuzz-hb-map.html#hb-map-t>`_.
+    """
+
     cdef hb_map_t* _hb_map
 
     INVALID_VALUE = HB_MAP_VALUE_INVALID
@@ -25,6 +38,13 @@ cdef class Map:
         return wrapper
 
     def copy(self) -> Map:
+        """Allocate a copy of this map.
+
+        :returns: Newly-allocated map.
+
+        Wraps `hb_map_copy()
+        <https://harfbuzz.github.io/harfbuzz-hb-map.html#hb-map-copy>`_.
+        """
         c = Map()
         c._hb_map = hb_map_copy(self._hb_map)
         return c
@@ -36,6 +56,14 @@ cdef class Map:
         hb_map_update(self._hb_map, other._hb_map)
 
     def update(self, other):
+        """Add the contents of ``other`` to this map.
+
+        :param other: Another :class:`Map`, or any mapping of integer keys to
+            integer values.
+
+        Wraps `hb_map_update()
+        <https://harfbuzz.github.io/harfbuzz-hb-map.html#hb-map-update>`_.
+        """
         if type(other) == Map:
             self._update(other)
         else:
@@ -46,6 +74,11 @@ cdef class Map:
             raise MemoryError()
 
     def clear(self):
+        """Clears out the contents of this map.
+
+        Wraps `hb_map_clear()
+        <https://harfbuzz.github.io/harfbuzz-hb-map.html#hb-map-clear>`_.
+        """
         hb_map_clear(self._hb_map)
 
     def __bool__(self) -> bool:
@@ -68,6 +101,16 @@ cdef class Map:
             raise MemoryError()
 
     def get(self, k: int):
+        """Fetches the value stored for ``k`` in this map.
+
+        :param k: The key to query.
+
+        :returns: The value stored for ``k``, or ``None`` if ``k`` is not in
+            the map.
+
+        Wraps `hb_map_get()
+        <https://harfbuzz.github.io/harfbuzz-hb-map.html#hb-map-get>`_.
+        """
         if k < 0 or k >= self.INVALID_VALUE:
             return None
         v = hb_map_get(self._hb_map, k)
@@ -94,12 +137,24 @@ cdef class Map:
         hb_map_del(self._hb_map, c)
 
     def items(self):
+        """Returns an iterator over ``(key, value)`` pairs in this map.
+
+        The order in which the pairs are returned is undefined.
+        """
         return MapIter(self)
 
     def keys(self):
+        """Returns an iterator over the keys in this map.
+
+        The order in which the keys are returned is undefined.
+        """
         return (k for k,v in self.items())
 
     def values(self):
+        """Returns an iterator over the values in this map.
+
+        The order in which the values are returned is undefined.
+        """
         return (v for k,v in self.items())
 
     def __iter__(self):
@@ -110,6 +165,11 @@ cdef class Map:
         return ("Map({%s})" % s)
 
 cdef class MapIter:
+    """Iterator over ``(key, value)`` pairs in a :class:`Map`.
+
+    Wraps `hb_map_next()
+    <https://harfbuzz.github.io/harfbuzz-hb-map.html#hb-map-next>`_.
+    """
     cdef Map m
     cdef hb_map_t *_hb_map
     cdef int _i
