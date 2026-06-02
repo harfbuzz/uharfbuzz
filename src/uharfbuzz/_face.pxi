@@ -1,34 +1,74 @@
 class OTVarAxisFlags(IntFlag):
+    """Flags for :class:`OTVarAxisInfo`.
+
+    .. attribute:: HIDDEN
+       :value: 0x01
+
+       The axis should not be exposed directly in user interfaces.
+
+    Wraps `hb_ot_var_axis_flags_t
+    <https://harfbuzz.github.io/harfbuzz-hb-ot-var.html#hb-ot-var-axis-flags-t>`_.
+    """
     HIDDEN = HB_OT_VAR_AXIS_FLAG_HIDDEN
 
 
 class OTVarAxisInfo(NamedTuple):
+    """Data type for holding variation-axis values.
+
+    Wraps `hb_ot_var_axis_info_t
+    <https://harfbuzz.github.io/harfbuzz-hb-ot-var.html#hb-ot-var-axis-info-t>`_.
+    """
     axis_index: int
+    """Index of the axis in the variation-axis array."""
     tag: str
+    """The tag identifying the design variation of the axis."""
     name_id: int
+    """The ``name`` table Name ID that provides display names for the axis."""
     flags: OTVarAxisFlags
+    """The :class:`OTVarAxisFlags` flags for the axis."""
     min_value: float
+    """The minimum value on the variation axis that the font covers."""
     default_value: float
+    """The position on the variation axis corresponding to the font's defaults."""
     max_value: float
+    """The maximum value on the variation axis that the font covers."""
 
 
 class OTVarNamedInstance(NamedTuple):
+    """A named instance defined in the font's ``fvar`` table."""
     subfamily_name_id: int
+    """The ``name`` table Name ID that provides display names for the
+    "Subfamily name" defined for the given named instance."""
     postscript_name_id: int
+    """The ``name`` table Name ID that provides display names for the
+    "PostScript name" defined for the given named instance."""
     design_coords: List[float]
+    """The design-space coordinates corresponding to the named instance."""
 
 
 class Color(NamedTuple):
+    """A color value. Colors are eight bits per channel RGB plus alpha
+    transparency.
+
+    Wraps `hb_color_t
+    <https://harfbuzz.github.io/harfbuzz-hb-ot-color.html#hb-color-t>`_.
+    """
     red: int
+    """Red channel value."""
     green: int
+    """Green channel value."""
     blue: int
+    """Blue channel value."""
     alpha: int
+    """Alpha channel value."""
 
     def to_int(self) -> int:
+        """Returns an :class:`int` representation of this :class:`Color`."""
         return HB_COLOR(self.blue, self.green, self.red, self.alpha)
 
     @staticmethod
     def from_int(value: int) -> Color:
+        """Construct a :class:`Color` from an integer representation."""
         r = hb_color_get_red(value)
         g = hb_color_get_green(value)
         b = hb_color_get_blue(value)
@@ -37,27 +77,97 @@ class Color(NamedTuple):
 
 
 class OTColor(Color):
+    """A :class:`Color` from a font's color palette, together with its name
+    ID."""
     name_id: int | None
 
 
 class OTColorPaletteFlags(IntFlag):
+    """Flags that describe the properties of a color palette.
+
+    .. attribute:: DEFAULT
+       :value: 0x00
+
+       Default indicating that there is nothing special to note about a
+       color palette.
+
+    .. attribute:: USABLE_WITH_LIGHT_BACKGROUND
+       :value: 0x01
+
+       Flag indicating that the color palette is appropriate to use when
+       displaying the font on a light background such as white.
+
+    .. attribute:: USABLE_WITH_DARK_BACKGROUND
+       :value: 0x02
+
+       Flag indicating that the color palette is appropriate to use when
+       displaying the font on a dark background such as black.
+
+    Wraps `hb_ot_color_palette_flags_t
+    <https://harfbuzz.github.io/harfbuzz-hb-ot-color.html#hb-ot-color-palette-flags-t>`_.
+    """
     DEFAULT = HB_OT_COLOR_PALETTE_FLAG_DEFAULT
     USABLE_WITH_LIGHT_BACKGROUND = HB_OT_COLOR_PALETTE_FLAG_USABLE_WITH_LIGHT_BACKGROUND
     USABLE_WITH_DARK_BACKGROUND = HB_OT_COLOR_PALETTE_FLAG_USABLE_WITH_DARK_BACKGROUND
 
 
 class OTColorPalette(NamedTuple):
+    """A color palette from a font's ``CPAL`` table."""
     colors: List[OTColor]
+    """The colors that make up the palette."""
     name_id: int | None
+    """The ``name`` table Name ID that provides display names for the
+    palette, or ``None`` if no name is associated."""
     flags: OTColorPaletteFlags
+    """The :class:`OTColorPaletteFlags` flags for the palette."""
 
 
 class OTColorLayer(NamedTuple):
+    """A pair of glyph and color index.
+
+    A color index of ``0xFFFF`` does not refer to a palette color, but
+    indicates that the foreground color should be used.
+
+    Wraps `hb_ot_color_layer_t
+    <https://harfbuzz.github.io/harfbuzz-hb-ot-color.html#hb-ot-color-layer-t>`_.
+    """
     glyph: int
+    """The glyph ID of the layer."""
     color_index: int
+    """The palette color index of the layer."""
 
 
 class OTLayoutGlyphClass(IntEnum):
+    """The GDEF classes defined for glyphs.
+
+    .. attribute:: UNCLASSIFIED
+       :value: 0
+
+       Glyphs not matching the other classifications.
+
+    .. attribute:: BASE_GLYPH
+       :value: 1
+
+       Spacing, single characters, capable of accepting marks.
+
+    .. attribute:: LIGATURE
+       :value: 2
+
+       Glyphs that represent ligation of multiple characters.
+
+    .. attribute:: MARK
+       :value: 3
+
+       Non-spacing, combining glyphs that represent marks.
+
+    .. attribute:: COMPONENT
+       :value: 4
+
+       Spacing glyphs that represent part of a single character.
+
+    Wraps `hb_ot_layout_glyph_class_t
+    <https://harfbuzz.github.io/harfbuzz-hb-ot-layout.html#hb-ot-layout-glyph-class-t>`_.
+    """
     UNCLASSIFIED = HB_OT_LAYOUT_GLYPH_CLASS_UNCLASSIFIED
     BASE_GLYPH = HB_OT_LAYOUT_GLYPH_CLASS_BASE_GLYPH
     LIGATURE = HB_OT_LAYOUT_GLYPH_CLASS_LIGATURE
@@ -121,6 +231,116 @@ cdef unsigned int _get_table_tags_func(
 
 
 class OTNameIdPredefined(IntEnum):
+    """Predefined values for the OpenType ``name`` table Name ID.
+
+    .. attribute:: COPYRIGHT
+
+       Copyright notice.
+
+    .. attribute:: FONT_FAMILY
+
+       Font Family name.
+
+    .. attribute:: FONT_SUBFAMILY
+
+       Font Subfamily name.
+
+    .. attribute:: UNIQUE_ID
+
+       Unique font identifier.
+
+    .. attribute:: FULL_NAME
+
+       Full font name that reflects all family and relevant subfamily
+       descriptors.
+
+    .. attribute:: VERSION_STRING
+
+       Version string.
+
+    .. attribute:: POSTSCRIPT_NAME
+
+       PostScript name for the font.
+
+    .. attribute:: TRADEMARK
+
+       Trademark.
+
+    .. attribute:: MANUFACTURER
+
+       Manufacturer name.
+
+    .. attribute:: DESIGNER
+
+       Designer.
+
+    .. attribute:: DESCRIPTION
+
+       Description.
+
+    .. attribute:: VENDOR_URL
+
+       URL of font vendor.
+
+    .. attribute:: DESIGNER_URL
+
+       URL of typeface designer.
+
+    .. attribute:: LICENSE
+
+       License description.
+
+    .. attribute:: LICENSE_URL
+
+       License information URL.
+
+    .. attribute:: TYPOGRAPHIC_FAMILY
+
+       Typographic family name.
+
+    .. attribute:: TYPOGRAPHIC_SUBFAMILY
+
+       Typographic subfamily name.
+
+    .. attribute:: MAC_FULL_NAME
+
+       Compatible full name (Macintosh only).
+
+    .. attribute:: SAMPLE_TEXT
+
+       Sample text.
+
+    .. attribute:: CID_FINDFONT_NAME
+
+       PostScript CID findfont name.
+
+    .. attribute:: WWS_FAMILY
+
+       WWS family name.
+
+    .. attribute:: WWS_SUBFAMILY
+
+       WWS subfamily name.
+
+    .. attribute:: LIGHT_BACKGROUND
+
+       Light background palette.
+
+    .. attribute:: DARK_BACKGROUND
+
+       Dark background palette.
+
+    .. attribute:: VARIATIONS_PS_PREFIX
+
+       Variations PostScript name prefix.
+
+    .. attribute:: INVALID
+
+       Value to represent a nonexistent name ID.
+
+    Wraps `hb_ot_name_id_predefined_t
+    <https://harfbuzz.github.io/harfbuzz-hb-ot-name.html#hb-ot-name-id-predefined-t>`_.
+    """
     COPYRIGHT = HB_OT_NAME_ID_COPYRIGHT
     FONT_FAMILY = HB_OT_NAME_ID_FONT_FAMILY
     FONT_SUBFAMILY = HB_OT_NAME_ID_FONT_SUBFAMILY
@@ -150,11 +370,39 @@ class OTNameIdPredefined(IntEnum):
 
 
 class OTNameEntry(NamedTuple):
+    """Structure representing a name ID in a particular language.
+
+    Wraps `hb_ot_name_entry_t
+    <https://harfbuzz.github.io/harfbuzz-hb-ot-name.html#hb-ot-name-entry-t>`_.
+    """
     name_id: OTNameIdPredefined | int
+    """The name ID, as an :class:`OTNameIdPredefined` value or a raw
+    :class:`int` if it does not match any of the predefined ones."""
     language: str | None
+    """The BCP 47 language tag, or ``None`` if the language cannot be
+    determined."""
 
 
 cdef class Face:
+    """Font face objects.
+
+    A font face is an object that represents a single face from within a
+    font family. More precisely, a font face represents a single face in a
+    binary font file. Font faces are typically built from a binary blob and
+    a face index. Font faces are used to create fonts.
+
+    The face index is used for blobs of file formats such as TTC and DFont
+    that can contain more than one face. Face indices within such
+    collections are zero-based.
+
+    :param blob: A :class:`Blob` or :class:`bytes` containing the font data.
+        If ``None``, the empty face is returned.
+    :param index: The index of the face within the blob.
+
+    Wraps `hb_face_t
+    <https://harfbuzz.github.io/harfbuzz-hb-face.html#hb-face-t>`_.
+    """
+
     cdef hb_face_t* _hb_face
     cdef object _reference_table_func
     cdef object _get_table_tags_func
@@ -197,6 +445,24 @@ cdef class Face:
                               object  # user_data
                           ], bytes],
                           user_data: object) -> Face:
+        """Variant of the normal constructor, built for those cases where it
+        is more convenient to provide data for individual tables instead of
+        the whole font data. With the caveat that :attr:`table_tags` would
+        not work with faces created this way. You can address that by
+        calling the :meth:`set_get_table_tags_func` method and setting the
+        appropriate callback.
+
+        Creates a new face object from the specified ``user_data`` and
+        ``func``.
+
+        :param func: A callback that takes the :class:`Face`, a table tag,
+            and the ``user_data`` and returns the table data as
+            :class:`bytes`.
+        :param user_data: User data passed to ``func`` on each call.
+
+        Wraps `hb_face_create_for_tables()
+        <https://harfbuzz.github.io/harfbuzz-hb-face.html#hb-face-create-for-tables>`_.
+        """
         cdef Face inst = cls(None)
         inst._hb_face = hb_face_create_for_tables(
             _reference_table_func, <void*>user_data, NULL)
@@ -206,10 +472,26 @@ cdef class Face:
 
     @property
     def count(self) -> int:
+        """The number of faces in the blob.
+
+        Wraps `hb_face_count()
+        <https://harfbuzz.github.io/harfbuzz-hb-face.html#hb-face-count>`_.
+        """
         return hb_face_count(self._blob._hb_blob)
 
     @property
     def index(self) -> int:
+        """The face-index of this face.
+
+        Face indices within a collection are zero-based. Changing the index
+        has no effect on the face itself, only on the value returned by this
+        property.
+
+        Wraps `hb_face_get_index()
+        <https://harfbuzz.github.io/harfbuzz-hb-face.html#hb-face-get-index>`_
+        / `hb_face_set_index()
+        <https://harfbuzz.github.io/harfbuzz-hb-face.html#hb-face-set-index>`_.
+        """
         return hb_face_get_index(self._hb_face)
 
     @index.setter
@@ -218,6 +500,16 @@ cdef class Face:
 
     @property
     def upem(self) -> int:
+        """The units-per-em (UPEM) value of the face.
+
+        Typical UPEM values for fonts are 1000, or 2048, but any value in
+        between 16 and 16,384 is allowed for OpenType fonts.
+
+        Wraps `hb_face_get_upem()
+        <https://harfbuzz.github.io/harfbuzz-hb-face.html#hb-face-get-upem>`_
+        / `hb_face_set_upem()
+        <https://harfbuzz.github.io/harfbuzz-hb-face.html#hb-face-set-upem>`_.
+        """
         return hb_face_get_upem(self._hb_face)
 
     @upem.setter
@@ -226,6 +518,13 @@ cdef class Face:
 
     @property
     def glyph_count(self) -> int:
+        """The glyph-count value of the face.
+
+        Wraps `hb_face_get_glyph_count()
+        <https://harfbuzz.github.io/harfbuzz-hb-face.html#hb-face-get-glyph-count>`_
+        / `hb_face_set_glyph_count()
+        <https://harfbuzz.github.io/harfbuzz-hb-face.html#hb-face-set-glyph-count>`_.
+        """
         return hb_face_get_glyph_count(self._hb_face)
 
     @glyph_count.setter
@@ -234,12 +533,33 @@ cdef class Face:
 
     @property
     def blob(self) -> Blob:
+        """A :class:`Blob` containing the binary data of the face.
+
+        If referencing the face data is not possible, this property creates
+        a blob out of individual table blobs if :attr:`table_tags` works
+        with this face, otherwise it returns an empty blob.
+
+        :type: Blob
+
+        Wraps `hb_face_reference_blob()
+        <https://harfbuzz.github.io/harfbuzz-hb-face.html#hb-face-reference-blob>`_.
+        """
         cdef hb_blob_t* blob = hb_face_reference_blob(self._hb_face)
         if blob is NULL:
             raise MemoryError()
         return Blob.from_ptr(blob)
 
     def reference_table(self, tag: str) -> Blob:
+        """Fetches a reference to the specified table within the face.
+
+        :param tag: The four-character tag of the table to query.
+
+        :returns: A :class:`Blob` with the table data, or an empty blob if
+            referencing table data is not possible.
+
+        Wraps `hb_face_reference_table()
+        <https://harfbuzz.github.io/harfbuzz-hb-face.html#hb-face-reference-table>`_.
+        """
         cdef bytes packed = tag.encode()
         cdef hb_tag_t hb_tag = hb_tag_from_string(<char*>packed, -1)
         cdef hb_blob_t* blob = hb_face_reference_table(self._hb_face, hb_tag)
@@ -267,6 +587,13 @@ cdef class Face:
 
     @property
     def table_tags(self) -> List[str]:
+        """A list of all table tags for the face, if possible.
+
+        :type: list[str]
+
+        Wraps `hb_face_get_table_tags()
+        <https://harfbuzz.github.io/harfbuzz-hb-face.html#hb-face-get-table-tags>`_.
+        """
         cdef unsigned int tag_count = STATIC_ARRAY_SIZE
         cdef hb_tag_t tags_array[STATIC_ARRAY_SIZE]
         cdef list tags = []
@@ -286,17 +613,41 @@ cdef class Face:
 
     @property
     def unicodes (self) -> Set[int]:
+        """All Unicode characters covered by the face.
+
+        :type: Set
+
+        Wraps `hb_face_collect_unicodes()
+        <https://harfbuzz.github.io/harfbuzz-hb-face.html#hb-face-collect-unicodes>`_.
+        """
         s = Set()
         hb_face_collect_unicodes(self._hb_face, s._hb_set)
         return s
 
     @property
     def variation_selectors(self) -> Set[int]:
+        """All Unicode "Variation Selector" characters covered by the face.
+
+        :type: Set
+
+        Wraps `hb_face_collect_variation_selectors()
+        <https://harfbuzz.github.io/harfbuzz-hb-face.html#hb-face-collect-variation-selectors>`_.
+        """
         s = Set()
         hb_face_collect_variation_selectors(self._hb_face, s._hb_set)
         return s
 
     def variation_unicodes(self, variation_selector: int) -> Set[int]:
+        """All Unicode characters for ``variation_selector`` covered by the
+        face.
+
+        :param variation_selector: The Variation Selector to query.
+
+        :returns: The :class:`Set` of Unicode characters.
+
+        Wraps `hb_face_collect_variation_unicodes()
+        <https://harfbuzz.github.io/harfbuzz-hb-face.html#hb-face-collect-variation-unicodes>`_.
+        """
         s = Set()
         hb_face_collect_variation_unicodes(self._hb_face, variation_selector, s._hb_set)
         return s
@@ -304,10 +655,23 @@ cdef class Face:
     # variations
     @property
     def has_var_data(self) -> bool:
+        """Whether the face includes any OpenType variation data in the
+        ``fvar`` table.
+
+        Wraps `hb_ot_var_has_data()
+        <https://harfbuzz.github.io/harfbuzz-hb-ot-var.html#hb-ot-var-has-data>`_.
+        """
         return hb_ot_var_has_data(self._hb_face)
 
     @property
     def axis_infos(self) -> List[OTVarAxisInfo]:
+        """A list of all variation axes in the face.
+
+        :type: list[OTVarAxisInfo]
+
+        Wraps `hb_ot_var_get_axis_infos()
+        <https://harfbuzz.github.io/harfbuzz-hb-ot-var.html#hb-ot-var-get-axis-infos>`_.
+        """
         cdef unsigned int axis_count = STATIC_ARRAY_SIZE
         cdef hb_ot_var_axis_info_t axis_array[STATIC_ARRAY_SIZE]
         cdef list infos = []
@@ -338,6 +702,19 @@ cdef class Face:
 
     @property
     def named_instances(self) -> List[OTVarNamedInstance]:
+        """The named instances defined in the face's ``fvar`` table.
+
+        :type: list[OTVarNamedInstance]
+
+        Wraps `hb_ot_var_get_named_instance_count()
+        <https://harfbuzz.github.io/harfbuzz-hb-ot-var.html#hb-ot-var-get-named-instance-count>`_,
+        `hb_ot_var_named_instance_get_subfamily_name_id()
+        <https://harfbuzz.github.io/harfbuzz-hb-ot-var.html#hb-ot-var-named-instance-get-subfamily-name-id>`_,
+        `hb_ot_var_named_instance_get_postscript_name_id()
+        <https://harfbuzz.github.io/harfbuzz-hb-ot-var.html#hb-ot-var-named-instance-get-postscript-name-id>`_,
+        and `hb_ot_var_named_instance_get_design_coords()
+        <https://harfbuzz.github.io/harfbuzz-hb-ot-var.html#hb-ot-var-named-instance-get-design-coords>`_.
+        """
         instances = []
         cdef hb_face_t* face = self._hb_face
         cdef unsigned int instance_count = hb_ot_var_get_named_instance_count(face)
@@ -362,17 +739,49 @@ cdef class Face:
     # math
     @property
     def has_math_data(self) -> bool:
+        """Whether the face has a ``MATH`` table.
+
+        Wraps `hb_ot_math_has_data()
+        <https://harfbuzz.github.io/harfbuzz-hb-ot-math.html#hb-ot-math-has-data>`_.
+        """
         return hb_ot_math_has_data(self._hb_face)
 
     def is_glyph_extended_math_shape(self, glyph: int) -> bool:
+        """Tests whether the given glyph index is an extended shape in the
+        face.
+
+        :param glyph: The glyph index to test.
+
+        :returns: ``True`` if the glyph is an extended shape, ``False``
+            otherwise.
+
+        Wraps `hb_ot_math_is_glyph_extended_shape()
+        <https://harfbuzz.github.io/harfbuzz-hb-ot-math.html#hb-ot-math-is-glyph-extended-shape>`_.
+        """
         return hb_ot_math_is_glyph_extended_shape(self._hb_face, glyph)
 
     # color
     @property
     def has_color_layers(self) -> bool:
+        """Whether the face includes a ``COLR`` table with data according to
+        COLRv0.
+
+        Wraps `hb_ot_color_has_layers()
+        <https://harfbuzz.github.io/harfbuzz-hb-ot-color.html#hb-ot-color-has-layers>`_.
+        """
         return hb_ot_color_has_layers(self._hb_face)
 
     def get_glyph_color_layers(self, glyph: int) -> List[OTColorLayer]:
+        """Fetches a list of all color layers for the specified glyph index in
+        the face.
+
+        :param glyph: The glyph index to query.
+
+        :returns: The array of layers found.
+
+        Wraps `hb_ot_color_glyph_get_layers()
+        <https://harfbuzz.github.io/harfbuzz-hb-ot-color.html#hb-ot-color-glyph-get-layers>`_.
+        """
         cdef list ret = []
         cdef unsigned int i
         cdef unsigned int start_offset = 0
@@ -387,9 +796,28 @@ cdef class Face:
 
     @property
     def has_color_palettes(self) -> bool:
+        """Whether the face includes a ``CPAL`` color-palette table.
+
+        Wraps `hb_ot_color_has_palettes()
+        <https://harfbuzz.github.io/harfbuzz-hb-ot-color.html#hb-ot-color-has-palettes>`_.
+        """
         return hb_ot_color_has_palettes(self._hb_face)
 
     def get_color_palette(self, palette_index: int) -> OTColorPalette:
+        """Fetches the color palette at the specified index.
+
+        :param palette_index: The index of the color palette.
+
+        :returns: An :class:`OTColorPalette` with the colors, name ID, and
+            flags of the palette.
+
+        Wraps `hb_ot_color_palette_get_colors()
+        <https://harfbuzz.github.io/harfbuzz-hb-ot-color.html#hb-ot-color-palette-get-colors>`_,
+        `hb_ot_color_palette_get_name_id()
+        <https://harfbuzz.github.io/harfbuzz-hb-ot-color.html#hb-ot-color-palette-get-name-id>`_,
+        and `hb_ot_color_palette_get_flags()
+        <https://harfbuzz.github.io/harfbuzz-hb-ot-color.html#hb-ot-color-palette-get-flags>`_.
+        """
         cdef hb_face_t* face = self._hb_face
         cdef list colors = []
         cdef unsigned int i
@@ -409,6 +837,13 @@ cdef class Face:
 
     @property
     def color_palettes(self) -> List[OTColorPalette]:
+        """The face's color palettes.
+
+        :type: list[OTColorPalette]
+
+        Wraps `hb_ot_color_palette_get_count()
+        <https://harfbuzz.github.io/harfbuzz-hb-ot-color.html#hb-ot-color-palette-get-count>`_.
+        """
         cdef list palettes = []
         cdef unsigned int palette_count = hb_ot_color_palette_get_count(self._hb_face)
         for i in range(palette_count):
@@ -416,6 +851,16 @@ cdef class Face:
         return palettes
 
     def color_palette_color_get_name_id(self, color_index: int) -> int | None:
+        """Fetches the ``name`` table Name ID that provides display names
+        for the specified color in the face's ``CPAL`` color palette.
+
+        :param color_index: The index of the color.
+
+        :returns: The Name ID, or ``None`` if the color is not named.
+
+        Wraps `hb_ot_color_palette_color_get_name_id()
+        <https://harfbuzz.github.io/harfbuzz-hb-ot-color.html#hb-ot-color-palette-color-get-name-id>`_.
+        """
         cdef hb_ot_name_id_t name_id
         name_id =  hb_ot_color_palette_color_get_name_id(self._hb_face, color_index)
         if name_id == HB_OT_NAME_ID_INVALID:
@@ -424,41 +869,115 @@ cdef class Face:
 
     @property
     def has_color_paint(self) -> bool:
+        """Whether the face includes a ``COLR`` table with data according to
+        COLRv1.
+
+        Wraps `hb_ot_color_has_paint()
+        <https://harfbuzz.github.io/harfbuzz-hb-ot-color.html#hb-ot-color-has-paint>`_.
+        """
         return hb_ot_color_has_paint(self._hb_face)
 
     def glyph_has_color_paint(self, glyph: int) -> bool:
+        """Tests whether the face includes COLRv1 paint data for ``glyph``.
+
+        :param glyph: The glyph index to query.
+
+        :returns: ``True`` if data is found, ``False`` otherwise.
+
+        Wraps `hb_ot_color_glyph_has_paint()
+        <https://harfbuzz.github.io/harfbuzz-hb-ot-color.html#hb-ot-color-glyph-has-paint>`_.
+        """
         return hb_ot_color_glyph_has_paint(self._hb_face, glyph)
 
     @property
     def has_color_svg(self) -> bool:
+        """Whether the face includes any ``SVG`` glyph images.
+
+        Wraps `hb_ot_color_has_svg()
+        <https://harfbuzz.github.io/harfbuzz-hb-ot-color.html#hb-ot-color-has-svg>`_.
+        """
         return hb_ot_color_has_svg(self._hb_face)
 
     def get_glyph_color_svg(self, glyph: int) -> Blob:
+        """Fetches the SVG document for a glyph. The blob may be either
+        plain text or gzip-encoded.
+
+        If the glyph has no SVG document, the singleton empty blob is
+        returned.
+
+        :param glyph: An SVG glyph index.
+
+        :returns: A :class:`Blob` with the content of the SVG document.
+
+        Wraps `hb_ot_color_glyph_reference_svg()
+        <https://harfbuzz.github.io/harfbuzz-hb-ot-color.html#hb-ot-color-glyph-reference-svg>`_.
+        """
         cdef hb_blob_t* blob
         blob = hb_ot_color_glyph_reference_svg(self._hb_face, glyph)
         return Blob.from_ptr(blob)
 
     @property
     def has_color_png(self) -> bool:
+        """Whether the face has PNG glyph images (either in ``CBDT`` or
+        ``sbix`` tables).
+
+        Wraps `hb_ot_color_has_png()
+        <https://harfbuzz.github.io/harfbuzz-hb-ot-color.html#hb-ot-color-has-png>`_.
+        """
         return hb_ot_color_has_png(self._hb_face)
 
     # layout
     @property
     def has_layout_glyph_classes(self) -> bool:
+        """Whether the face has any glyph classes defined in its GDEF table.
+
+        Wraps `hb_ot_layout_has_glyph_classes()
+        <https://harfbuzz.github.io/harfbuzz-hb-ot-layout.html#hb-ot-layout-has-glyph-classes>`_.
+        """
         return hb_ot_layout_has_glyph_classes(self._hb_face)
 
     def get_layout_glyph_class(self, glyph: int) -> OTLayoutGlyphClass:
+        """Fetches the GDEF class of the requested glyph.
+
+        :param glyph: The glyph code point to query.
+
+        :returns: The :class:`OTLayoutGlyphClass` glyph class of the given
+            code point in the GDEF table of the face.
+
+        Wraps `hb_ot_layout_get_glyph_class()
+        <https://harfbuzz.github.io/harfbuzz-hb-ot-layout.html#hb-ot-layout-get-glyph-class>`_.
+        """
         return OTLayoutGlyphClass(hb_ot_layout_get_glyph_class(self._hb_face, glyph))
 
     @property
     def has_layout_positioning(self) -> bool:
+        """Whether the face includes any GPOS positioning.
+
+        Wraps `hb_ot_layout_has_positioning()
+        <https://harfbuzz.github.io/harfbuzz-hb-ot-layout.html#hb-ot-layout-has-positioning>`_.
+        """
         return hb_ot_layout_has_positioning(self._hb_face)
 
     @property
     def has_layout_substitution(self) -> bool:
+        """Whether the face includes any GSUB substitutions.
+
+        Wraps `hb_ot_layout_has_substitution()
+        <https://harfbuzz.github.io/harfbuzz-hb-ot-layout.html#hb-ot-layout-has-substitution>`_.
+        """
         return hb_ot_layout_has_substitution(self._hb_face)
 
     def get_lookup_glyph_alternates(self, lookup_index: int, glyph: int) -> List[int]:
+        """Fetches alternates of a glyph from a given GSUB lookup index.
+
+        :param lookup_index: Index of the feature lookup to query.
+        :param glyph: A glyph id.
+
+        :returns: Alternate glyphs associated with the glyph id.
+
+        Wraps `hb_ot_layout_lookup_get_glyph_alternates()
+        <https://harfbuzz.github.io/harfbuzz-hb-ot-layout.html#hb-ot-layout-lookup-get-glyph-alternates>`_.
+        """
         cdef list alternates = []
         cdef unsigned int i
         cdef unsigned int start_offset = 0
@@ -476,6 +995,17 @@ cdef class Face:
                                   tag: str,
                                   script_index: int = 0,
                                   language_index: int = 0xFFFF) -> List[str]:
+        """Fetches a list of all features in the face's GSUB or GPOS table.
+
+        :param tag: ``"GSUB"`` or ``"GPOS"``.
+        :param script_index: The index of the requested script tag.
+        :param language_index: The index of the requested language tag.
+
+        :returns: The array of feature tags found for the query.
+
+        Wraps `hb_ot_layout_language_get_feature_tags()
+        <https://harfbuzz.github.io/harfbuzz-hb-ot-layout.html#hb-ot-layout-language-get-feature-tags>`_.
+        """
         cdef bytes packed = tag.encode()
         cdef hb_tag_t hb_tag = hb_tag_from_string(<char*>packed, -1)
         cdef unsigned int feature_count = STATIC_ARRAY_SIZE
@@ -501,6 +1031,17 @@ cdef class Face:
         return tags
 
     def get_script_language_tags(self, tag: str, script_index: int = 0) -> List[str]:
+        """Fetches a list of language tags in the face's GSUB or GPOS table,
+        underneath the specified script index.
+
+        :param tag: ``"GSUB"`` or ``"GPOS"``.
+        :param script_index: The index of the requested script tag.
+
+        :returns: Array of language tags found in the table.
+
+        Wraps `hb_ot_layout_script_get_language_tags()
+        <https://harfbuzz.github.io/harfbuzz-hb-ot-layout.html#hb-ot-layout-script-get-language-tags>`_.
+        """
         cdef bytes packed = tag.encode()
         cdef hb_tag_t hb_tag = hb_tag_from_string(<char*>packed, -1)
         cdef unsigned int language_count = STATIC_ARRAY_SIZE
@@ -526,6 +1067,16 @@ cdef class Face:
         return tags
 
     def get_table_script_tags(self, tag: str) -> List[str]:
+        """Fetches a list of all scripts enumerated in the specified face's
+        GSUB or GPOS table.
+
+        :param tag: ``"GSUB"`` or ``"GPOS"``.
+
+        :returns: The array of script tags found for the query.
+
+        Wraps `hb_ot_layout_table_get_script_tags()
+        <https://harfbuzz.github.io/harfbuzz-hb-ot-layout.html#hb-ot-layout-table-get-script-tags>`_.
+        """
         cdef bytes packed = tag.encode()
         cdef hb_tag_t hb_tag = hb_tag_from_string(<char*>packed, -1)
         cdef unsigned int script_count = STATIC_ARRAY_SIZE
@@ -550,6 +1101,13 @@ cdef class Face:
         return tags
 
     def list_names(self) -> List[OTNameEntry]:
+        """Enumerates all available name IDs and language combinations.
+
+        :returns: Array of available name entries.
+
+        Wraps `hb_ot_name_list_names()
+        <https://harfbuzz.github.io/harfbuzz-hb-ot-name.html#hb-ot-name-list-names>`_.
+        """
         cdef list ret = []
         cdef unsigned int num_entries
         cdef const hb_ot_name_entry_t* entries
@@ -573,6 +1131,17 @@ cdef class Face:
         return ret
 
     def get_name(self, name_id: OTNameIdPredefined | int, language: str | None = None) -> str | None:
+        """Fetches a font name from the OpenType ``name`` table.
+
+        :param name_id: The OpenType name identifier to fetch.
+        :param language: The BCP 47 language tag to fetch the name for. If
+            ``None``, English (``"en"``) is assumed.
+
+        :returns: The name as a :class:`str`, or ``None`` if not found.
+
+        Wraps `hb_ot_name_get_utf8()
+        <https://harfbuzz.github.io/harfbuzz-hb-ot-name.html#hb-ot-name-get-utf8>`_.
+        """
         cdef bytes packed
         cdef hb_language_t lang
         cdef char *text

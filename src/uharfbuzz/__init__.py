@@ -41,6 +41,8 @@ __all__ = [
     "OTMathKern",
     "OTMathKernEntry",
     "OTMetricsTag",
+    "OTNameEntry",
+    "OTNameIdPredefined",
     "OTVarAxisFlags",
     "OTVarAxisInfo",
     "OTVarNamedInstance",
