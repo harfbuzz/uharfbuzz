@@ -549,9 +549,9 @@ cdef class Font:
             return position
         return None
 
-    def get_metric_position_with_fallback(font, tag: OTMetricsTag) -> int:
+    def get_metric_position_with_fallback(self, tag: OTMetricsTag) -> int:
         cdef hb_position_t position
-        hb_ot_metrics_get_position_with_fallback(font._hb_font, tag, &position)
+        hb_ot_metrics_get_position_with_fallback(self._hb_font, tag, &position)
         return position
 
     def get_metric_variation(self, tag: OTMetricsTag) -> float:
