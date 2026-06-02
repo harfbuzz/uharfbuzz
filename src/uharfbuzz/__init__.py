@@ -57,6 +57,7 @@ __all__ = [
     "RepackerError",
     "Set",
     "SetIter",
+    "StyleTag",
     "SubsetFlags",
     "SubsetInput",
     "SubsetInputSets",
