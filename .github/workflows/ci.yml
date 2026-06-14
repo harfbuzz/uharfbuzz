@@ -45,10 +45,17 @@ jobs:
     - name: Set up Python
       uses: actions/setup-python@v5
       with:
-        # Must match Pyodide's Python version (0.28.x uses 3.13)
+        # Host Python must match cibuildwheel's default stable Pyodide ABI
+        # (Pyodide 0.28/0.29.x -> pyemscripten_2025_0 -> CPython 3.13). If a
+        # future cibuildwheel bumps its default stable Pyodide to a newer
+        # CPython, bump this in lockstep (or pin pyodide-version) or the
+        # cross-build will fail.
         python-version: "3.13"
     - name: Install cibuildwheel
-      run: pip install cibuildwheel
+      # cibuildwheel >= 4.0 tags Pyodide wheels with the PEP 783 pyemscripten_*
+      # platform, which PyPI accepts. Older versions emit pyodide_2024_0, which
+      # PyPI rejects.
+      run: pip install "cibuildwheel>=4.0"
     - name: Build and test Pyodide wheel
       run: python -m cibuildwheel --platform pyodide --output-dir wheelhouse
     - uses: actions/upload-artifact@v4
@@ -89,11 +96,6 @@ jobs:
         for wheel_dir in wheelhouse/uharfbuzz*/; do
           mv "${wheel_dir}"/*.whl dist/
         done
-        # Separate Pyodide wheels (PyPI doesn't accept wasm32 wheels yet)
-        # https://github.com/pypi/warehouse/issues/10416
-        # https://discuss.python.org/t/pep-783-emscripten-packaging
-        mkdir -p dist-pyodide/
-        mv dist/*pyodide*.whl dist-pyodide/ 2>/dev/null || true
     - name: Extract release notes from annotated tag message
       id: release_notes
       env:
@@ -131,11 +133,6 @@ jobs:
                             --title "${{ env.RELEASE_NAME }}" \
                             $notes \
                             $prerelease
-    - name: Upload Pyodide wheel to GitHub release
-      run: |
-        if [ -d dist-pyodide ] && [ "$(ls -A dist-pyodide)" ]; then
-          gh release upload ${{ github.ref_name }} dist-pyodide/*.whl
-        fi
     - name: Build sdist
       run: |
         if [ "$IS_PRERELEASE" == true ]; then
