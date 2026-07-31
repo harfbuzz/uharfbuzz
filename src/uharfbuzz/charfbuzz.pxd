@@ -683,6 +683,14 @@ cdef extern from "hb.h":
         hb_codepoint_t glyph,
         hb_font_t *font,
         void *user_data)
+    ctypedef void (*hb_paint_fill_glyph_func_t) (
+        hb_paint_funcs_t *funcs,
+        void *paint_data,
+        hb_codepoint_t glyph,
+        hb_font_t *font,
+        hb_bool_t is_foreground,
+        hb_color_t color,
+        void *user_data)
     ctypedef void (*hb_paint_push_clip_glyph_func_t) (
         hb_paint_funcs_t *funcs,
         void *paint_data,
@@ -795,6 +803,11 @@ cdef extern from "hb.h":
         hb_paint_color_glyph_func_t     func,
         void                            *user_data,
         hb_destroy_func_t                destroy)
+    void hb_paint_funcs_set_fill_glyph_func(
+        hb_paint_funcs_t           *funcs,
+        hb_paint_fill_glyph_func_t  func,
+        void                       *user_data,
+        hb_destroy_func_t           destroy)
     void hb_paint_funcs_set_push_clip_glyph_func(
         hb_paint_funcs_t                *funcs,
         hb_paint_push_clip_glyph_func_t  func,
