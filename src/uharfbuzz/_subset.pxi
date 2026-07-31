@@ -140,6 +140,28 @@ class SubsetFlags(IntFlag):
        If set do not perform glyph closure on layout substitution rules
        (``GSUB``).
 
+    .. attribute:: OPTIMIZE_IUP_DELTAS
+
+       If set perform IUP delta optimization on the remaining ``gvar``
+       table's deltas.
+
+    .. attribute:: NO_BIDI_CLOSURE
+
+       If set do not pull mirrored versions of input codepoints into the
+       subset.
+
+    .. attribute:: DOWNGRADE_CFF2
+
+       If set and instantiating a variable font with all axes pinned,
+       convert the output ``CFF2`` table to ``CFF ``. This enables
+       compatibility with older renderers that don't support ``CFF2``.
+
+    .. attribute:: CFF_IDENTITY_CHARSET
+
+       If set and subsetting a CID-keyed CFF font, the output CFF charset
+       will use sequential identity CIDs (CID = new GID) rather than
+       preserving the original CIDs.
+
     Wraps `hb_subset_flags_t
     <https://harfbuzz.github.io/harfbuzz-hb-subset.html#hb-subset-flags-t>`_.
     """
@@ -154,6 +176,10 @@ class SubsetFlags(IntFlag):
     GLYPH_NAMES = HB_SUBSET_FLAGS_GLYPH_NAMES
     NO_PRUNE_UNICODE_RANGES = HB_SUBSET_FLAGS_NO_PRUNE_UNICODE_RANGES
     NO_LAYOUT_CLOSURE = HB_SUBSET_FLAGS_NO_LAYOUT_CLOSURE
+    OPTIMIZE_IUP_DELTAS = HB_SUBSET_FLAGS_OPTIMIZE_IUP_DELTAS
+    NO_BIDI_CLOSURE = HB_SUBSET_FLAGS_NO_BIDI_CLOSURE
+    DOWNGRADE_CFF2 = HB_SUBSET_FLAGS_DOWNGRADE_CFF2
+    CFF_IDENTITY_CHARSET = HB_SUBSET_FLAGS_CFF_IDENTITY_CHARSET
 
 
 cdef class SubsetInput:
