@@ -669,6 +669,21 @@ cdef class PaintFuncs:
         ``is_foreground`` indicates whether the color is the foreground.
         ``color`` is the color to use, unpremultiplied.
 
+        When ``is_foreground`` is true, this color originates from the
+        foreground-color sentinel in the font's color data. The ``color``
+        parameter still carries a fully resolved RGBA value (with any
+        paint-tree alpha already applied), so backends that do not need to
+        distinguish the foreground can simply use ``color`` directly.
+
+        Backends that defer foreground resolution (e.g. to honor a CSS
+        ``currentColor`` or a runtime uniform) should substitute their own
+        foreground RGB when ``is_foreground`` is true, but must combine the
+        alpha from ``color`` with their foreground alpha, since it encodes
+        additional modulation from the paint tree. For this mode to work
+        correctly, the caller should pass a fully-opaque foreground color to
+        :meth:`Font.paint_glyph`, so that the alpha in ``color`` reflects
+        only the paint-tree contribution.
+
         Wraps `hb_paint_funcs_set_color_func()
         <https://harfbuzz.github.io/harfbuzz-hb-paint.html#hb-paint-funcs-set-color-func>`_.
         """
