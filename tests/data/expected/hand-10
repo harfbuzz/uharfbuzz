@@ -30,19 +30,13 @@ start transform 1 0 0 1 0 0
       end clip
     end transform
     start transform 1 0 0 1 0 0
-      start clip glyph 15
-        solid 145 103 77 255
-      end clip
+      fill glyph 15 solid 145 103 77 255
     end transform
     start transform 1 0 0 1 0 0
-      start clip glyph 16
-        solid 30 136 229 255
-      end clip
+      fill glyph 16 solid 30 136 229 255
     end transform
     start transform 1 0 0 1 0 0
-      start clip glyph 21
-        solid 145 103 77 255
-      end clip
+      fill glyph 21 solid 145 103 77 255
     end transform
     start transform 1 0 0 1 0 0
       start clip glyph 16
@@ -58,9 +52,7 @@ start transform 1 0 0 1 0 0
       end clip
     end transform
     start transform 1 0 0 1 0 0
-      start clip glyph 18
-        solid 66 66 66 51
-      end clip
+      fill glyph 18 solid 66 66 66 51
     end transform
     start transform 1 0 0 1 0 0
       start clip glyph 19
@@ -79,9 +71,7 @@ start transform 1 0 0 1 0 0
       end clip
     end transform
     start transform 1 0 0 1 0 0
-      start clip glyph 20
-        solid 145 103 77 255
-      end clip
+      fill glyph 20 solid 145 103 77 255
     end transform
   end clip
 end transform

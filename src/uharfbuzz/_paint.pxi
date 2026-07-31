@@ -322,6 +322,19 @@ cdef hb_bool_t _paint_color_glyph_func(
     return 0
 
 
+cdef void _paint_fill_glyph_func(
+        hb_paint_funcs_t *funcs,
+        void *paint_data,
+        hb_codepoint_t glyph,
+        hb_font_t *font,
+        hb_bool_t is_foreground,
+        hb_color_t color,
+        void *user_data) noexcept:
+    py_funcs = <PaintFuncs>user_data
+    py_color: Color = Color.from_int(color)
+    py_funcs._fill_glyph_func(glyph, py_color, <bint>is_foreground, <object>paint_data)
+
+
 cdef void _paint_push_clip_glyph_func(
         hb_paint_funcs_t *funcs,
         void *paint_data,
@@ -487,6 +500,7 @@ cdef class PaintFuncs:
     cdef object _push_transform_func
     cdef object _pop_transform_func
     cdef object _color_glyph_func
+    cdef object _fill_glyph_func
     cdef object _push_clip_glyph_func
     cdef object _push_clip_rectangle_func
     cdef object _pop_clip_func
@@ -560,6 +574,29 @@ cdef class PaintFuncs:
         self._color_glyph_func = func
         hb_paint_funcs_set_color_glyph_func(
             self._hb_paintfuncs, _paint_color_glyph_func, <void*>self, NULL)
+
+    def set_fill_glyph_func(self,
+                            func: Callable[[
+                                int,  # gid
+                                Color,  # color
+                                bool,  # is_foreground
+                                object,  # paint_data
+                            ], None]):
+        """Sets the fill-glyph callback on this :class:`PaintFuncs`.
+
+        The callback fills a glyph's shape with a solid color.
+        ``is_foreground`` indicates whether the color is the foreground.
+        ``color`` is the color to use, unpremultiplied.
+
+        If not set, a sequence of push-clip-glyph, color and pop-clip paint
+        operations, in that order, will be emitted instead.
+
+        Wraps `hb_paint_funcs_set_fill_glyph_func()
+        <https://harfbuzz.github.io/harfbuzz-hb-paint.html#hb-paint-funcs-set-fill-glyph-func>`_.
+        """
+        self._fill_glyph_func = func
+        hb_paint_funcs_set_fill_glyph_func(
+            self._hb_paintfuncs, _paint_fill_glyph_func, <void*>self, NULL)
 
     def set_push_clip_glyph_func(self,
                                  func: Callable[[

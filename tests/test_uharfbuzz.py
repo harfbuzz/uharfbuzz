@@ -1494,6 +1494,10 @@ class TestPaintFuncs:
             conainer.append(f"paint color glyph {gid}; acting as failed")
             return False
 
+        def fill_glyph_func(gid, color, is_foreground, conainer):
+            r, g, b, a = color
+            conainer.append(f"fill glyph {gid} solid {r} {g} {b} {a}")
+
         def push_clip_glyph_func(gid, conainer):
             conainer.append(f"start clip glyph {gid}")
             conainer.level += 1
@@ -1562,6 +1566,7 @@ class TestPaintFuncs:
         funcs.set_push_transform_func(push_transform_func)
         funcs.set_pop_transform_func(pop_transform_func)
         funcs.set_color_glyph_func(color_glyph_func)
+        funcs.set_fill_glyph_func(fill_glyph_func)
         funcs.set_push_clip_glyph_func(push_clip_glyph_func)
         funcs.set_push_clip_rectangle_func(push_clip_rectangle_func)
         funcs.set_pop_clip_func(pop_clip_func)
@@ -1625,6 +1630,33 @@ class TestPaintFuncs:
             expected = "".join(line for line in f.readlines() if line[0] != "#")
 
         assert result.strip() == expected.strip()
+
+    def test_fill_glyph_fallback(self):
+        blob = hb.Blob.from_file_path(TESTDATA / "test_glyphs-glyf_colr_1.ttf")
+        face = hb.Face(blob)
+        font = hb.Font(face)
+
+        def push_clip_glyph_func(gid, lines):
+            lines.append(f"start clip glyph {gid}")
+
+        def color_func(color, is_foreground, lines):
+            r, g, b, a = color
+            lines.append(f"solid {r} {g} {b} {a}")
+
+        def pop_clip_func(lines):
+            lines.append("end clip")
+
+        # Without a fill-glyph callback, the operation is decomposed into
+        # push-clip-glyph, color and pop-clip.
+        funcs = hb.PaintFuncs()
+        funcs.set_push_clip_glyph_func(push_clip_glyph_func)
+        funcs.set_color_func(color_func)
+        funcs.set_pop_clip_func(pop_clip_func)
+
+        lines = []
+        font.paint_glyph(6, funcs, lines)
+
+        assert lines == ["start clip glyph 6", "solid 0 0 0 255", "end clip"]
 
 
 class MessageCollector:
