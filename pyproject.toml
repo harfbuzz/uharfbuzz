@@ -14,7 +14,9 @@ build-backend = "setuptools.build_meta"
 # Also skip wheels for free-threaded CPython 3.14 (e.g. 'cp314t') until we
 # actually support them. We currently aren't thread-safe as we define HB_NO_MT=1.
 # CPython abi3 wheels only need universal2 on macOS, skip the single-arch builds.
-skip = ["cp38-*", "cp39-*", "cp3??t-*", "cp*-macosx_x86_64", "cp*-macosx_arm64"]
+# Pyodide 3.15 wheel fails to import.
+skip = ["cp38-*", "cp39-*", "cp3??t-*", "cp*-macosx_x86_64", "cp*-macosx_arm64",
+        "cp315-pyodide_wasm32"]
 enable = ["pypy"]
 test-requires = "pytest"
 test-command = "pytest {project}/tests"
