@@ -331,7 +331,7 @@ cdef class SubsetInput:
         return None
 
     @property
-    def unicode_set(self) -> Set[int]:
+    def unicode_set(self) -> Set:
         """The set of Unicode code points to retain. The caller should modify
         the set as needed.
 
@@ -343,7 +343,7 @@ cdef class SubsetInput:
         return Set.from_ptr(hb_set_reference (hb_subset_input_unicode_set(self._hb_input)))
 
     @property
-    def glyph_set(self) -> Set[int]:
+    def glyph_set(self) -> Set:
         """The set of glyph IDs to retain. The caller should modify the set
         as needed.
 
@@ -379,7 +379,7 @@ cdef class SubsetInput:
         return self.sets(SubsetInputSets.DROP_TABLE_TAG)
 
     @property
-    def name_id_set(self) -> Set[int]:
+    def name_id_set(self) -> Set:
         """Shortcut for ``sets(SubsetInputSets.NAME_ID)``.
 
         :type: Set
@@ -387,7 +387,7 @@ cdef class SubsetInput:
         return self.sets(SubsetInputSets.NAME_ID)
 
     @property
-    def name_lang_id_set(self) -> Set[int]:
+    def name_lang_id_set(self) -> Set:
         """Shortcut for ``sets(SubsetInputSets.NAME_LANG_ID)``.
 
         :type: Set

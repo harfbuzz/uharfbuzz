@@ -899,7 +899,7 @@ cdef class Buffer:
         """
         hb_buffer_guess_segment_properties(self._hb_buffer)
 
-    def set_message_func(self, callback: Callable[str]):
+    def set_message_func(self, callback: Callable[[str], None]):
         """Sets the implementation function for the buffer's message
         callback.
 
