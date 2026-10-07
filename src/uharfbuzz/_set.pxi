@@ -291,7 +291,7 @@ cdef class Set:
         """
         return hb_set_get_max(self._hb_set)
 
-    def __iter__(self):
+    def __iter__(self) -> SetIter:
         return SetIter(self)
 
     def __repr__(self):
@@ -316,7 +316,7 @@ cdef class SetIter:
         self._hb_set = s._hb_set
         self._c = s.INVALID_VALUE
 
-    def __iter__(self):
+    def __iter__(self) -> SetIter:
         return self
 
     def __next__(self) -> int:

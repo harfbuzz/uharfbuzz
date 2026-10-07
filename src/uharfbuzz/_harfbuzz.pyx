@@ -42,7 +42,7 @@ def version_string() -> str:
     return packed.decode()
 
 
-WARNED = set()
+WARNED: set[str] = set()
 
 
 def deprecated(replacement=None, since=""):

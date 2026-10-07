@@ -609,8 +609,6 @@ cdef extern from "hb.h":
         HB_PAINT_EXTEND_REPEAT
         HB_PAINT_EXTEND_REFLECT
 
-    ctypedef struct hb_color_line_t:
-        pass
 
     ctypedef enum hb_paint_composite_mode_t:
         HB_PAINT_COMPOSITE_MODE_CLEAR

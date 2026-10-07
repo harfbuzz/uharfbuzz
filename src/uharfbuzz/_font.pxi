@@ -867,7 +867,7 @@ cdef class Font:
         cdef void *draw_state_p = <void *>draw_state
         if PyCapsule_IsValid(draw_state, NULL):
             draw_state_p = <void *>PyCapsule_GetPointer(draw_state, NULL)
-        hb_font_draw_glyph(self._hb_font, gid, draw_funcs._hb_drawfuncs, draw_state_p);
+        hb_font_draw_glyph(self._hb_font, gid, draw_funcs._hb_drawfuncs, draw_state_p)
 
     def paint_glyph(self, gid: int,
                     paint_funcs: PaintFuncs,
@@ -1441,7 +1441,7 @@ cdef class FontFuncs:
                                     Font,
                                     int,  # gid
                                     object,  # user_data
-                                ], (int, int, int)],  # success, v_origin_x, v_origin_y
+                                ], Tuple[int, int, int]],  # success, v_origin_x, v_origin_y
                                 user_data: object = None):
         """Sets the implementation function for the vertical-glyph-origin
         callback. The callback must return a ``(success, x, y)`` tuple.

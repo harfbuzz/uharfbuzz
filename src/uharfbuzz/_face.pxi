@@ -612,7 +612,7 @@ cdef class Face:
         return tags
 
     @property
-    def unicodes (self) -> Set[int]:
+    def unicodes (self) -> Set:
         """All Unicode characters covered by the face.
 
         :type: Set
@@ -625,7 +625,7 @@ cdef class Face:
         return s
 
     @property
-    def variation_selectors(self) -> Set[int]:
+    def variation_selectors(self) -> Set:
         """All Unicode "Variation Selector" characters covered by the face.
 
         :type: Set
@@ -637,7 +637,7 @@ cdef class Face:
         hb_face_collect_variation_selectors(self._hb_face, s._hb_set)
         return s
 
-    def variation_unicodes(self, variation_selector: int) -> Set[int]:
+    def variation_unicodes(self, variation_selector: int) -> Set:
         """All Unicode characters for ``variation_selector`` covered by the
         face.
 

@@ -227,7 +227,26 @@ def _generate_field_docs() -> None:
         f.write(content)
 
 
+def _generate_type_annotations() -> None:
+    from stubgen_pyx import StubgenPyx
+
+    stubgen = StubgenPyx()
+    results = stubgen.convert_glob("**/*.pyx")
+    for result in results:
+        if result.success:
+            print(f"Generated: {result.pyi_file}")
+        else:
+            print(f"Failed: {result.pyx_file}")
+            print(f"  Error: {result.error}")
+
+    pkg_dir = os.path.join(here, "src", "uharfbuzz")
+
+    with open(os.path.join(pkg_dir, "py.typed"), "w") as typed:
+        typed.write("")
+
+
 _generate_field_docs()
+_generate_type_annotations()
 
 
 setup(
@@ -251,4 +270,5 @@ setup(
         compiler_directives={"linetrace": use_cython_linetrace},
     ),
     options={"bdist_wheel": {"py_limited_api": "cp310"}} if use_py_limited_api else {},
+    package_data={"uharfbuzz": ["*.pyi", "py.typed"]}
 )
